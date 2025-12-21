@@ -102,8 +102,8 @@ export default function SearchPage() {
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search people, vibes, or shorts..."
-                            className="bg-transparent border-none focus-visible:ring-0 text-white font-semibold placeholder:text-slate-600 h-14 text-lg"
+                            placeholder="Search..."
+                            className="flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 text-white font-semibold placeholder:text-slate-600 h-12 sm:h-14 text-base sm:text-lg"
                         />
                         <AnimatePresence>
                             {query && (
@@ -116,18 +116,18 @@ export default function SearchPage() {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => setQuery("")}
-                                        className="h-10 w-10 text-slate-500 hover:text-white rounded-full bg-white/5 mr-1"
+                                        className="h-8 w-8 sm:h-10 sm:w-10 text-slate-500 hover:text-white rounded-full bg-white/5 mr-1"
                                     >
                                         <X className="w-4 h-4" />
                                     </Button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                        <Button className="bg-gradient-to-br from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-white font-black uppercase italic tracking-wider rounded-2xl px-8 h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 group-hover:px-10 duration-500">
+                        <Button className="bg-gradient-to-br from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-white font-black uppercase italic tracking-wider rounded-xl sm:rounded-2xl px-4 sm:px-8 h-10 sm:h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 text-xs sm:text-sm">
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 sm:gap-2">
                                     <span>Sync</span>
-                                    <TrendingUp className="w-4 h-4" />
+                                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </div>
                             )}
                         </Button>

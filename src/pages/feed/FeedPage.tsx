@@ -413,39 +413,39 @@ export default function FeedPage() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-[#0c0c0e]/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] p-20 text-center relative overflow-hidden group"
+                    className="bg-[#0c0c0e]/40 backdrop-blur-3xl border border-white/5 rounded-3xl sm:rounded-[3rem] p-8 sm:p-12 lg:p-20 text-center relative overflow-hidden group mx-2"
                 >
                     <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/20 rounded-full blur-[100px] group-hover:bg-primary/30 transition-colors duration-1000" />
                     <div className="relative">
-                        <div className="w-28 h-28 mx-auto mb-10 rounded-[2.5rem] bg-gradient-to-br from-primary/20 to-secondary/20 border border-white/10 flex items-center justify-center shadow-inner">
-                            <TrendingUp className="w-12 h-12 text-primary drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-6 sm:mb-8 lg:mb-10 rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-primary/20 to-secondary/20 border border-white/10 flex items-center justify-center shadow-inner">
+                            <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-primary drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
                         </div>
-                        <h3 className="font-heading font-extrabold text-4xl text-white mb-4 tracking-tighter uppercase italic">Offline Vibe</h3>
-                        <p className="text-slate-500 font-medium mb-10 max-w-sm mx-auto leading-relaxed">
+                        <h3 className="font-heading font-extrabold text-2xl sm:text-3xl lg:text-4xl text-white mb-3 sm:mb-4 tracking-tighter uppercase italic text-center">Offline Vibe</h3>
+                        <p className="text-slate-500 font-medium mb-6 sm:mb-8 lg:mb-10 max-w-xs sm:max-w-sm mx-auto leading-relaxed text-sm sm:text-base px-2">
                             No active signals in this frequency. Be the catalyst and initiate the first broadcast.
                         </p>
-                        <Button className="bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-bold rounded-2xl px-10 h-14 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest border border-primary/20">
-                            <Plus className="w-5 h-5 mr-3" />
+                        <Button className="bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-bold rounded-xl sm:rounded-2xl px-6 sm:px-8 lg:px-10 h-12 sm:h-14 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-xs sm:text-sm border border-primary/20">
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
                             Launch Content
                         </Button>
                     </div>
                 </motion.div>
             ) : (
-                <AnimatePresence mode="popLayout">
-                    <div className="space-y-8">
-                        {posts.map((post, index) => (
-                            <motion.div
-                                key={post._id}
-                                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                            >
-                                <PostCard post={post} />
-                            </motion.div>
-                        ))}
-                    </div>
-                </AnimatePresence>
+            <AnimatePresence mode="popLayout">
+                <div className="space-y-8">
+                    {posts.map((post, index) => (
+                        <motion.div
+                            key={post._id}
+                            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            <PostCard post={post} />
+                        </motion.div>
+                    ))}
+                </div>
+            </AnimatePresence>
             )}
 
             {/* Story Viewer Modal */}

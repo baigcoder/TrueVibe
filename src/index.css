@@ -64,11 +64,13 @@
 
   html {
     @apply scroll-smooth;
+    background-color: #030712;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+    background-color: #030712;
   }
 
   h1,
