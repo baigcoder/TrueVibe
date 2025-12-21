@@ -102,7 +102,7 @@ const ShortItem = ({
     return (
         <div className="h-full w-full relative bg-slate-950 flex items-center justify-center snap-start">
             {/* Video Layer */}
-            <div className="relative h-full w-full max-w-[450px] overflow-hidden md:rounded-[2.5rem] shadow-2xl border-x md:border border-white/10 group/video">
+            <div className="relative h-full w-full max-w-[450px] overflow-hidden md:rounded-[2.5rem] shadow-2xl border-x md:border border-white/10">
                 {(isActive || shouldLoad) && (
                     <video
                         ref={videoRef}
@@ -148,9 +148,9 @@ const ShortItem = ({
                 )}
 
                 {/* HUD Overlays */}
-                <div className="absolute inset-0 pointer-events-none p-3 sm:p-4 lg:p-6 flex flex-col justify-between z-20">
+                <div className="absolute inset-0 p-3 sm:p-4 lg:p-6 flex flex-col justify-between z-30" style={{ pointerEvents: 'none' }}>
                     {/* Top Stats */}
-                    <div className="flex justify-between items-start pointer-events-auto">
+                    <div className="flex justify-between items-start" style={{ pointerEvents: 'auto' }}>
                         <div className="flex gap-2 flex-wrap">
                             <div className={cn(
                                 "px-3 py-1.5 rounded-xl border flex items-center gap-2",
@@ -173,8 +173,8 @@ const ShortItem = ({
                     </div>
 
                     {/* Bottom Info Section */}
-                    <div className="flex items-end justify-between pointer-events-auto pb-14 sm:pb-4 lg:pb-0">
-                        <div className="flex-1 mr-4 sm:mr-6 max-w-[60%] sm:max-w-[70%]">
+                    <div className="flex items-end justify-between pb-16 sm:pb-4 lg:pb-0" style={{ pointerEvents: 'auto' }}>
+                        <div className="flex-1 mr-4 sm:mr-6 max-w-[55%] sm:max-w-[65%]">
                             <div className="flex items-center gap-3 mb-4">
                                 <motion.div whileHover={{ scale: 1.05 }} className="relative">
                                     <Avatar className="w-12 h-12 border-2 border-primary/30 rounded-2xl shadow-xl">
@@ -226,8 +226,8 @@ const ShortItem = ({
                             </div>
                         </div>
 
-                        {/* Action Bar (Vertical) */}
-                        <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5 items-center pb-4 flex-shrink-0">
+                        {/* Action Bar (Vertical) - High z-index for touch */}
+                        <div className="flex flex-col gap-4 sm:gap-4 lg:gap-5 items-center pb-4 flex-shrink-0" style={{ zIndex: 50 }}>
                             <ActionButton
                                 icon={Heart}
                                 label={formatNumber(short.likesCount)}
@@ -290,22 +290,30 @@ const ShortItem = ({
 
 const ActionButton = ({ icon: Icon, label, color, isActive = false, onClick }: any) => {
     const colorClasses: Record<string, string> = {
-        "rose-500": isActive ? "bg-rose-500/20 border-rose-500/40 text-rose-500" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95",
-        "primary": isActive ? "bg-primary/20 border-primary/40 text-primary" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95",
-        "amber-400": isActive ? "bg-amber-400/20 border-amber-400/40 text-amber-400" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95",
-        "white": isActive ? "bg-white/20 border-white/40 text-white" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95"
+        "rose-500": isActive ? "bg-rose-500/20 border-rose-500/40 text-rose-500" : "bg-black/50 border-white/20 text-white",
+        "primary": isActive ? "bg-primary/20 border-primary/40 text-primary" : "bg-black/50 border-white/20 text-white",
+        "amber-400": isActive ? "bg-amber-400/20 border-amber-400/40 text-amber-400" : "bg-black/50 border-white/20 text-white",
+        "white": isActive ? "bg-white/20 border-white/40 text-white" : "bg-black/50 border-white/20 text-white"
+    };
+
+    const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onClick?.(e);
     };
 
     return (
         <div className="flex flex-col items-center gap-1">
             <button
-                onClick={onClick}
+                onClick={handleClick}
+                onTouchEnd={handleClick}
                 className={cn(
-                    "w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center border transition-all duration-150 shadow-lg hover:scale-105",
+                    "w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center border shadow-xl backdrop-blur-sm touch-manipulation select-none",
                     colorClasses[color] || colorClasses["white"]
                 )}
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
             >
-                <Icon className={cn("w-5 h-5 lg:w-6 lg:h-6", isActive && "fill-current")} />
+                <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", isActive && "fill-current")} />
             </button>
             <span className="text-[8px] lg:text-[9px] font-bold text-white/50 uppercase tracking-tight hidden lg:block">{label}</span>
         </div>
