@@ -46,8 +46,25 @@ export const createApp = (): Application => {
         crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     }));
 
+    // CORS - remove trailing slash from origin to prevent mismatch
+    const allowedOrigins = [
+        config.frontend.url.replace(/\/$/, ''), // Remove trailing slash
+        'http://localhost:5173',
+        'http://localhost:3000',
+    ];
+
     app.use(cors({
-        origin: config.frontend.url,
+        origin: (origin, callback) => {
+            // Allow requests with no origin (mobile apps, curl, etc.)
+            if (!origin) return callback(null, true);
+
+            // Check if origin is in allowed list
+            if (allowedOrigins.some(allowed => origin === allowed || origin === allowed + '/')) {
+                return callback(null, origin);
+            }
+
+            return callback(new Error('Not allowed by CORS'));
+        },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
