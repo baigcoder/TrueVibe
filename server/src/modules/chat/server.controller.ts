@@ -91,6 +91,7 @@ export const createServer = async (
             members: [{
                 userId,
                 role: 'owner',
+                roleIds: [],
                 joinedAt: new Date(),
             }],
             memberCount: 1,
@@ -216,6 +217,7 @@ export const joinServer = async (
         server.members.push({
             userId,
             role: 'member',
+            roleIds: [],
             joinedAt: new Date(),
         });
         server.memberCount = server.members.length;
