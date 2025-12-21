@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
     Heart, MessageCircle, Share2, Bookmark, Play,
     Volume2, VolumeX, MoreHorizontal, ChevronUp, ChevronDown,
-    ShieldCheck, Loader2, Zap, Sparkles, TrendingUp, Cpu, Plus, Upload, X, Video, Check, Trash2
+    ShieldCheck, Loader2, Zap, TrendingUp, Cpu, Plus, Upload, X, Video, Check, Trash2, Send, MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -50,7 +50,7 @@ const ShortItem = ({
     currentIndex: number
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(true);
     const [showHeart, setShowHeart] = useState(false);
     const followMutation = useFollowUser();
     const unfollowMutation = useUnfollowUser();
@@ -58,141 +58,164 @@ const ShortItem = ({
     const deleteMutation = useDeleteShort();
     const { profile } = useAuth();
     const isOwner = profile?._id === short.userId || profile?._id === short.creator?._id;
-
-    const [shouldLoad, setShouldLoad] = useState(false);
-
-    useEffect(() => {
-        // Preload if within 2 units of distance
-        const distance = Math.abs(index - currentIndex);
-        if (distance <= 1) {
-            setShouldLoad(true);
-        }
-    }, [currentIndex, index]);
+    const shouldLoad = isActive || Math.abs(index - currentIndex) <= 1;
 
     useEffect(() => {
-        if (isActive && videoRef.current) {
-            videoRef.current.play().catch(() => { });
+        if (isActive) {
             setIsPlaying(true);
-            if (short._id && !short._id.toString().startsWith('mock-')) {
-                recordView.mutate(short._id);
+            const playPromise = videoRef.current?.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => setIsPlaying(false));
             }
-        } else if (videoRef.current) {
+            // Record view after 3 seconds
+            const timer = setTimeout(() => {
+                if (short._id && !short._id.toString().startsWith('mock-')) {
+                    recordView.mutate(short._id);
+                }
+            }, 3000);
+            return () => clearTimeout(timer);
+        } else {
+            videoRef.current?.pause();
+        }
+    }, [isActive, short._id]);
+
+    const handlePlayPause = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!videoRef.current) return;
+        if (isPlaying) {
             videoRef.current.pause();
             setIsPlaying(false);
-        }
-    }, [isActive, short._id, shouldLoad]);
-
-    const handlePlayPause = () => {
-        if (isPlaying) {
-            videoRef.current?.pause();
         } else {
-            videoRef.current?.play();
+            videoRef.current.play();
+            setIsPlaying(true);
         }
-        setIsPlaying(!isPlaying);
     };
 
-    const handleDoubleTap = () => {
+    const handleDoubleTap = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!short.isLiked) {
             onLikeToggle(short._id, false);
             setShowHeart(true);
-            setTimeout(() => setShowHeart(false), 1000);
+            setTimeout(() => setShowHeart(false), 800);
         }
     };
 
     return (
-        <div className="h-full w-full relative bg-slate-950 flex items-center justify-center snap-start">
-            {/* Video Layer */}
-            <div className="relative h-full w-full max-w-[450px] overflow-hidden md:rounded-[2.5rem] shadow-2xl border-x md:border border-white/10">
-                {(isActive || shouldLoad) && (
-                    <video
-                        ref={videoRef}
-                        src={short.videoUrl}
-                        poster={short.thumbnailUrl}
-                        preload={isActive ? "auto" : "metadata"}
-                        className="h-full w-full object-cover cursor-pointer bg-slate-900"
-                        loop
-                        playsInline
-                        muted={isMuted}
-                        onClick={handlePlayPause}
-                        onDoubleClick={handleDoubleTap}
-                    />
-                )}
-                {!shouldLoad && !isActive && (
-                    <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
-                        <img src={short.thumbnailUrl} className="w-full h-full object-cover opacity-50 blur-sm" alt="" />
-                        <Loader2 className="w-8 h-8 text-primary animate-spin absolute" />
-                    </div>
-                )}
+        <div className="h-[100dvh] w-full relative bg-black flex items-center justify-center snap-start overflow-hidden">
+            {/* Desktop Background Blur */}
+            <div className="hidden md:block absolute inset-0 z-0 opacity-40">
+                <img src={short.thumbnailUrl} className="w-full h-full object-cover blur-[100px] scale-150" alt="" />
+                <div className="absolute inset-0 bg-black/60" />
+            </div>
 
-                {/* Heart Animation on Double Tap */}
-                <AnimatePresence>
-                    {showHeart && (
+            {/* Main Content Layer */}
+            <div className="relative h-full w-full max-w-[450px] md:h-[92vh] md:rounded-[2.5rem] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)] z-10 border-x border-white/5 md:border md:border-white/10">
+
+                {/* 1. Video Layer - Base Level */}
+                <div
+                    className="absolute inset-0 z-0 bg-slate-950 cursor-pointer"
+                    onClick={handlePlayPause}
+                    onDoubleClick={handleDoubleTap}
+                >
+                    {shouldLoad ? (
+                        <video
+                            ref={videoRef}
+                            src={short.videoUrl}
+                            poster={short.thumbnailUrl}
+                            preload={isActive ? "auto" : "metadata"}
+                            className="h-full w-full object-cover"
+                            loop
+                            playsInline
+                            muted={isMuted}
+                        />
+                    ) : (
+                        <div className="h-full w-full relative">
+                            <img src={short.thumbnailUrl} className="w-full h-full object-cover opacity-50 blur-sm" alt="" />
+                            <div className="absolute inset-0 bg-black/20" />
+                            <Loader2 className="w-10 h-10 text-primary animate-spin absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                        </div>
+                    )}
+                </div>
+
+                {/* 2. Visual Feedback Layer - Non-interactive */}
+                <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+                    <AnimatePresence>
+                        {showHeart && (
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1.5, opacity: 1 }}
+                                exit={{ scale: 2, opacity: 0 }}
+                                className="z-50"
+                            >
+                                <Heart className="w-28 h-28 text-primary fill-primary drop-shadow-[0_0_40px_rgba(var(--primary-rgb),0.6)]" />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    {!isPlaying && (
                         <motion.div
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1.5, opacity: 1 }}
-                            exit={{ scale: 2, opacity: 0 }}
-                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-20 h-20 rounded-full bg-black/40 backdrop-blur-2xl border border-white/10 flex items-center justify-center"
                         >
-                            <Heart className="w-24 h-24 text-primary fill-primary drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]" />
+                            <Play className="w-8 h-8 text-white fill-white ml-1.5" />
                         </motion.div>
                     )}
-                </AnimatePresence>
+                </div>
 
-                {/* Pause Indicator */}
-                {!isPlaying && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none z-10 transition-opacity">
-                        <div className="w-20 h-20 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                            <Play className="w-8 h-8 text-white fill-white ml-1" />
-                        </div>
-                    </div>
-                )}
+                {/* 3. Global HUD Layer - Pointer-events: none (controls children individually) */}
+                <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between p-4 sm:p-5 pb-24 sm:pb-10">
 
-                {/* HUD Overlays */}
-                <div className="absolute inset-0 p-3 sm:p-4 lg:p-6 flex flex-col justify-between z-30" style={{ pointerEvents: 'none' }}>
-                    {/* Top Stats */}
-                    <div className="flex justify-between items-start" style={{ pointerEvents: 'auto' }}>
-                        <div className="flex gap-2 flex-wrap">
+                    {/* Top Row - Meta Info */}
+                    <div className="flex justify-between items-start">
+                        <div className="flex flex-col gap-2.5 pointer-events-auto">
                             <div className={cn(
-                                "px-3 py-1.5 rounded-xl border flex items-center gap-2",
-                                short.trustLevel === 'authentic' ? "bg-[#10b981]/20 border-[#10b981]/30 text-emerald-400" : "bg-[#f59e0b]/20 border-[#f59e0b]/30 text-amber-400"
+                                "px-3.5 py-1.5 rounded-xl border backdrop-blur-2xl flex items-center gap-2",
+                                short.trustLevel === 'authentic' ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" : "bg-amber-500/20 border-amber-500/30 text-amber-400"
                             )}>
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">{short.trustLevel.toUpperCase()}</span>
+                                <ShieldCheck className="w-4 h-4" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{short.trustLevel}</span>
                             </div>
-                            <div className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-white/70 flex items-center gap-2">
-                                <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">STREAM_VIBE</span>
+                            <div className="px-3.5 py-1.5 rounded-xl border bg-primary/20 border-primary/30 text-primary backdrop-blur-2xl flex items-center gap-2">
+                                <TrendingUp className="w-4 h-4" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Trending</span>
                             </div>
                         </div>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                            className="w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
-                        >
-                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </button>
+
+                        <div className="flex flex-col gap-3 pointer-events-auto">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                                className="p-2.5 rounded-xl bg-black/40 border border-white/10 text-white backdrop-blur-xl transition-all active:scale-90"
+                            >
+                                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                            </button>
+                            <button
+                                className="p-2.5 rounded-xl bg-black/40 border border-white/10 text-white/70 hover:text-white backdrop-blur-xl transition-all active:scale-90"
+                                onClick={(e) => { e.stopPropagation(); }}
+                            >
+                                <MoreHorizontal className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Bottom Info Section */}
-                    <div className="flex items-end justify-between pb-16 sm:pb-4 lg:pb-0" style={{ pointerEvents: 'auto' }}>
-                        <div className="flex-1 mr-4 sm:mr-6 max-w-[55%] sm:max-w-[65%]">
+                    {/* Bottom Row - Content & Actions */}
+                    <div className="flex items-end justify-between gap-4">
+
+                        {/* Information Section */}
+                        <div className="flex-1 min-w-0 pointer-events-auto">
                             <div className="flex items-center gap-3 mb-4">
-                                <motion.div whileHover={{ scale: 1.05 }} className="relative">
-                                    <Avatar className="w-12 h-12 border-2 border-primary/30 rounded-2xl shadow-xl">
-                                        <AvatarImage src={short.creator?.avatar} />
-                                        <AvatarFallback className="bg-slate-800 text-white font-black">{short.creator?.name?.[0]}</AvatarFallback>
-                                    </Avatar>
-                                    {short.creator?.trustScore > 80 && (
-                                        <div className="absolute -bottom-1 -right-1 bg-primary text-white p-0.5 rounded-lg border-2 border-slate-900">
-                                            <Sparkles className="w-2 h-2" />
-                                        </div>
-                                    )}
-                                </motion.div>
-                                <div className="flex-1">
-                                    <h3 className="text-sm sm:text-lg font-black text-white leading-tight uppercase tracking-tight flex items-center gap-2 truncate">
+                                <Avatar className="w-11 h-11 border-2 border-primary/40 p-0.5 bg-black">
+                                    <AvatarImage src={short.creator?.avatar} className="rounded-full object-cover" />
+                                    <AvatarFallback className="bg-slate-800 text-white font-black">{short.creator?.name?.[0]}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col min-w-0">
+                                    <h3 className="text-[15px] font-black text-white tracking-tight flex items-center gap-1.5 truncate">
                                         {short.creator?.name}
-                                        {short.creator?.isFollowing && <Check className="w-3 h-3 text-primary" />}
+                                        <div className="w-3.5 h-3.5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                                            <Check className="w-2 h-2 text-white" />
+                                        </div>
                                     </h3>
-                                    <p className="text-[10px] text-white/50 font-black uppercase tracking-widest">@{short.creator?.handle}</p>
+                                    <span className="text-[10px] font-bold text-white/50 tracking-[0.1em] uppercase truncate">@{short.creator?.handle}</span>
                                 </div>
                                 <Button
                                     size="sm"
@@ -205,7 +228,7 @@ const ShortItem = ({
                                         }
                                     }}
                                     className={cn(
-                                        "rounded-xl font-black text-[10px] uppercase tracking-widest h-9 px-4 transition-all",
+                                        "h-7 px-3.5 rounded-lg text-[10px] font-black tracking-widest uppercase ml-1 flex-shrink-0 transition-all",
                                         short.creator?.isFollowing
                                             ? "bg-white/10 border border-white/10 text-white hover:bg-white/20"
                                             : "bg-primary hover:bg-primary/80 text-white shadow-lg shadow-primary/20"
@@ -214,33 +237,31 @@ const ShortItem = ({
                                     {short.creator?.isFollowing ? 'Following' : 'Follow'}
                                 </Button>
                             </div>
-                            <div className="bg-black/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 group-hover/video:bg-black/80 transition-all">
-                                <p className="text-white text-xs sm:text-sm leading-relaxed line-clamp-2 italic opacity-90">
-                                    {short.caption || "Synchronizing visual fragments..."}
+
+                            <div className="bg-black/30 backdrop-blur-3xl border border-white/10 rounded-[20px] p-4.5 shadow-2xl">
+                                <p className="text-white text-[13px] sm:text-sm font-medium leading-relaxed italic">
+                                    "{short.caption}"
                                 </p>
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex gap-2.5 mt-3.5 overflow-x-auto scrollbar-hide">
                                     {short.hashtags?.map((tag: string) => (
-                                        <span key={tag} className="text-primary text-[10px] font-black uppercase tracking-widest">#{tag}</span>
+                                        <span key={tag} className="text-primary text-[10px] font-black tracking-tighter bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20">#{tag}</span>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Action Bar (Vertical) - MUST have pointer-events-auto */}
-                        <div
-                            className="flex flex-col gap-4 items-center pb-4 flex-shrink-0"
-                            style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
-                        >
+                        {/* Side Action Bar */}
+                        <div className="flex flex-col gap-5 items-center flex-shrink-0 pointer-events-auto">
                             <ActionButton
                                 icon={Heart}
-                                label={formatNumber(short.likesCount)}
+                                count={formatNumber(short.likesCount)}
                                 color="rose-500"
                                 isActive={short.isLiked}
                                 onClick={() => onLikeToggle(short._id, short.isLiked)}
                             />
                             <ActionButton
                                 icon={MessageCircle}
-                                label={formatNumber(short.commentsCount)}
+                                count={formatNumber(short.commentsCount)}
                                 color="primary"
                                 onClick={onCommentClick}
                             />
@@ -254,33 +275,27 @@ const ShortItem = ({
                             <ActionButton
                                 icon={Share2}
                                 label="SHARE"
-                                color="white"
                                 onClick={() => { }}
                             />
                             {isOwner && (
                                 <ActionButton
                                     icon={Trash2}
                                     label="DELETE"
-                                    color="white"
-                                    onClick={(e: any) => {
-                                        e.stopPropagation();
-                                        if (confirm('Delete this transmission?')) {
+                                    onClick={() => {
+                                        if (confirm('Initiate deletion protocol?')) {
                                             deleteMutation.mutate(short._id);
                                         }
                                     }}
                                 />
                             )}
-                            <button className="w-12 h-12 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
-                                <MoreHorizontal className="w-6 h-6" />
-                            </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Progress Bar (at bottom of video) */}
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/5 z-30">
+                {/* 4. Bottom Progress Bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/5 z-30 pointer-events-none">
                     <motion.div
-                        className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.7)]"
+                        className="h-full bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)]"
                         initial={{ width: 0 }}
                         animate={isActive ? { width: '100%' } : { width: 0 }}
                         transition={{ duration: 30, ease: 'linear', repeat: Infinity }}
@@ -291,42 +306,54 @@ const ShortItem = ({
     );
 };
 
-const ActionButton = ({ icon: Icon, color, isActive = false, onClick }: any) => {
+const ActionButton = ({ icon: Icon, color, isActive = false, onClick, label, count }: any) => {
     const getColors = () => {
         if (color === 'rose-500') {
             return isActive
-                ? 'bg-rose-500/30 border-rose-500 text-rose-400'
-                : 'bg-black/70 border-white/30 text-white';
+                ? 'bg-rose-500/30 border-rose-500/50 text-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.3)]'
+                : 'bg-black/40 border-white/10 text-white hover:bg-black/60';
         }
         if (color === 'primary') {
             return isActive
-                ? 'bg-primary/30 border-primary text-primary'
-                : 'bg-black/70 border-white/30 text-white';
+                ? 'bg-primary/30 border-primary/50 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]'
+                : 'bg-black/40 border-white/10 text-white hover:bg-black/60';
         }
         if (color === 'amber-400') {
             return isActive
-                ? 'bg-amber-400/30 border-amber-400 text-amber-400'
-                : 'bg-black/70 border-white/30 text-white';
+                ? 'bg-amber-400/30 border-amber-400/50 text-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
+                : 'bg-black/40 border-white/10 text-white hover:bg-black/60';
         }
-        return 'bg-black/70 border-white/30 text-white';
+        return 'bg-black/40 border-white/10 text-white hover:bg-black/60';
     };
 
     return (
-        <button
-            type="button"
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick?.();
-            }}
-            className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center border-2 shadow-2xl backdrop-blur-md",
-                "active:scale-90 transition-transform cursor-pointer",
-                getColors()
+        <div className="flex flex-col items-center gap-1.5 group">
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClick?.();
+                }}
+                className={cn(
+                    "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border backdrop-blur-md transition-all duration-300",
+                    "active:scale-90 touch-manipulation cursor-pointer",
+                    getColors()
+                )}
+                style={{ pointerEvents: 'auto' }}
+            >
+                <Icon className={cn("w-6 h-6 sm:w-7 sm:h-7 transition-transform", isActive && "fill-current scale-110")} />
+            </button>
+            {count !== undefined && (
+                <span className="text-[10px] sm:text-xs font-black text-white/70 tracking-widest uppercase">
+                    {count}
+                </span>
             )}
-            style={{ pointerEvents: 'auto' }}
-        >
-            <Icon className={cn("w-7 h-7", isActive && "fill-current")} />
-        </button>
+            {label && !count && (
+                <span className="text-[8px] sm:text-[10px] font-black text-white/50 tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+                    {label}
+                </span>
+            )}
+        </div>
     );
 };
 
@@ -470,12 +497,12 @@ export default function ShortsPage() {
     }
 
     return (
-        <div className="relative w-full h-[calc(100vh-160px)] sm:h-[calc(100vh-180px)] lg:h-[calc(100vh-100px)] flex flex-col items-center bg-slate-950/50 rounded-xl sm:rounded-2xl lg:rounded-[2rem] overflow-hidden border border-white/5">
+        <div className="relative w-full h-[100dvh] flex flex-col items-center bg-black overflow-hidden overscroll-none">
             {/* Main Scrolling Feed */}
             <div
                 ref={containerRef}
                 onScroll={handleScroll}
-                className="h-full w-full overflow-y-scroll snap-y snap-mandatory relative z-10"
+                className="h-full w-full overflow-y-scroll snap-y snap-mandatory relative z-10 no-scrollbar"
                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {shorts.map((short, index) => (
@@ -493,16 +520,16 @@ export default function ShortsPage() {
                 ))}
             </div>
 
-            {/* Navigation Overlay - Contained within parent */}
-            <div className="absolute top-1/2 right-2 lg:right-8 -translate-y-1/2 z-50 flex flex-col gap-4 lg:gap-6 pointer-events-auto">
+            {/* Navigation Overlay - Desktop Only */}
+            <div className="hidden md:flex absolute top-1/2 right-8 -translate-y-1/2 z-50 flex-col gap-6 pointer-events-auto">
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => scrollToIndex(currentIndex - 1)}
                     disabled={currentIndex === 0}
-                    className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-black/40 border border-white/10 text-white hover:bg-black/60 shadow-2xl backdrop-blur-md disabled:opacity-20 flex-shrink-0"
+                    className="w-12 h-12 rounded-2xl bg-black/40 border border-white/10 text-white hover:bg-black/60 shadow-2xl backdrop-blur-md disabled:opacity-20 flex-shrink-0"
                 >
-                    <ChevronUp className="w-5 h-5 lg:w-6 lg:h-6" />
+                    <ChevronUp className="w-6 h-6" />
                 </Button>
 
                 <div className="flex flex-col items-center gap-2">
@@ -519,102 +546,140 @@ export default function ShortsPage() {
                     size="icon"
                     onClick={() => scrollToIndex(currentIndex + 1)}
                     disabled={currentIndex === shorts.length - 1 && !hasNextPage}
-                    className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-black/40 border border-white/10 text-white hover:bg-black/60 shadow-2xl backdrop-blur-md disabled:opacity-20 flex-shrink-0"
+                    className="w-12 h-12 rounded-2xl bg-black/40 border border-white/10 text-white hover:bg-black/60 shadow-2xl backdrop-blur-md disabled:opacity-20 flex-shrink-0"
                 >
-                    <ChevronDown className="w-5 h-5 lg:w-6 lg:h-6" />
+                    <ChevronDown className="w-6 h-6" />
                 </Button>
             </div>
 
-            {/* Create Button Overlay */}
-            <div className="absolute bottom-6 left-4 lg:bottom-10 lg:left-10 z-50">
+            {/* Create Button Overlay - Adjusted for 100dvh */}
+            <div className="absolute bottom-24 sm:bottom-10 left-6 sm:left-10 z-50">
                 <motion.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsCreateOpen(true)}
-                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-rose-400 p-0.5 shadow-2xl shadow-primary/40 group"
+                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-rose-400 p-0.5 shadow-2xl shadow-primary/40 group"
                 >
-                    <div className="w-full h-full bg-slate-900 rounded-[0.9rem] lg:rounded-[1.3rem] flex items-center justify-center transition-all group-hover:bg-transparent">
-                        <Plus className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+                    <div className="w-full h-full bg-slate-900 rounded-[1.3rem] flex items-center justify-center transition-all group-hover:bg-transparent">
+                        <Plus className="w-7 h-7 text-white" />
                     </div>
                 </motion.button>
             </div>
 
-            {/* Comments Right Panel */}
+            {/* Comments Panel - Hybrid Responsive */}
             <AnimatePresence>
                 {isCommentOpen && (
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'tween', duration: 0.25 }}
-                        className="fixed inset-0 md:absolute md:right-0 md:top-0 md:bottom-0 md:left-auto z-[100] w-full md:w-[400px] bg-[#0c0c0e]/98 md:border-l border-white/10 p-4 sm:p-6 md:p-8 flex flex-col shadow-2xl md:rounded-l-[2rem] backdrop-blur-xl safe-area-inset-bottom"
-                    >
-                        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-shrink-0">
-                            <h3 className="font-heading font-black text-lg sm:text-xl text-white uppercase italic tracking-tighter flex items-center gap-2 sm:gap-3">
-                                <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                                Comments
-                            </h3>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setIsCommentOpen(false)}
-                                className="text-white/40 hover:text-white -mr-2"
-                            >
-                                <X className="w-6 h-6" />
-                            </Button>
-                        </div>
+                    <>
+                        {/* Backdrop for mobile */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsCommentOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] md:hidden"
+                        />
 
-                        <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pr-1 mb-4 no-scrollbar overscroll-contain">
-                            {loadingComments ? (
-                                <div className="flex justify-center py-16"><Loader2 className="animate-spin text-primary" /></div>
-                            ) : comments.length === 0 ? (
-                                <div className="text-center py-16 opacity-30">
-                                    <Zap className="w-12 h-12 mx-auto mb-3" />
-                                    <p className="font-black uppercase tracking-widest text-[10px]">No comments yet</p>
-                                </div>
-                            ) : (
-                                comments.map((comment: any) => (
-                                    <div key={comment._id} className="flex gap-3">
-                                        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl border border-white/10 flex-shrink-0">
-                                            <AvatarImage src={comment.author?.avatar} />
-                                            <AvatarFallback className="bg-slate-800 text-white font-black text-xs">{comment.author?.name?.[0]}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-xs sm:text-sm font-bold text-white truncate">{comment.author?.name}</span>
-                                            </div>
-                                            <div className="bg-white/5 border border-white/5 rounded-xl sm:rounded-2xl rounded-tl-sm p-3 sm:p-4">
-                                                <p className="text-white/80 text-xs sm:text-sm leading-relaxed">{comment.content}</p>
-                                            </div>
-                                            <div className="flex items-center gap-4 mt-2 px-1">
-                                                <button className="flex items-center gap-1 text-[10px] font-bold text-white/30 hover:text-rose-500">
-                                                    <Heart className="w-3 h-3" /> {comment.likesCount || 0}
-                                                </button>
+                        <motion.div
+                            initial={window.innerWidth < 768 ? { y: '100%' } : { x: '100%' }}
+                            animate={window.innerWidth < 768 ? { y: 0 } : { x: 0 }}
+                            exit={window.innerWidth < 768 ? { y: '100%' } : { x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className={cn(
+                                "fixed z-[100] bg-[#0c0c0e]/95 backdrop-blur-3xl shadow-[0_-20px_80px_rgba(0,0,0,0.5)] flex flex-col",
+                                "bottom-0 left-0 right-0 h-[75vh] rounded-t-[2.5rem] border-t border-white/10", // Mobile
+                                "md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-[450px] md:h-full md:rounded-l-[3rem] md:border-l md:border-t-0" // Desktop
+                            )}
+                        >
+                            {/* Drag Indicator for Mobile */}
+                            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mt-4 mb-2 md:hidden" />
+
+                            <div className="flex items-center justify-between p-6 sm:p-8 pb-4 flex-shrink-0">
+                                <h3 className="text-xl sm:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
+                                    <MessageCircle className="w-6 h-6 text-primary" />
+                                    Comments
+                                    <span className="text-xs not-italic font-bold text-white/30 ml-2">{comments.length}</span>
+                                </h3>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setIsCommentOpen(false)}
+                                    className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 text-white/40 hover:text-white transition-all"
+                                >
+                                    <X className="w-5 h-5" />
+                                </Button>
+                            </div>
+
+                            {/* Comments Scroll Area */}
+                            <div className="flex-1 overflow-y-auto px-6 sm:px-8 space-y-6 no-scrollbar overscroll-contain pb-32 md:pb-8">
+                                {loadingComments ? (
+                                    <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Syncing Data...</p>
+                                    </div>
+                                ) : comments.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 opacity-20 text-center">
+                                        <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                                            <Zap className="w-8 h-8" />
+                                        </div>
+                                        <p className="text-sm font-black uppercase tracking-widest">Digital Silence</p>
+                                        <p className="text-[10px] font-bold mt-2">BE THE FIRST TO BROADCAST A VIBE</p>
+                                    </div>
+                                ) : (
+                                    comments.map((comment: any) => (
+                                        <div key={comment._id} className="flex gap-4 group">
+                                            <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border border-white/10 flex-shrink-0 bg-black">
+                                                <AvatarImage src={comment.author?.avatar} className="rounded-xl" />
+                                                <AvatarFallback className="bg-slate-800 text-white font-black text-xs uppercase">{comment.author?.name?.[0]}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-sm font-black text-white uppercase tracking-tight">{comment.author?.name}</span>
+                                                    <span className="text-[9px] font-bold text-white/20 uppercase">2h ago</span>
+                                                </div>
+                                                <div className="bg-white/[0.03] border border-white/[0.05] rounded-2xl rounded-tl-sm p-4 relative">
+                                                    <p className="text-white/80 text-sm leading-relaxed">{comment.content}</p>
+                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button className="text-white/20 hover:text-rose-500">
+                                                            <Heart className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-5 mt-2.5 px-1">
+                                                    <button className="flex items-center gap-1.5 text-[10px] font-black text-white/30 hover:text-primary uppercase tracking-widest transition-colors">
+                                                        <MessageSquare className="w-3 h-3" /> Reply
+                                                    </button>
+                                                    <button className="flex items-center gap-1.5 text-[10px] font-black text-white/30 hover:text-rose-500 uppercase tracking-widest transition-colors">
+                                                        <Heart className="w-3 h-3" /> {comment.likesCount || 0}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    ))
+                                )}
+                            </div>
 
-                        <div className="flex gap-2 sm:gap-3 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-2 sm:p-3 items-center focus-within:border-primary/50 transition-all flex-shrink-0 pb-[env(safe-area-inset-bottom,8px)]">
-                            <input
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
-                                placeholder="Write a comment..."
-                                className="bg-transparent border-none text-white text-sm focus:outline-none flex-1 placeholder:text-white/30 px-2 sm:px-3 min-w-0"
-                            />
-                            <Button
-                                size="sm"
-                                onClick={handlePostComment}
-                                disabled={!commentText.trim() || createCommentMutation.isPending}
-                                className="bg-primary hover:bg-primary/80 text-white rounded-xl sm:rounded-2xl h-9 sm:h-10 px-4 sm:px-6 font-bold text-xs sm:text-sm flex-shrink-0"
-                            >
-                                {createCommentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send'}
-                            </Button>
-                        </div>
-                    </motion.div>
+                            {/* Input Area - Fixed at Bottom of Panel */}
+                            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-gradient-to-t from-[#0c0c0e] via-[#0c0c0e] to-transparent pt-12 safe-area-inset-bottom">
+                                <div className="flex gap-3 bg-white/5 border border-white/10 rounded-[1.5rem] p-2 pl-5 items-center focus-within:border-primary/50 focus-within:bg-white/[0.08] transition-all shadow-2xl">
+                                    <input
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
+                                        placeholder="Add to the conversation..."
+                                        className="bg-transparent border-none text-white text-sm focus:outline-none flex-1 placeholder:text-white/20 py-2 sm:py-3"
+                                    />
+                                    <Button
+                                        size="icon"
+                                        onClick={handlePostComment}
+                                        disabled={!commentText.trim() || createCommentMutation.isPending}
+                                        className="bg-primary hover:bg-primary/80 text-white rounded-xl w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 shadow-lg shadow-primary/20"
+                                    >
+                                        {createCommentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-5 h-5" />}
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
