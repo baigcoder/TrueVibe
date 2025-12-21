@@ -7,35 +7,46 @@ import { initializeSocketIO } from './socket/index.js';
 // Import workers to start BullMQ job processors
 import './jobs/worker.js';
 
-const startServer = async (): Promise<void> => {
-    console.log('🏁 Starting server initialization...');
-    try {
-        // Connect to databases
-        await connectDatabase();
-        getRedisClient(); // Initialize Redis connection
+console.log('🔵 Server script initialized. Checking environment...');
+console.log('   NODE_ENV:', process.env.NODE_ENV);
+console.log('   PORT:', process.env.PORT);
 
-        // Create Express app
+const startServer = async (): Promise<void> => {
+    console.log('🏁 Starting server initialization sequence...');
+    try {
+        // 1. Create Express app
         const app = createApp();
 
-        // Create HTTP server
+        // 2. Create HTTP server
         const server = http.createServer(app);
 
-        // Initialize Socket.IO
+        // 3. Initialize Socket.IO
         initializeSocketIO(server);
 
-        // Start server - explicitly bind to 0.0.0.0 for container environments
-        server.listen(config.port, '0.0.0.0', () => {
-            const host = '0.0.0.0';
+        // 4. Start listening IMMEDIATELY so healthchecks pass
+        const port = config.port;
+        const host = '0.0.0.0';
+
+        server.listen(port, host, () => {
             console.log(`
-🚀 TrueVibe Server is running!
+🚀 TrueVibe Server is LISTENING!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 Environment: ${config.env}
-🌐 URL: http://${host}:${config.port}
-📚 API: http://${host}:${config.port}/api/v1
-💓 Health: http://${host}:${config.port}/health
+🌐 URL: http://${host}:${port}
+📚 API: http://${host}:${port}/api/v1
+💓 Health: http://${host}:${port}/health
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      `);
+            `);
         });
+
+        // 5. Connect to databases in the background/after listening
+        console.log('🔌 Connecting to MongoDB...');
+        await connectDatabase();
+
+        console.log('🔌 Connecting to Redis...');
+        getRedisClient(); // Initialize Redis connection
+
+        console.log('✅ All services initialized successfully.');
 
         // Graceful shutdown
         const shutdown = async (signal: string) => {
