@@ -226,8 +226,11 @@ const ShortItem = ({
                             </div>
                         </div>
 
-                        {/* Action Bar (Vertical) - High z-index for touch */}
-                        <div className="flex flex-col gap-4 sm:gap-4 lg:gap-5 items-center pb-4 flex-shrink-0" style={{ zIndex: 50 }}>
+                        {/* Action Bar (Vertical) - MUST have pointer-events-auto */}
+                        <div
+                            className="flex flex-col gap-4 items-center pb-4 flex-shrink-0"
+                            style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+                        >
                             <ActionButton
                                 icon={Heart}
                                 label={formatNumber(short.likesCount)}
@@ -288,54 +291,42 @@ const ShortItem = ({
     );
 };
 
-const ActionButton = ({ icon: Icon, label, color, isActive = false, onClick }: any) => {
-    const touchedRef = React.useRef(false);
-
-    const colorClasses: Record<string, string> = {
-        "rose-500": isActive ? "bg-rose-500/30 border-rose-500/50 text-rose-400" : "bg-black/60 border-white/20 text-white",
-        "primary": isActive ? "bg-primary/30 border-primary/50 text-primary" : "bg-black/60 border-white/20 text-white",
-        "amber-400": isActive ? "bg-amber-400/30 border-amber-400/50 text-amber-400" : "bg-black/60 border-white/20 text-white",
-        "white": isActive ? "bg-white/30 border-white/50 text-white" : "bg-black/60 border-white/20 text-white"
-    };
-
-    const handleTouchStart = () => {
-        touchedRef.current = true;
-    };
-
-    const handleTouchEnd = (e: React.TouchEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (touchedRef.current) {
-            onClick?.();
-            // Reset after a delay to allow for next interaction
-            setTimeout(() => { touchedRef.current = false; }, 300);
+const ActionButton = ({ icon: Icon, color, isActive = false, onClick }: any) => {
+    const getColors = () => {
+        if (color === 'rose-500') {
+            return isActive
+                ? 'bg-rose-500/30 border-rose-500 text-rose-400'
+                : 'bg-black/70 border-white/30 text-white';
         }
-    };
-
-    const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        // Only fire if not already handled by touch
-        if (!touchedRef.current) {
-            onClick?.();
+        if (color === 'primary') {
+            return isActive
+                ? 'bg-primary/30 border-primary text-primary'
+                : 'bg-black/70 border-white/30 text-white';
         }
+        if (color === 'amber-400') {
+            return isActive
+                ? 'bg-amber-400/30 border-amber-400 text-amber-400'
+                : 'bg-black/70 border-white/30 text-white';
+        }
+        return 'bg-black/70 border-white/30 text-white';
     };
 
     return (
-        <div className="flex flex-col items-center gap-1">
-            <button
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                onClick={handleClick}
-                className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center border-2 shadow-2xl backdrop-blur-md active:scale-90 transition-transform",
-                    colorClasses[color] || colorClasses["white"]
-                )}
-                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
-            >
-                <Icon className={cn("w-6 h-6", isActive && "fill-current")} />
-            </button>
-            <span className="text-[9px] font-bold text-white/60 uppercase tracking-tight hidden lg:block">{label}</span>
-        </div>
+        <button
+            type="button"
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick?.();
+            }}
+            className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center border-2 shadow-2xl backdrop-blur-md",
+                "active:scale-90 transition-transform cursor-pointer",
+                getColors()
+            )}
+            style={{ pointerEvents: 'auto' }}
+        >
+            <Icon className={cn("w-7 h-7", isActive && "fill-current")} />
+        </button>
     );
 };
 
