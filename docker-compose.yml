@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Main API server
+  app:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: truevibe-api
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/truevibe
+      - REDIS_URL=redis://redis:6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:-your-access-secret}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-refresh-secret}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+    depends_on:
+      - mongodb
+      - redis
+    restart: unless-stopped
+    networks:
+      - truevibe-network
+
+  # Background job worker
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: truevibe-worker
+    command: node dist/jobs/worker.js
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/truevibe
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    restart: unless-stopped
+    networks:
+      - truevibe-network
+
+  # MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: truevibe-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - truevibe-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: truevibe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - truevibe-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+
+networks:
+  truevibe-network:
+    driver: bridge

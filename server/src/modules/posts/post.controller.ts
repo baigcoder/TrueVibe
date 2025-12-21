@@ -1,0 +1,1066 @@
+import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
+import { Post } from './Post.model.js';
+import { Media } from './Media.model.js';
+import { Draft } from './Draft.model.js';
+import { AIAnalysis } from './AIAnalysis.model.js';
+import { Profile } from '../users/Profile.model.js';
+import { Comment } from '../comments/Comment.model.js';
+import { NotFoundError, ForbiddenError } from '../../shared/middleware/error.middleware.js';
+import { addAIAnalysisJob } from '../../jobs/queues.js';
+import { createNotification } from '../notifications/notification.service.js';
+
+// Create post
+export const createPost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const { content, mediaIds, visibility } = req.body;
+
+        // Create post
+        const post = await Post.create({
+            userId,
+            content,
+            media: mediaIds || [],
+            visibility: visibility || 'public',
+            trustLevel: mediaIds?.length ? 'pending' : 'authentic', // No media = authentic
+        });
+
+        // If there are media files, queue AI analysis
+        if (mediaIds?.length) {
+            for (const mediaId of mediaIds) {
+                await addAIAnalysisJob({
+                    mediaId,
+                    postId: post._id.toString(),
+                });
+            }
+        }
+
+        // Populate for response
+        const populatedPost = await Post.findById(post._id)
+            .populate('media')
+            .populate({
+                path: 'userId',
+                model: 'Profile',
+                foreignField: 'userId',
+                localField: 'userId',
+            });
+
+        res.status(201).json({
+            success: true,
+            data: { post: populatedPost },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get post by ID
+export const getPost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const post = await Post.findOne({ _id: id, isDeleted: false })
+            .populate('media')
+            .populate('aiAnalysisId');
+
+        if (!post) {
+            throw new NotFoundError('Post');
+        }
+
+        // Get author profile
+        const profile = await Profile.findOne({ userId: post.userId });
+
+        // Check if liked/saved by current user
+        const isLiked = req.user
+            ? post.likes.some((id) => id.toString() === req.user!.userId)
+            : false;
+        const isSaved = req.user
+            ? post.savedBy.some((id) => id.toString() === req.user!.userId)
+            : false;
+
+        res.json({
+            success: true,
+            data: {
+                post: {
+                    ...post.toJSON(),
+                    author: profile,
+                    isLiked,
+                    isSaved,
+                },
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Update/Edit post
+export const updatePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+        const { content, visibility } = req.body;
+
+        const post = await Post.findOne({ _id: id, isDeleted: false });
+
+        if (!post) {
+            throw new NotFoundError('Post');
+        }
+
+        if (post.userId.toString() !== userId) {
+            throw new ForbiddenError('Not authorized to edit this post');
+        }
+
+        // Track edit history
+        const editedAt = new Date();
+
+        // Update fields
+        if (content !== undefined) {
+            post.content = content;
+        }
+        if (visibility !== undefined) {
+            post.visibility = visibility;
+        }
+
+        // Mark as edited
+        (post as any).editedAt = editedAt;
+        (post as any).isEdited = true;
+
+        await post.save();
+
+        // Populate for response
+        const populatedPost = await Post.findById(post._id)
+            .populate('media')
+            .lean();
+
+        const profile = await Profile.findOne({ userId: post.userId });
+
+        res.json({
+            success: true,
+            data: {
+                post: {
+                    ...populatedPost,
+                    author: profile,
+                },
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Delete post
+export const deletePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findById(id);
+
+        if (!post) {
+            throw new NotFoundError('Post');
+        }
+
+        if (post.userId.toString() !== userId && req.user!.role !== 'admin') {
+            throw new ForbiddenError('Not authorized to delete this post');
+        }
+
+        // Soft delete
+        post.isDeleted = true;
+        await post.save();
+
+        res.json({
+            success: true,
+            message: 'Post deleted successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Like post
+export const likePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        // First check if post exists and if already liked
+        const existingPost = await Post.findOne({ _id: id, isDeleted: false });
+
+        if (!existingPost) {
+            throw new NotFoundError('Post');
+        }
+
+        // If already liked, just return current count (idempotent)
+        if (existingPost.likes.includes(userId)) {
+            res.json({
+                success: true,
+                data: { likesCount: existingPost.likesCount, alreadyLiked: true },
+            });
+            return;
+        }
+
+        // Add like
+        const post = await Post.findOneAndUpdate(
+            { _id: id, isDeleted: false },
+            { $push: { likes: userId }, $inc: { likesCount: 1 } },
+            { new: true }
+        );
+
+        // Notify post owner
+        if (post && post.userId.toString() !== req.user!.userId) {
+            const liker = await Profile.findOne({ userId: req.user!.userId });
+            createNotification({
+                userId: post.userId.toString(),
+                type: 'like',
+                title: `${liker?.name || 'Someone'} liked your post`,
+                body: post.content.substring(0, 50),
+                senderId: req.user!.userId,
+                link: `/app/posts/${id}`,
+            });
+        }
+
+        res.json({
+            success: true,
+            data: { likesCount: post?.likesCount || existingPost.likesCount + 1 },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Unlike post
+export const unlikePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        // First check if post exists
+        const existingPost = await Post.findOne({ _id: id, isDeleted: false });
+
+        if (!existingPost) {
+            throw new NotFoundError('Post');
+        }
+
+        // If not liked, just return current count (idempotent)
+        if (!existingPost.likes.includes(userId)) {
+            res.json({
+                success: true,
+                data: { likesCount: existingPost.likesCount, notLiked: true },
+            });
+            return;
+        }
+
+        // Remove like
+        const post = await Post.findOneAndUpdate(
+            { _id: id, isDeleted: false },
+            { $pull: { likes: userId }, $inc: { likesCount: -1 } },
+            { new: true }
+        );
+
+        res.json({
+            success: true,
+            data: { likesCount: post?.likesCount || Math.max(0, existingPost.likesCount - 1) },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Save post
+export const savePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findOneAndUpdate(
+            { _id: id, isDeleted: false, savedBy: { $ne: userId } },
+            { $push: { savedBy: userId } },
+            { new: true }
+        );
+
+        if (!post) {
+            throw new NotFoundError('Post or already saved');
+        }
+
+        res.json({
+            success: true,
+            message: 'Post saved',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Unsave post
+export const unsavePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findOneAndUpdate(
+            { _id: id, savedBy: userId },
+            { $pull: { savedBy: userId } },
+            { new: true }
+        );
+
+        if (!post) {
+            throw new NotFoundError('Post or not saved');
+        }
+
+        res.json({
+            success: true,
+            message: 'Post unsaved',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Repost
+export const repost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findOneAndUpdate(
+            { _id: id, isDeleted: false, reposts: { $ne: userId } },
+            { $push: { reposts: userId }, $inc: { sharesCount: 1 } },
+            { new: true }
+        );
+
+        if (!post) {
+            throw new NotFoundError('Post or already reposted');
+        }
+
+        // Notify post owner
+        if (post.userId.toString() !== req.user!.userId) {
+            const reposter = await Profile.findOne({ userId: req.user!.userId });
+            createNotification({
+                userId: post.userId.toString(),
+                type: 'mention', // Using mention for repost notification
+                title: `${reposter?.name || 'Someone'} reposted your content`,
+                body: post.content.substring(0, 50),
+                senderId: req.user!.userId,
+                link: `/app/posts/${id}`,
+            });
+        }
+
+        res.json({
+            success: true,
+            data: { sharesCount: post.sharesCount },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get AI analysis for post
+export const getAIAnalysis = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const post = await Post.findById(id);
+        if (!post) {
+            throw new NotFoundError('Post');
+        }
+
+        const analysis = await AIAnalysis.findOne({ postId: id });
+
+        res.json({
+            success: true,
+            data: {
+                analysis,
+                trustLevel: post.trustLevel,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get user posts
+export const getUserPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { userId } = req.params;
+        const { cursor, limit = '10' } = req.query;
+
+        const query: Record<string, unknown> = {
+            userId,
+            isDeleted: false,
+            visibility: 'public',
+        };
+
+        if (cursor) {
+            query._id = { $lt: cursor };
+        }
+
+        const posts = await Post.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit as string, 10) + 1)
+            .populate('media');
+
+        const hasMore = posts.length > parseInt(limit as string, 10);
+        const results = hasMore ? posts.slice(0, -1) : posts;
+
+        // Get profile
+        const profile = await Profile.findOne({ userId });
+
+        // Attach author to posts
+        const postsWithAuthor = results.map((post) => ({
+            ...post.toJSON(),
+            author: profile,
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                posts: postsWithAuthor,
+                cursor: hasMore ? results[results.length - 1]._id : null,
+                hasMore,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Vote on poll
+export const votePoll = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { optionIndex } = req.body;
+        const userId = req.user!.userId;
+
+        const post = await Post.findOne({ _id: id, isDeleted: false, hasPoll: true });
+
+        if (!post || !post.poll) {
+            throw new NotFoundError('Post with poll');
+        }
+
+        // Check if poll expired
+        if (post.poll.expiresAt && new Date() > post.poll.expiresAt) {
+            res.status(400).json({ success: false, error: 'Poll has expired' });
+            return;
+        }
+
+        // Check if user already voted (if not multiple choice)
+        const hasVoted = post.poll.options.some(opt => opt.votes.includes(userId));
+        if (hasVoted && !post.poll.allowMultiple) {
+            res.status(400).json({ success: false, error: 'Already voted' });
+            return;
+        }
+
+        // Validate option index
+        if (optionIndex < 0 || optionIndex >= post.poll.options.length) {
+            res.status(400).json({ success: false, error: 'Invalid option' });
+            return;
+        }
+
+        // Add vote
+        (post.poll.options[optionIndex] as any).votes.push(userId);
+        (post.poll.options[optionIndex] as any).votesCount += 1;
+        post.poll.totalVotes += 1;
+        await post.save();
+
+        res.json({
+            success: true,
+            data: { poll: post.poll },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Pin post to profile
+export const pinPost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findOne({ _id: id, userId, isDeleted: false });
+
+        if (!post) {
+            throw new NotFoundError('Post');
+        }
+
+        // Unpin all other posts first
+        await Post.updateMany({ userId, isPinned: true }, { isPinned: false });
+
+        // Pin this post
+        post.isPinned = true;
+        await post.save();
+
+        res.json({
+            success: true,
+            message: 'Post pinned to profile',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Unpin post
+export const unpinPost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findOneAndUpdate(
+            { _id: id, userId, isDeleted: false },
+            { isPinned: false },
+            { new: true }
+        );
+
+        if (!post) {
+            throw new NotFoundError('Post');
+        }
+
+        res.json({
+            success: true,
+            message: 'Post unpinned',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get posts by hashtag
+export const getHashtagPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { hashtag } = req.params;
+        const { cursor, limit = '10' } = req.query;
+
+        const normalizedTag = hashtag.toLowerCase().replace('#', '');
+
+        const query: Record<string, unknown> = {
+            hashtags: normalizedTag,
+            isDeleted: false,
+            visibility: 'public',
+        };
+
+        if (cursor) {
+            query._id = { $lt: cursor };
+        }
+
+        const posts = await Post.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit as string, 10) + 1)
+            .populate('media');
+
+        const hasMore = posts.length > parseInt(limit as string, 10);
+        const results = hasMore ? posts.slice(0, -1) : posts;
+
+        // Get unique user IDs
+        const userIds = [...new Set(results.map(p => p.userId))];
+        const profiles = await Profile.find({ userId: { $in: userIds } });
+        const profileMap = new Map(profiles.map(p => [p.userId, p]));
+
+        const postsWithAuthor = results.map(post => ({
+            ...post.toJSON(),
+            author: profileMap.get(post.userId),
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                hashtag: normalizedTag,
+                posts: postsWithAuthor,
+                cursor: hasMore ? results[results.length - 1]._id : null,
+                hasMore,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get trending hashtags
+export const getTrendingHashtags = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { limit = '10' } = req.query;
+
+        // Get hashtags from last 24 hours
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        const trending = await Post.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: oneDayAgo },
+                    isDeleted: false,
+                    visibility: 'public',
+                    hashtags: { $exists: true, $ne: [] },
+                },
+            },
+            { $unwind: '$hashtags' },
+            {
+                $group: {
+                    _id: '$hashtags',
+                    count: { $sum: 1 },
+                    engagement: { $sum: { $add: ['$likesCount', '$commentsCount', '$sharesCount'] } },
+                },
+            },
+            { $sort: { count: -1, engagement: -1 } },
+            { $limit: parseInt(limit as string, 10) },
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                hashtags: trending.map(t => ({
+                    tag: t._id,
+                    count: t.count,
+                    engagement: t.engagement,
+                })),
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Create quote post
+export const createQuotePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id: quotedPostId } = req.params;
+        const userId = req.user!.userId;
+        const { content } = req.body;
+
+        // Verify quoted post exists
+        const quotedPost = await Post.findOne({ _id: quotedPostId, isDeleted: false });
+        if (!quotedPost) {
+            throw new NotFoundError('Post to quote');
+        }
+
+        // Extract hashtags from content
+        const hashtagRegex = /#(\w+)/g;
+        const hashtags: string[] = [];
+        let match;
+        while ((match = hashtagRegex.exec(content)) !== null) {
+            hashtags.push(match[1].toLowerCase());
+        }
+
+        // Create quote post
+        const post = await Post.create({
+            userId,
+            content,
+            quotedPostId,
+            hashtags,
+            visibility: 'public',
+            trustLevel: 'authentic',
+        });
+
+        // Increment share count on original
+        await Post.updateOne(
+            { _id: quotedPostId },
+            { $inc: { sharesCount: 1 } }
+        );
+
+        // Notify original author
+        if (quotedPost.userId.toString() !== userId) {
+            const quoter = await Profile.findOne({ userId });
+            createNotification({
+                userId: quotedPost.userId.toString(),
+                type: 'mention',
+                title: `${quoter?.name || 'Someone'} quoted your post`,
+                body: content.substring(0, 50),
+                senderId: userId,
+                link: `/app/posts/${post._id}`,
+            });
+        }
+
+        // Populate for response
+        const populatedPost = await Post.findById(post._id)
+            .populate('media')
+            .populate({
+                path: 'quotedPostId',
+                populate: { path: 'media' },
+            });
+
+        const profile = await Profile.findOne({ userId });
+
+        res.status(201).json({
+            success: true,
+            data: {
+                post: {
+                    ...populatedPost!.toJSON(),
+                    author: profile,
+                },
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ============ DRAFTS ============
+
+/**
+ * Save or update a draft
+ */
+export const saveDraft = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const { draftId, content, mediaIds, poll, hashtags, visibility, scheduledFor, autoSaved } = req.body;
+
+        let draft;
+
+        if (draftId && mongoose.Types.ObjectId.isValid(draftId)) {
+            draft = await Draft.findOneAndUpdate(
+                { _id: draftId, userId },
+                {
+                    content,
+                    media: mediaIds,
+                    poll,
+                    hashtags,
+                    visibility,
+                    scheduledFor,
+                    autoSaved: autoSaved || false,
+                    lastSavedAt: new Date(),
+                },
+                { new: true, upsert: true }
+            );
+        } else {
+            draft = await Draft.create({
+                userId,
+                content,
+                media: mediaIds,
+                poll,
+                hashtags,
+                visibility,
+                scheduledFor,
+                autoSaved: autoSaved || false,
+                lastSavedAt: new Date(),
+            });
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: { draft },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get all drafts for the current user
+ */
+export const getDrafts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const drafts = await Draft.find({ userId }).sort({ lastSavedAt: -1 }).populate('media');
+
+        res.status(200).json({
+            status: 'success',
+            data: { drafts },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Delete a draft
+ */
+export const deleteDraft = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const draft = await Draft.findOneAndDelete({ _id: id, userId });
+
+        if (!draft) {
+            throw new NotFoundError('Draft not found');
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Draft deleted',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Publish a draft (convert it to a post)
+ */
+export const publishDraft = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const draft = await Draft.findOne({ _id: id, userId });
+
+        if (!draft) {
+            throw new NotFoundError('Draft not found');
+        }
+
+        // Create the post
+        const postData: any = {
+            userId,
+            content: draft.content,
+            media: draft.media,
+            hashtags: draft.hashtags,
+            visibility: draft.visibility,
+            trustLevel: draft.media?.length ? 'pending' : 'authentic',
+        };
+
+        if (draft.poll) {
+            postData.poll = {
+                options: draft.poll.options.map(o => ({ text: o.text, votes: [], votesCount: 0 })),
+                allowMultiple: draft.poll.allowMultiple,
+                totalVotes: 0,
+            };
+            if (draft.poll.expiresIn) {
+                const expiresAt = new Date();
+                expiresAt.setHours(expiresAt.getHours() + draft.poll.expiresIn);
+                postData.poll.expiresAt = expiresAt;
+            }
+            postData.hasPoll = true;
+        }
+
+        const post = await Post.create(postData);
+
+        // Queue AI analysis if needed
+        if (draft.media?.length) {
+            for (const mediaId of draft.media) {
+                await addAIAnalysisJob({
+                    mediaId: mediaId.toString(),
+                    postId: post._id.toString(),
+                });
+            }
+        }
+
+        // Delete the draft
+        await Draft.findByIdAndDelete(id);
+
+        res.status(201).json({
+            status: 'success',
+            data: { post },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ============ SCHEDULING ============
+
+/**
+ * Get all scheduled posts for the current user
+ */
+export const getScheduledPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        // Drafts with scheduledFor in the future are "scheduled posts"
+        const scheduledPosts = await Draft.find({
+            userId,
+            scheduledFor: { $gt: new Date() }
+        }).sort({ scheduledFor: 1 }).populate('media');
+
+        res.status(200).json({
+            status: 'success',
+            data: { scheduledPosts },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Cancel a scheduled post (keep as draft but remove schedule)
+ */
+export const cancelScheduledPost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const draft = await Draft.findOneAndUpdate(
+            { _id: id, userId },
+            { $unset: { scheduledFor: 1 } },
+            { new: true }
+        );
+
+        if (!draft) {
+            throw new NotFoundError('Scheduled post not found');
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: { draft },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+// ============ ANALYTICS ============
+
+/**
+ * Record a view for a post
+ */
+export const recordView = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.userId;
+
+        const post = await Post.findById(id);
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        post.views += 1;
+        if (userId && !post.uniqueViews.includes(userId)) {
+            post.uniqueViews.push(userId);
+        }
+
+        await post.save();
+
+        res.status(200).json({
+            status: 'success',
+            message: 'View recorded',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get detailed analytics for a post
+ */
+export const getPostAnalytics = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        const post = await Post.findById(id);
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        // Only the author can see detailed analytics
+        if (post.userId.toString() !== userId) {
+            throw new ForbiddenError('Access denied: You are not the author of this post');
+        }
+
+        const analytics = {
+            totalViews: post.views,
+            uniqueViews: post.uniqueViews.length,
+            likes: post.likes.length,
+            comments: post.commentsCount,
+            shares: post.sharesCount,
+            saves: post.savedBy.length,
+            engagementRate: post.views > 0
+                ? ((post.likes.length + post.commentsCount + post.sharesCount + post.savedBy.length) / post.views) * 100
+                : 0,
+            engagementCount: post.engagementCount,
+        };
+
+        res.status(200).json({
+            status: 'success',
+            data: { analytics },
+        });
+    } catch (error) {
+        next(error);
+    }
+};

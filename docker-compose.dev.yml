@@ -1,0 +1,55 @@
+version: '3.8'
+
+# Development-only: Just runs MongoDB and Redis
+# Use this for local development where you run the API separately
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: truevibe-mongodb-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_dev:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: truevibe-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Optional: Redis Commander for debugging
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: truevibe-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    profiles:
+      - debug
+
+  # Optional: Mongo Express for debugging
+  mongo-express:
+    image: mongo-express:latest
+    container_name: truevibe-mongo-express
+    ports:
+      - "8082:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongodb:27017/truevibe
+      - ME_CONFIG_BASICAUTH=false
+    depends_on:
+      - mongodb
+    profiles:
+      - debug
+
+volumes:
+  mongodb_data_dev:
+  redis_data_dev:
