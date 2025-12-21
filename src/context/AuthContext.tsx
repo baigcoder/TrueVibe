@@ -11,6 +11,7 @@ interface Profile {
     name: string;
     handle: string;
     avatar?: string;
+    coverImage?: string;
     bio?: string;
     location?: string;
     website?: string;

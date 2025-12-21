@@ -22,6 +22,7 @@ interface ProfileData {
     name: string;
     handle: string;
     avatar?: string;
+    coverImage?: string;
     bio?: string;
     location?: string;
     website?: string;
@@ -87,6 +88,7 @@ export default function ProfilePage() {
             name: currentUserProfile.name,
             handle: currentUserProfile.handle,
             avatar: currentUserProfile.avatar,
+            coverImage: currentUserProfile.coverImage,
             bio: currentUserProfile.bio,
             location: currentUserProfile.location,
             website: currentUserProfile.website,
@@ -181,34 +183,43 @@ export default function ProfilePage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="h-64 md:h-80 rounded-[2.5rem] relative overflow-hidden group shadow-[0_32px_80px_-20px_rgba(0,0,0,0.6)]"
+                        className="h-40 sm:h-56 md:h-72 lg:h-80 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden group shadow-[0_32px_80px_-20px_rgba(0,0,0,0.6)]"
                     >
-                        {/* Vibrant Aurora Background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#030712] via-[#0a0f1a] to-[#050918]">
-                            <motion.div
-                                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3], x: [0, 50, 0] }}
-                                transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] bg-indigo-500/30 rounded-full blur-[120px]"
+                        {/* Cover Image or Aurora Background */}
+                        {displayProfile.coverImage ? (
+                            <img
+                                src={displayProfile.coverImage}
+                                alt="Cover"
+                                className="absolute inset-0 w-full h-full object-cover"
                             />
-                            <motion.div
-                                animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2], x: [0, -40, 0] }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute -bottom-[20%] -right-[10%] w-[70%] h-[70%] bg-emerald-500/20 rounded-full blur-[100px]"
-                            />
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-                            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.08),transparent_40%)]" />
-                        </div>
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#030712] via-[#0a0f1a] to-[#050918]">
+                                <div className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] bg-indigo-500/30 rounded-full blur-[120px] opacity-40" />
+                                <div className="absolute -bottom-[20%] -right-[10%] w-[70%] h-[70%] bg-emerald-500/20 rounded-full blur-[100px] opacity-30" />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
                         {/* Cover Actions */}
-                        <div className="absolute bottom-6 right-6 flex gap-3 z-30">
+                        <div className="absolute bottom-3 sm:bottom-4 md:bottom-6 right-3 sm:right-4 md:right-6 flex gap-2 sm:gap-3 z-30">
                             {isOwnProfile ? (
-                                <Button
-                                    onClick={() => navigate({ to: '/app/settings' })}
-                                    className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 rounded-2xl h-11 px-6 gap-2.5 font-bold text-xs shadow-2xl transition-all hover:scale-105 active:scale-95"
-                                >
-                                    <Edit3 className="w-4 h-4 text-primary" />
-                                    Edit Profile
-                                </Button>
+                                <>
+                                    <Button
+                                        size="icon"
+                                        className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 rounded-xl sm:rounded-2xl w-9 h-9 sm:w-11 sm:h-11 shadow-2xl"
+                                        title="Change cover"
+                                    >
+                                        <Camera className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        onClick={() => navigate({ to: '/app/settings' })}
+                                        className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 rounded-xl sm:rounded-2xl h-9 sm:h-11 px-3 sm:px-6 gap-1.5 sm:gap-2.5 font-bold text-[10px] sm:text-xs shadow-2xl transition-all hover:scale-105 active:scale-95"
+                                    >
+                                        <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                        <span className="hidden sm:inline">Edit Profile</span>
+                                        <span className="sm:hidden">Edit</span>
+                                    </Button>
+                                </>
                             ) : (
                                 <div className="flex gap-3">
                                     <Button
@@ -263,55 +274,50 @@ export default function ProfilePage() {
                     </motion.div>
 
                     {/* Avatar Section */}
-                    <div className="absolute -bottom-10 left-8 md:bottom-[-20%] md:left-12 z-40">
+                    <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-3 sm:left-6 md:left-12 z-40">
                         <motion.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.2 }}
                             className="relative group"
                         >
-                            {/* Glow effect for avatar */}
-                            <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-                            <Avatar className="w-36 h-36 md:w-48 md:h-48 border-[8px] border-[#020617] rounded-[3rem] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105">
+                            <Avatar className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 border-4 sm:border-[6px] md:border-[8px] border-[#020617] rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105">
                                 <AvatarImage src={displayProfile.avatar} className="object-cover" />
-                                <AvatarFallback className="text-5xl bg-gradient-to-br from-primary via-indigo-600 to-primary text-white font-bold italic">
+                                <AvatarFallback className="text-2xl sm:text-4xl md:text-5xl bg-gradient-to-br from-primary via-indigo-600 to-primary text-white font-bold italic">
                                     {displayProfile.name?.[0]?.toUpperCase() || '?'}
                                 </AvatarFallback>
                             </Avatar>
                             {isOwnProfile && (
-                                <motion.button
-                                    whileHover={{ scale: 1.15 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="absolute bottom-2 right-2 p-3 rounded-2xl bg-primary text-white shadow-xl shadow-primary/40 border border-primary/50 z-10"
+                                <button
+                                    className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary text-white shadow-xl shadow-primary/40 border border-primary/50 z-10 hover:scale-110 active:scale-95 transition-transform"
                                 >
-                                    <Camera className="w-5 h-5" />
-                                </motion.button>
+                                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                                </button>
                             )}
                         </motion.div>
                     </div>
                 </div>
 
                 {/* Profile Info & Content Grid */}
-                <div className="px-6 md:px-12 mt-12 md:mt-16">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div className="px-4 sm:px-6 md:px-12 mt-14 sm:mt-16 md:mt-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12">
                         {/* Profile Stats & Bio Column */}
-                        <div className="lg:col-span-4 space-y-10">
+                        <div className="lg:col-span-4 space-y-6 sm:space-y-8 lg:space-y-10">
                             <section className="space-y-6">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h1 className="font-bold text-4xl text-white tracking-tight">
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-1">
+                                        <h1 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white tracking-tight">
                                             {displayProfile.name}
                                         </h1>
                                         {displayProfile.verified && (
                                             <div className="bg-primary/20 p-1 rounded-full border border-primary/20">
-                                                <ShieldCheck className="w-5 h-5 text-primary fill-primary/10" />
+                                                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary fill-primary/10" />
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-base text-slate-500 font-medium">@{displayProfile.handle}</span>
-                                        <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Member</span>
+                                        <span className="text-sm sm:text-base text-slate-500 font-medium">@{displayProfile.handle}</span>
+                                        <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Member</span>
                                     </div>
                                 </div>
 
