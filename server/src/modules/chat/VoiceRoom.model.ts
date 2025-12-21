@@ -24,7 +24,7 @@ export interface IVoiceRoom extends Document {
     admins: mongoose.Types.ObjectId[];
     participants: mongoose.Types.ObjectId[];
     speakers: mongoose.Types.ObjectId[];      // Users who can speak
-    listeners: mongoose.Types.ObjectId[];     // Users in listen-only mode
+    listenerIds: mongoose.Types.ObjectId[];   // Users in listen-only mode
     raisedHands: IRaisedHand[];              // Users requesting to speak
     pendingRequests: IPendingRequest[];
     maxParticipants: number;
@@ -97,7 +97,7 @@ const voiceRoomSchema = new Schema<IVoiceRoom>(
             type: Schema.Types.ObjectId,
             ref: 'Profile',
         }],
-        listeners: [{
+        listenerIds: [{
             type: Schema.Types.ObjectId,
             ref: 'Profile',
         }],

@@ -31,6 +31,7 @@ export const createApp = (): Application => {
 
     // Health check (no rate limiting, top priority for deployment health checks)
     app.get('/health', (req: Request, res: Response) => {
+        console.log('💓 Healthcheck request received at:', new Date().toISOString());
         res.json({
             status: 'healthy',
             timestamp: new Date().toISOString(),

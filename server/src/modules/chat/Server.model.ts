@@ -122,7 +122,6 @@ const serverSchema = new Schema<IServer>(
 
 // Indexes
 serverSchema.index({ 'members.userId': 1 });
-serverSchema.index({ inviteCode: 1 });
 serverSchema.index({ isPublic: 1, memberCount: -1 });
 
 // Generate invite code before saving

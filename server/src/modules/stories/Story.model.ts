@@ -73,7 +73,6 @@ const storySchema = new Schema<IStory>(
         expiresAt: {
             type: Date,
             required: true,
-            index: true,
         },
         isDeleted: {
             type: Boolean,
