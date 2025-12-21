@@ -407,11 +407,11 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 isExpanded && "opacity-100"
             )} />
 
-            <div className="p-4 sm:p-6 relative">
-                <div className="flex gap-5">
-                    <div className="relative pt-1">
+            <div className="p-3 sm:p-4 md:p-6 relative">
+                <div className="flex gap-3 sm:gap-5">
+                    <div className="relative pt-1 flex-shrink-0">
                         <motion.div animate={{ scale: isExpanded ? 1.1 : 1, opacity: isExpanded ? 0.8 : 0.4 }} className="absolute inset-0 bg-secondary/30 rounded-full blur-xl" />
-                        <Avatar className="w-11 h-11 relative ring-2 ring-white/5 group-hover/create:ring-secondary/30 transition-all duration-500">
+                        <Avatar className="w-10 h-10 sm:w-11 sm:h-11 relative ring-2 ring-white/5 group-hover/create:ring-secondary/30 transition-all duration-500">
                             <AvatarImage src={profile?.avatar} />
                             <AvatarFallback className="bg-slate-900 text-slate-500 font-black text-[10px]">
                                 {profile?.name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
