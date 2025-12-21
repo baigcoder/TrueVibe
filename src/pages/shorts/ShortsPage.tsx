@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
@@ -289,33 +289,52 @@ const ShortItem = ({
 };
 
 const ActionButton = ({ icon: Icon, label, color, isActive = false, onClick }: any) => {
+    const touchedRef = React.useRef(false);
+
     const colorClasses: Record<string, string> = {
-        "rose-500": isActive ? "bg-rose-500/20 border-rose-500/40 text-rose-500" : "bg-black/50 border-white/20 text-white",
-        "primary": isActive ? "bg-primary/20 border-primary/40 text-primary" : "bg-black/50 border-white/20 text-white",
-        "amber-400": isActive ? "bg-amber-400/20 border-amber-400/40 text-amber-400" : "bg-black/50 border-white/20 text-white",
-        "white": isActive ? "bg-white/20 border-white/40 text-white" : "bg-black/50 border-white/20 text-white"
+        "rose-500": isActive ? "bg-rose-500/30 border-rose-500/50 text-rose-400" : "bg-black/60 border-white/20 text-white",
+        "primary": isActive ? "bg-primary/30 border-primary/50 text-primary" : "bg-black/60 border-white/20 text-white",
+        "amber-400": isActive ? "bg-amber-400/30 border-amber-400/50 text-amber-400" : "bg-black/60 border-white/20 text-white",
+        "white": isActive ? "bg-white/30 border-white/50 text-white" : "bg-black/60 border-white/20 text-white"
     };
 
-    const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-        e.stopPropagation();
+    const handleTouchStart = () => {
+        touchedRef.current = true;
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
         e.preventDefault();
-        onClick?.(e);
+        e.stopPropagation();
+        if (touchedRef.current) {
+            onClick?.();
+            // Reset after a delay to allow for next interaction
+            setTimeout(() => { touchedRef.current = false; }, 300);
+        }
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // Only fire if not already handled by touch
+        if (!touchedRef.current) {
+            onClick?.();
+        }
     };
 
     return (
         <div className="flex flex-col items-center gap-1">
             <button
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
                 onClick={handleClick}
-                onTouchEnd={handleClick}
                 className={cn(
-                    "w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center border shadow-xl backdrop-blur-sm touch-manipulation select-none",
+                    "w-12 h-12 rounded-2xl flex items-center justify-center border-2 shadow-2xl backdrop-blur-md active:scale-90 transition-transform",
                     colorClasses[color] || colorClasses["white"]
                 )}
                 style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
             >
-                <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", isActive && "fill-current")} />
+                <Icon className={cn("w-6 h-6", isActive && "fill-current")} />
             </button>
-            <span className="text-[8px] lg:text-[9px] font-bold text-white/50 uppercase tracking-tight hidden lg:block">{label}</span>
+            <span className="text-[9px] font-bold text-white/60 uppercase tracking-tight hidden lg:block">{label}</span>
         </div>
     );
 };
