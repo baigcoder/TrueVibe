@@ -9,6 +9,7 @@ import { CallOverlay } from "@/components/chat/CallOverlay";
 import { VoiceRoomPanel } from "@/components/chat/VoiceRoomPanel";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
+import { NotificationManager } from "@/components/NotificationManager";
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -79,6 +80,7 @@ function AppContent() {
   return (
     <AuthLoader>
       <RouterProvider router={router} />
+      <NotificationManager />
       <CallOverlay />
       <VoiceRoomPanel />
       <Toaster position="top-right" theme="dark" richColors />
