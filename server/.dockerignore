@@ -8,3 +8,7 @@ coverage
 .gitignore
 *.md
 .DS_Store
+ai-service/
+models/
+venv/
+__pycache__/
