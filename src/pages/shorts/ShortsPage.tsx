@@ -290,26 +290,24 @@ const ShortItem = ({
 
 const ActionButton = ({ icon: Icon, label, color, isActive = false, onClick }: any) => {
     const colorClasses: Record<string, string> = {
-        "rose-500": isActive ? "bg-rose-500/20 border-rose-500/40 text-rose-500" : "bg-black/40 border-white/10 text-white/70 hover:text-white",
-        "primary": isActive ? "bg-primary/20 border-primary/40 text-primary" : "bg-black/40 border-white/10 text-white/70 hover:text-white",
-        "amber-400": isActive ? "bg-amber-400/20 border-amber-400/40 text-amber-400" : "bg-black/40 border-white/10 text-white/70 hover:text-white",
-        "white": isActive ? "bg-white/20 border-white/40 text-white" : "bg-black/40 border-white/10 text-white/70 hover:text-white"
+        "rose-500": isActive ? "bg-rose-500/20 border-rose-500/40 text-rose-500" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95",
+        "primary": isActive ? "bg-primary/20 border-primary/40 text-primary" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95",
+        "amber-400": isActive ? "bg-amber-400/20 border-amber-400/40 text-amber-400" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95",
+        "white": isActive ? "bg-white/20 border-white/40 text-white" : "bg-black/40 border-white/10 text-white/70 hover:text-white active:scale-95"
     };
 
     return (
-        <div className="flex flex-col items-center gap-1.5">
-            <motion.button
-                whileHover={{ scale: 1.1, x: -4 }}
-                whileTap={{ scale: 0.9 }}
+        <div className="flex flex-col items-center gap-1">
+            <button
                 onClick={onClick}
                 className={cn(
-                    "w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center border transition-all duration-300 shadow-xl",
+                    "w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center border transition-all duration-150 shadow-lg hover:scale-105",
                     colorClasses[color] || colorClasses["white"]
                 )}
             >
                 <Icon className={cn("w-5 h-5 lg:w-6 lg:h-6", isActive && "fill-current")} />
-            </motion.button>
-            <span className="text-[8px] lg:text-[9px] font-black text-white/50 uppercase tracking-tighter italic hidden lg:block">{label}</span>
+            </button>
+            <span className="text-[8px] lg:text-[9px] font-bold text-white/50 uppercase tracking-tight hidden lg:block">{label}</span>
         </div>
     );
 };
@@ -401,12 +399,21 @@ export default function ShortsPage() {
         }
     }, [currentIndex, shorts.length, hasNextPage, fetchNextPage]);
 
-    const handleLikeToggle = (id: string, currentlyLiked: boolean) => {
-        if (id.startsWith('mock-')) return;
-        if (currentlyLiked) {
-            unlikeMutation.mutate(id);
-        } else {
-            likeMutation.mutate(id);
+    const handleLikeToggle = async (id: string, currentlyLiked: boolean) => {
+        if (id.startsWith('mock-')) {
+            // Show feedback for mock data
+            console.log('Cannot like mock data');
+            return;
+        }
+
+        try {
+            if (currentlyLiked) {
+                await unlikeMutation.mutateAsync(id);
+            } else {
+                await likeMutation.mutateAsync(id);
+            }
+        } catch (error) {
+            console.error('Like failed:', error);
         }
     };
 
@@ -521,52 +528,50 @@ export default function ShortsPage() {
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 35, stiffness: 300 }}
-                        className="absolute right-0 top-0 bottom-0 z-[100] w-full md:w-[400px] bg-[#0c0c0e]/98 border-l border-white/10 p-8 flex flex-col shadow-2xl transform-gpu rounded-l-[3rem] backdrop-blur-xl"
+                        transition={{ type: 'tween', duration: 0.25 }}
+                        className="fixed inset-0 md:absolute md:right-0 md:top-0 md:bottom-0 md:left-auto z-[100] w-full md:w-[400px] bg-[#0c0c0e]/98 md:border-l border-white/10 p-4 sm:p-6 md:p-8 flex flex-col shadow-2xl md:rounded-l-[2rem] backdrop-blur-xl safe-area-inset-bottom"
                     >
-                        <div className="flex items-center justify-between mb-8 flex-shrink-0">
-                            <h3 className="font-heading font-black text-xl text-white uppercase italic tracking-tighter flex items-center gap-3">
-                                <MessageCircle className="w-6 h-6 text-primary" />
-                                Signals
+                        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-shrink-0">
+                            <h3 className="font-heading font-black text-lg sm:text-xl text-white uppercase italic tracking-tighter flex items-center gap-2 sm:gap-3">
+                                <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                                Comments
                             </h3>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setIsCommentOpen(false)}
-                                className="text-white/40 hover:text-white"
+                                className="text-white/40 hover:text-white -mr-2"
                             >
                                 <X className="w-6 h-6" />
                             </Button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-6 pr-2 mb-6 no-scrollbar">
+                        <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pr-1 mb-4 no-scrollbar overscroll-contain">
                             {loadingComments ? (
-                                <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>
+                                <div className="flex justify-center py-16"><Loader2 className="animate-spin text-primary" /></div>
                             ) : comments.length === 0 ? (
-                                <div className="text-center py-20 opacity-20">
-                                    <Zap className="w-16 h-16 mx-auto mb-4" />
-                                    <p className="font-black uppercase tracking-[0.3em] text-xs italic">Silence in the grid...</p>
+                                <div className="text-center py-16 opacity-30">
+                                    <Zap className="w-12 h-12 mx-auto mb-3" />
+                                    <p className="font-black uppercase tracking-widest text-[10px]">No comments yet</p>
                                 </div>
                             ) : (
                                 comments.map((comment: any) => (
-                                    <div key={comment._id} className="flex gap-4 group">
-                                        <Avatar className="w-10 h-10 rounded-2xl border border-white/10 flex-shrink-0">
+                                    <div key={comment._id} className="flex gap-3">
+                                        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl border border-white/10 flex-shrink-0">
                                             <AvatarImage src={comment.author?.avatar} />
-                                            <AvatarFallback className="bg-slate-800 text-white font-black">{comment.author?.name?.[0]}</AvatarFallback>
+                                            <AvatarFallback className="bg-slate-800 text-white font-black text-xs">{comment.author?.name?.[0]}</AvatarFallback>
                                         </Avatar>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-sm font-black text-white uppercase tracking-tight">{comment.author?.name}</span>
-                                                <span className="text-[9px] font-black text-white/20 uppercase">just now</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-xs sm:text-sm font-bold text-white truncate">{comment.author?.name}</span>
                                             </div>
-                                            <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-none p-4 group-hover:bg-white/10 transition-colors">
-                                                <p className="text-white/80 text-[13px] leading-relaxed italic line-clamp-3">"{comment.content}"</p>
+                                            <div className="bg-white/5 border border-white/5 rounded-xl sm:rounded-2xl rounded-tl-sm p-3 sm:p-4">
+                                                <p className="text-white/80 text-xs sm:text-sm leading-relaxed">{comment.content}</p>
                                             </div>
-                                            <div className="flex items-center gap-6 mt-3 px-1">
-                                                <button className="flex items-center gap-1.5 text-[10px] font-black text-white/30 hover:text-rose-500 uppercase tracking-widest transition-colors">
-                                                    <Heart className="w-3.5 h-3.5" /> {comment.likesCount || 0}
+                                            <div className="flex items-center gap-4 mt-2 px-1">
+                                                <button className="flex items-center gap-1 text-[10px] font-bold text-white/30 hover:text-rose-500">
+                                                    <Heart className="w-3 h-3" /> {comment.likesCount || 0}
                                                 </button>
-                                                <button className="text-[10px] font-black text-white/30 hover:text-white uppercase tracking-widest transition-colors">REPLY</button>
                                             </div>
                                         </div>
                                     </div>
@@ -574,20 +579,21 @@ export default function ShortsPage() {
                             )}
                         </div>
 
-                        <div className="flex gap-4 bg-white/5 border border-white/10 rounded-3xl p-3 items-center focus-within:border-primary/50 transition-all flex-shrink-0">
+                        <div className="flex gap-2 sm:gap-3 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-2 sm:p-3 items-center focus-within:border-primary/50 transition-all flex-shrink-0 pb-[env(safe-area-inset-bottom,8px)]">
                             <input
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
-                                placeholder="Add a transmission..."
-                                className="bg-transparent border-none text-white text-sm focus:outline-none flex-1 placeholder:text-white/20 px-3"
+                                placeholder="Write a comment..."
+                                className="bg-transparent border-none text-white text-sm focus:outline-none flex-1 placeholder:text-white/30 px-2 sm:px-3 min-w-0"
                             />
                             <Button
                                 size="sm"
                                 onClick={handlePostComment}
-                                className="bg-primary hover:bg-primary/80 text-white rounded-2xl h-10 px-6 font-black italic uppercase tracking-widest"
+                                disabled={!commentText.trim() || createCommentMutation.isPending}
+                                className="bg-primary hover:bg-primary/80 text-white rounded-xl sm:rounded-2xl h-9 sm:h-10 px-4 sm:px-6 font-bold text-xs sm:text-sm flex-shrink-0"
                             >
-                                Send
+                                {createCommentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send'}
                             </Button>
                         </div>
                     </motion.div>
