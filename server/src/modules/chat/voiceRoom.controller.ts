@@ -186,8 +186,8 @@ export const joinRoom = async (
                         room.speakers.push(profileId);
                     }
                 } else {
-                    if (!room.listeners.some(l => l.toString() === profileId.toString())) {
-                        room.listeners.push(profileId);
+                    if (!room.listenerIds.some(l => l.toString() === profileId.toString())) {
+                        room.listenerIds.push(profileId);
                     }
                 }
             }
@@ -800,7 +800,7 @@ export const promoteToSpeaker = async (
         }
 
         // Move from listeners to speakers
-        room.listeners = room.listeners.filter(l => l.toString() !== targetUserId);
+        room.listenerIds = room.listenerIds.filter((l: any) => l.toString() !== targetUserId);
         if (!room.speakers.some(s => s.toString() === targetUserId)) {
             room.speakers.push(new mongoose.Types.ObjectId(targetUserId) as any);
         }
@@ -854,8 +854,8 @@ export const demoteToListener = async (
 
         // Move from speakers to listeners
         room.speakers = room.speakers.filter(s => s.toString() !== targetUserId);
-        if (!room.listeners.some(l => l.toString() === targetUserId)) {
-            room.listeners.push(new mongoose.Types.ObjectId(targetUserId) as any);
+        if (!room.listenerIds.some((l: any) => l.toString() === targetUserId)) {
+            room.listenerIds.push(new mongoose.Types.ObjectId(targetUserId) as any);
         }
 
         await room.save();
