@@ -70,10 +70,11 @@ export function FollowingTab() {
                     <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 flex items-center justify-center shadow-inner">
                         <Users className="w-10 h-10 text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
                     </div>
-                    <h3 className="font-heading font-extrabold text-3xl text-white mb-3 tracking-tighter uppercase italic">
+                    <h3 className="font-heading font-extrabold text-2xl sm:text-3xl text-white mb-3 tracking-tighter uppercase italic text-center break-words w-full">
                         No Connections Yet
                     </h3>
-                    <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto leading-relaxed">
+                    <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto leading-relaxed text-center px-4">
+
                         Start building your network! Follow creators to see their activity here.
                     </p>
                     <Link to="/app/search">

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useSocket } from '@/context/SocketContext';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { useNavigate, useLocation } from '@tanstack/react-router';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Message {
@@ -16,8 +15,6 @@ interface Message {
 export function NotificationManager() {
     const { socket } = useSocket();
     const { profile } = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
 
     useEffect(() => {
         if (!socket) return;
@@ -35,11 +32,10 @@ export function NotificationManager() {
             // Don't notify for our own messages
             if (message.senderId === profile?._id) return;
 
-            // Check if we're already in the conversation page
-            // Path: /app/chat?conversationId=...
+            // Check if we're already in the conversation page using window.location
             const searchParams = new URLSearchParams(window.location.search);
             const currentConvId = searchParams.get('conversationId');
-            const isAtChatPath = location.pathname.includes('/app/chat');
+            const isAtChatPath = window.location.pathname.includes('/app/chat');
 
             if (isAtChatPath && currentConvId === conversationId) {
                 return;
@@ -57,7 +53,8 @@ export function NotificationManager() {
             toast.custom((t) => (
                 <div
                     onClick={() => {
-                        navigate({ to: '/app/chat', search: { conversationId } });
+                        // Use window.location for navigation instead of router hooks
+                        window.location.href = `/app/chat?conversationId=${conversationId}`;
                         toast.dismiss(t);
                     }}
                     className="w-[350px] glass-aether border border-primary/20 p-4 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-right-8 duration-300"
@@ -84,7 +81,7 @@ export function NotificationManager() {
         return () => {
             socket.off('message:new', handleNewMessage);
         };
-    }, [socket, profile?._id, navigate, location.pathname]);
+    }, [socket, profile?._id]);
 
     return null;
 }
