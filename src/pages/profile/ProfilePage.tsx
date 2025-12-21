@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FollowersModal } from "@/components/modals/FollowersModal";
+import { ImageCropModal } from "@/components/ImageCropModal";
 import { toast } from "sonner";
+import { api } from "@/api/client";
 
 interface ProfileData {
     _id: string;
@@ -49,11 +51,57 @@ export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState('posts');
     const [followersModalOpen, setFollowersModalOpen] = useState(false);
     const [followersModalType, setFollowersModalType] = useState<'followers' | 'following'>('followers');
+    const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+    const [cropModalOpen, setCropModalOpen] = useState(false);
+    const [isUploadingCover, setIsUploadingCover] = useState(false);
+    const coverInputRef = useRef<HTMLInputElement>(null);
 
     const isOwnProfile = !id || id === 'me' || id === currentUserProfile?._id;
     const userId = isOwnProfile ? (currentUserProfile?._id || user?.id) : id;
 
     const cancelRequestMutation = useCancelFollowRequest();
+
+    // Cover image upload handler
+    const handleCoverFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please select an image file');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error('Image must be less than 10MB');
+                return;
+            }
+            setCoverImageFile(file);
+            setCropModalOpen(true);
+        }
+        // Reset input so same file can be selected again
+        if (e.target) e.target.value = '';
+    };
+
+    const handleCoverSave = async (blob: Blob) => {
+        setIsUploadingCover(true);
+        try {
+            const formData = new FormData();
+            formData.append('coverImage', blob, 'cover.jpg');
+
+            const response = await api.patch('/users/me/cover', formData) as { success: boolean; error?: { message: string } };
+            if (response.success) {
+                toast.success('Cover image updated!');
+                // Refresh profile data
+                window.location.reload();
+            } else {
+                throw new Error(response.error?.message || 'Failed to upload');
+            }
+        } catch (error: any) {
+            console.error('Cover upload failed:', error);
+            toast.error(error.message || 'Failed to upload cover image');
+        } finally {
+            setIsUploadingCover(false);
+            setCoverImageFile(null);
+        }
+    };
 
 
     const { data: profileData, isLoading: loadingProfile } = useProfile(
@@ -206,11 +254,24 @@ export default function ProfilePage() {
                                 <>
                                     <Button
                                         size="icon"
+                                        onClick={() => coverInputRef.current?.click()}
+                                        disabled={isUploadingCover}
                                         className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 rounded-xl sm:rounded-2xl w-9 h-9 sm:w-11 sm:h-11 shadow-2xl"
                                         title="Change cover"
                                     >
-                                        <Camera className="w-4 h-4" />
+                                        {isUploadingCover ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Camera className="w-4 h-4" />
+                                        )}
                                     </Button>
+                                    <input
+                                        ref={coverInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleCoverFileSelect}
+                                        className="hidden"
+                                    />
                                     <Button
                                         onClick={() => navigate({ to: '/app/settings' })}
                                         className="bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 rounded-xl sm:rounded-2xl h-9 sm:h-11 px-3 sm:px-6 gap-1.5 sm:gap-2.5 font-bold text-[10px] sm:text-xs shadow-2xl transition-all hover:scale-105 active:scale-95"
@@ -645,6 +706,19 @@ export default function ProfilePage() {
                 userId={userId || ''}
                 type={followersModalType}
                 currentUserId={currentUserProfile?._id}
+            />
+
+            {/* Cover Image Crop Modal */}
+            <ImageCropModal
+                isOpen={cropModalOpen}
+                onClose={() => {
+                    setCropModalOpen(false);
+                    setCoverImageFile(null);
+                }}
+                onSave={handleCoverSave}
+                imageFile={coverImageFile}
+                aspectRatio={16 / 5}
+                title="Edit Cover Image"
             />
         </>
     );
