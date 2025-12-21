@@ -3,7 +3,46 @@ import { Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Users, Sparkles, Globe, Layout, Cpu, Zap as ZapIcon, ShieldCheck, ArrowRight, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+
+// Matrix-style text reveal animation
+const MatrixText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [isComplete, setIsComplete] = useState(false);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@#$%!?';
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            let currentIndex = 0;
+            const interval = setInterval(() => {
+                if (currentIndex <= text.length) {
+                    // Show scrambled characters ahead of the reveal point
+                    const revealed = text.substring(0, currentIndex);
+                    const scrambleLength = Math.min(3, text.length - currentIndex);
+                    let scrambled = '';
+                    for (let i = 0; i < scrambleLength; i++) {
+                        scrambled += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                    setDisplayText(revealed + scrambled);
+                    currentIndex++;
+                } else {
+                    setDisplayText(text);
+                    setIsComplete(true);
+                    clearInterval(interval);
+                }
+            }, 50);
+            return () => clearInterval(interval);
+        }, delay);
+        return () => clearTimeout(timeout);
+    }, [text, delay]);
+
+    return (
+        <span className={cn(className, !isComplete && "opacity-90")}>
+            {displayText}
+            {!isComplete && <span className="animate-pulse">_</span>}
+        </span>
+    );
+};
 
 const BackgroundAtmosphere = () => {
     return (
@@ -91,13 +130,13 @@ export default function LandingPage() {
                         className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/5 border border-primary/10 text-primary text-[9px] font-bold uppercase tracking-[0.4em] mb-8"
                     >
                         <ZapIcon className="w-3 h-3" />
-                        AETHER_PROTOCOL_v4
+                        <MatrixText text="AETHER_PROTOCOL_v4" delay={500} />
                     </motion.div>
 
                     <h1 className="font-heading text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white italic uppercase tracking-tighter mb-6 sm:mb-8 leading-[0.9] drop-shadow-2xl px-2 sm:px-6 break-words">
-                        CRAFTING <br />
+                        <MatrixText text="CRAFTING" delay={800} /> <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent animate-gradient text-xl xs:text-2xl sm:text-5xl md:text-6xl lg:text-7xl">
-                            SYNTHETIC_REALITY
+                            <MatrixText text="SYNTHETIC_REALITY" delay={1200} />
                         </span>
                     </h1>
 

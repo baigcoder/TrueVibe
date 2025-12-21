@@ -173,8 +173,8 @@ const ShortItem = ({
                     </div>
 
                     {/* Bottom Info Section */}
-                    <div className="flex items-end justify-between pointer-events-auto pb-2 sm:pb-0">
-                        <div className="flex-1 mr-2 sm:mr-4 max-w-[75%] sm:max-w-none">
+                    <div className="flex items-end justify-between pointer-events-auto pb-14 sm:pb-4 lg:pb-0">
+                        <div className="flex-1 mr-4 sm:mr-6 max-w-[60%] sm:max-w-[70%]">
                             <div className="flex items-center gap-3 mb-4">
                                 <motion.div whileHover={{ scale: 1.05 }} className="relative">
                                     <Avatar className="w-12 h-12 border-2 border-primary/30 rounded-2xl shadow-xl">
@@ -227,7 +227,7 @@ const ShortItem = ({
                         </div>
 
                         {/* Action Bar (Vertical) */}
-                        <div className="flex flex-col gap-2 sm:gap-3 lg:gap-5 items-center pb-2 flex-shrink-0">
+                        <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5 items-center pb-4 flex-shrink-0">
                             <ActionButton
                                 icon={Heart}
                                 label={formatNumber(short.likesCount)}
@@ -457,8 +457,8 @@ export default function ShortsPage() {
             <div
                 ref={containerRef}
                 onScroll={handleScroll}
-                className="h-full w-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide no-scrollbar relative z-10"
-                style={{ scrollBehavior: 'smooth' }}
+                className="h-full w-full overflow-y-scroll snap-y snap-mandatory relative z-10"
+                style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {shorts.map((short, index) => (
                     <ShortItem
