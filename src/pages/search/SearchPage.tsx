@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearch } from "@/api/hooks";
 import { Input } from "@/components/ui/input";
-import { Search, User, FileText, Film, Loader2, ShieldCheck, Heart, MessageCircle, X } from "lucide-react";
+import {
+    Search, User, FileText, Film, Loader2, ShieldCheck,
+    Heart, MessageCircle, X, Sparkles, TrendingUp, Users, ArrowUpRight, Compass, Video
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,49 +34,67 @@ export default function SearchPage() {
     ];
 
     return (
-        <div className="max-w-5xl mx-auto px-4 pb-20 space-y-10">
-            {/* Header */}
+        <div className="min-h-full w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+            {/* Header / Search Hero Section */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative z-50 pt-8"
+                className="relative pt-12 pb-16"
             >
-                {/* Aurora Background */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[400px] overflow-hidden -z-10">
+                {/* Immersive Background Effects */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] pointer-events-none -z-10 overflow-hidden">
                     <motion.div
-                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-[-50%] left-[-20%] w-[80%] h-[80%] bg-primary/20 rounded-full blur-[120px]"
+                        animate={{
+                            scale: [1, 1.1, 1],
+                            opacity: [0.2, 0.4, 0.2],
+                            rotate: [0, 10, 0]
+                        }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[120px]"
                     />
                     <motion.div
-                        animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
-                        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-[-30%] right-[-20%] w-[60%] h-[60%] bg-emerald-500/15 rounded-full blur-[100px]"
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.15, 0.3, 0.15],
+                            rotate: [0, -15, 0]
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute top-[-10%] right-[-10%] w-[45%] h-[45%] bg-blue-500/10 rounded-full blur-[100px]"
                     />
                 </div>
 
-                <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
-                        Discover
+                <div className="flex flex-col items-center text-center space-y-4 mb-12">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-inner"
+                    >
+                        <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Discover the Vibe</span>
+                    </motion.div>
+
+                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter italic uppercase">
+                        Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-emerald-400">Everything</span>
                     </h1>
-                    <p className="text-slate-400 text-sm">Find people, posts, and videos on TrueVibe</p>
                 </div>
 
-                {/* Search Input */}
+                {/* Aether Search Bar */}
                 <div className={cn(
-                    "relative max-w-2xl mx-auto transition-all duration-500",
-                    isFocused ? "scale-[1.02]" : "scale-100"
+                    "relative max-w-3xl mx-auto transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]",
+                    isFocused ? "scale-[1.03] -translate-y-1" : "scale-100"
                 )}>
+                    {/* Outer Glow */}
                     <div className={cn(
-                        "absolute -inset-0.5 bg-gradient-to-r from-primary/50 via-emerald-500/50 to-primary/50 rounded-2xl blur opacity-0 transition-opacity duration-500",
+                        "absolute -inset-1 bg-gradient-to-r from-primary/40 via-blue-400/40 to-emerald-400/40 rounded-[2rem] blur-2xl opacity-0 transition-opacity duration-700",
                         isFocused && "opacity-100"
                     )} />
 
-                    <div className="relative bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-2xl">
+                    <div className="relative bg-[#0c0c0e]/60 backdrop-blur-3xl border border-white/10 rounded-[1.8rem] p-2.5 flex items-center gap-3 shadow-[0_25px_80px_rgba(0,0,0,0.5)] tech-border group">
                         <div className="pl-4">
                             <Search className={cn(
-                                "w-5 h-5 transition-colors duration-300",
-                                isFocused ? "text-primary" : "text-slate-500"
+                                "w-5 h-5 transition-all duration-500",
+                                isFocused ? "text-primary scale-110 rotate-12" : "text-slate-500"
                             )} />
                         </div>
                         <Input
@@ -81,86 +102,108 @@ export default function SearchPage() {
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search for people, posts, or topics..."
-                            className="bg-transparent border-none focus-visible:ring-0 text-white font-medium placeholder:text-slate-500 h-12 text-base"
+                            placeholder="Search people, vibes, or shorts..."
+                            className="bg-transparent border-none focus-visible:ring-0 text-white font-semibold placeholder:text-slate-600 h-14 text-lg"
                         />
-                        {query && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setQuery("")}
-                                className="mr-2 text-slate-500 hover:text-white rounded-xl"
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
-                        )}
-                        <Button className="bg-primary hover:bg-primary/90 text-white font-medium rounded-xl px-6 h-10 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0">
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Search"}
+                        <AnimatePresence>
+                            {query && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                >
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setQuery("")}
+                                        className="h-10 w-10 text-slate-500 hover:text-white rounded-full bg-white/5 mr-1"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                        <Button className="bg-gradient-to-br from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-white font-black uppercase italic tracking-wider rounded-2xl px-8 h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 group-hover:px-10 duration-500">
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                <div className="flex items-center gap-2">
+                                    <span>Sync</span>
+                                    <TrendingUp className="w-4 h-4" />
+                                </div>
+                            )}
                         </Button>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex justify-center flex-wrap gap-2 mt-8">
+                {/* Tab Navigation */}
+                <div className="flex justify-center flex-wrap gap-2.5 mt-12">
                     {tabs.map((tab) => (
                         <motion.button
                             key={tab.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.08)" }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "px-5 py-2.5 rounded-xl flex items-center gap-2.5 transition-all duration-300 border text-sm font-medium",
+                                "px-6 py-3 rounded-2xl flex items-center gap-3 transition-all duration-500 border text-xs font-black uppercase tracking-[0.1em] relative overflow-hidden group/tab",
                                 activeTab === tab.id
-                                    ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                                    : "bg-white/[0.03] border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
+                                    ? "bg-white/10 text-white border-white/20 shadow-2xl"
+                                    : "bg-white/[0.02] border-white/5 text-slate-500 hover:text-slate-300"
                             )}
                         >
-                            <tab.icon className="w-4 h-4" />
+                            {activeTab === tab.id && (
+                                <motion.div
+                                    layoutId="search-tab-bg"
+                                    className="absolute inset-0 bg-gradient-to-r from-primary/20 via-blue-500/10 to-emerald-500/20 -z-10"
+                                />
+                            )}
+                            <tab.icon className={cn(
+                                "w-4 h-4 transition-all duration-500",
+                                activeTab === tab.id ? "text-primary scale-110" : "group-hover/tab:text-primary"
+                            )} />
                             {tab.label}
                         </motion.button>
                     ))}
                 </div>
             </motion.div>
 
-            {/* Results */}
-            <div className="relative min-h-[400px]">
-                <AnimatePresence mode="sync">
+            {/* Results Grid */}
+            <div className="relative min-h-[500px]">
+                <AnimatePresence mode="wait">
                     {!debouncedQuery ? (
                         <motion.div
                             key="empty"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center justify-center py-20 text-center"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.05 }}
+                            className="flex flex-col items-center justify-center py-24 text-center"
                         >
-                            <motion.div
-                                initial={{ scale: 0.9 }}
-                                animate={{ scale: 1 }}
-                                className="relative mb-8"
-                            >
+                            <div className="relative mb-10 group">
                                 <motion.div
-                                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute inset-0 w-24 h-24 rounded-[1.5rem] bg-gradient-to-br from-primary/30 to-emerald-500/30 blur-2xl"
+                                    animate={{
+                                        scale: [1, 1.15, 1],
+                                        opacity: [0.3, 0.6, 0.3],
+                                        rotate: [0, 5, 0]
+                                    }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                    className="absolute inset-0 w-32 h-32 rounded-[2.5rem] bg-primary/30 blur-3xl opacity-50"
                                 />
-                                <div className="w-24 h-24 bg-white/[0.03] border border-white/10 rounded-[1.5rem] flex items-center justify-center relative shadow-2xl backdrop-blur-xl">
-                                    <Search className="w-10 h-10 text-white/40" />
+                                <div className="w-32 h-32 bg-white/[0.03] border border-white/10 rounded-[2.5rem] flex items-center justify-center relative shadow-2xl backdrop-blur-3xl group-hover:scale-105 transition-transform duration-700 tech-border">
+                                    <Compass className="w-14 h-14 text-white/20 group-hover:text-primary/40 transition-colors duration-700" />
                                 </div>
-                            </motion.div>
-                            <h2 className="text-2xl font-bold text-white mb-3">Start Exploring</h2>
-                            <p className="text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
-                                Search for people to connect with, discover trending posts, or find short videos.
+                            </div>
+                            <h2 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase italic">Ready to Sync?</h2>
+                            <p className="text-slate-500 text-sm max-w-sm mx-auto leading-relaxed font-medium uppercase tracking-wide">
+                                Enter parameters to bridge with people, discover premium vibes, or filter trending shorts.
                             </p>
 
-                            <div className="mt-10 flex flex-wrap justify-center gap-3 max-w-lg">
-                                {['Trending', 'Photography', 'Music', 'Art'].map((tag) => (
+                            <div className="mt-12 flex flex-wrap justify-center gap-3 max-w-2xl px-4">
+                                {['#trending', '#photography', '#vibe_check', '#music_sync', '#digital_art', '#future_now'].map((tag) => (
                                     <Button
                                         key={tag}
-                                        variant="outline"
-                                        onClick={() => setQuery(tag)}
-                                        className="bg-white/[0.02] border-white/10 rounded-xl h-10 font-medium text-slate-400 hover:text-primary hover:border-primary/30 transition-all"
+                                        variant="ghost"
+                                        onClick={() => setQuery(tag.replace('#', ''))}
+                                        className="bg-white/[0.02] border border-white/5 rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all duration-500"
                                     >
-                                        #{tag}
+                                        {tag}
                                     </Button>
                                 ))}
                             </div>
@@ -170,61 +213,158 @@ export default function SearchPage() {
                             key="loading"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex flex-col items-center justify-center py-32"
+                            className="flex flex-col items-center justify-center py-40"
                         >
-                            <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
-                            <p className="text-sm text-slate-400 font-medium">Searching...</p>
+                            <div className="relative">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                    className="w-16 h-16 border-t-2 border-r-2 border-primary rounded-full shadow-[0_0_20px_rgba(0,245,255,0.3)]"
+                                />
+                                <motion.div
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-2 border-b-2 border-l-2 border-blue-400 rounded-full opacity-50"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em] mt-8 animate-pulse italic">Scanning Network...</p>
                         </motion.div>
                     ) : (data?.data?.users?.length || data?.data?.posts?.length || data?.data?.shorts?.length) ? (
                         <motion.div
                             key="results"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="space-y-12"
+                            className="space-y-16"
                         >
-                            {/* Users */}
+                            {/* People Results */}
                             {(activeTab === 'all' || activeTab === 'users') && data?.data?.users?.length > 0 && (
-                                <section className="space-y-5">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                            <User className="w-4 h-4 text-primary" />
-                                            People
-                                        </h3>
-                                        <span className="text-xs text-slate-500">{data.data.users.length} found</span>
+                                <section className="space-y-6">
+                                    <div className="flex items-center justify-between px-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                                                <Users className="w-5 h-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Vibe Masters</h3>
+                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Network Connections</p>
+                                            </div>
+                                        </div>
+                                        <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-slate-400">
+                                            {data.data.users.length} SYNCED
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {data.data.users.map((user: any, idx: number) => (
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                                        {data.data.users.map((item: any, idx: number) => (
                                             <motion.div
-                                                key={user.id}
+                                                key={item.userId || item._id || idx}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
+                                                transition={{ delay: idx * 0.03 }}
                                             >
                                                 <Link
                                                     to="/app/profile/$id"
-                                                    params={{ id: user.id }}
-                                                    className="flex items-center gap-4 p-5 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/[0.04] hover:border-primary/30 transition-all group"
+                                                    params={{ id: item.userId || item._id }}
+                                                    className="group flex items-center gap-4 p-5 bg-[#0c0c0e]/40 backdrop-blur-2xl border border-white/5 rounded-3xl hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-700 relative overflow-hidden"
                                                 >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
                                                     <div className="relative">
-                                                        <Avatar className="w-14 h-14 border-2 border-white/10 group-hover:border-primary/50 transition-colors rounded-xl">
-                                                            <AvatarImage src={user.avatar} />
-                                                            <AvatarFallback className="bg-slate-800 text-white font-bold">{user.name[0]}</AvatarFallback>
+                                                        <Avatar className="w-16 h-16 border-2 border-white/10 group-hover:border-primary/40 transition-all duration-700 rounded-2xl shadow-2xl">
+                                                            <AvatarImage src={item.avatar} className="object-cover" />
+                                                            <AvatarFallback className="bg-slate-900 text-white font-black italic">{item.name?.[0]}</AvatarFallback>
                                                         </Avatar>
-                                                        {user.trustScore > 80 && (
-                                                            <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-emerald-500 rounded-lg border-2 border-[#020617] flex items-center justify-center">
-                                                                <ShieldCheck className="w-3 h-3 text-white" />
+                                                        {item.trustScore > 80 && (
+                                                            <div className="absolute -top-2 -right-2 w-7 h-7 bg-primary rounded-xl border-4 border-[#0c0c0e] flex items-center justify-center shadow-lg">
+                                                                <ShieldCheck className="w-3.5 h-3.5 text-white" />
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-bold text-white group-hover:text-primary transition-colors truncate">{user.name}</h4>
-                                                        <p className="text-xs text-slate-500">@{user.handle}</p>
-                                                        {user.trustScore && (
-                                                            <div className="flex items-center gap-1.5 mt-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                                <span className="text-[10px] text-emerald-400 font-medium">{user.trustScore}% Trust Score</span>
+
+                                                    <div className="flex-1 min-w-0 relative z-10">
+                                                        <h4 className="font-black text-white text-lg tracking-tight group-hover:text-primary transition-colors truncate italic uppercase">{item.name}</h4>
+                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">@{item.handle}</p>
+
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex -space-x-2">
+                                                                {[1, 2, 3].map(i => (
+                                                                    <div key={i} className="w-5 h-5 rounded-full border-2 border-[#0c0c0e] bg-white/5" />
+                                                                ))}
                                                             </div>
-                                                        )}
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Mutuals</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <ArrowUpRight className="w-5 h-5 text-slate-700 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-500 self-start mr-1 mt-1" />
+                                                </Link>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Posts Results */}
+                            {(activeTab === 'all' || activeTab === 'posts') && data?.data?.posts?.length > 0 && (
+                                <section className="space-y-6">
+                                    <div className="flex items-center justify-between px-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                                <FileText className="w-5 h-5 text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Signal Feed</h3>
+                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Global Interactions</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {data.data.posts.map((post: any, idx: number) => (
+                                            <motion.div
+                                                key={post._id || idx}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.03 }}
+                                            >
+                                                <Link
+                                                    to={`/app/feed`}
+                                                    className="block p-7 bg-[#0c0c0e]/40 backdrop-blur-2xl border border-white/5 rounded-3xl hover:bg-white/[0.05] hover:border-blue-500/30 transition-all duration-700 group h-full"
+                                                >
+                                                    <div className="flex items-center justify-between mb-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="w-10 h-10 border border-white/10 rounded-xl">
+                                                                <AvatarImage src={post.userId?.avatar} className="object-cover" />
+                                                                <AvatarFallback className="bg-slate-900 text-[10px] font-black">{post.userId?.name?.[0]}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div>
+                                                                <p className="text-xs font-black text-white italic uppercase">{post.userId?.name}</p>
+                                                                <p className="text-[9px] text-slate-500 font-bold tracking-widest uppercase">
+                                                                    {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                                            <ArrowUpRight className="w-4 h-4 text-slate-700 group-hover:text-blue-400 transition-colors" />
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-slate-300 text-sm leading-[1.6] group-hover:text-white transition-colors line-clamp-3 mb-8 font-medium italic">
+                                                        "{post.content}"
+                                                    </p>
+
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="flex items-center gap-2 group/stat">
+                                                            <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center group-hover/stat:bg-pink-500/20 transition-colors">
+                                                                <Heart className="w-3.5 h-3.5 text-pink-400" />
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-slate-500 group-hover/stat:text-pink-400 transition-colors tracking-widest">{post.likesCount || 0}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 group/stat">
+                                                            <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover/stat:bg-blue-500/20 transition-colors">
+                                                                <MessageCircle className="w-3.5 h-3.5 text-blue-400" />
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-slate-500 group-hover/stat:text-blue-400 transition-colors tracking-widest">{post.commentsCount || 0}</span>
+                                                        </div>
                                                     </div>
                                                 </Link>
                                             </motion.div>
@@ -233,94 +373,66 @@ export default function SearchPage() {
                                 </section>
                             )}
 
-                            {/* Posts */}
-                            {(activeTab === 'all' || activeTab === 'posts') && data?.data?.posts?.length > 0 && (
-                                <section className="space-y-5">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-primary" />
-                                            Posts
-                                        </h3>
-                                        <span className="text-xs text-slate-500">{data.data.posts.length} found</span>
+                            {/* Shorts Results */}
+                            {(activeTab === 'all' || activeTab === 'shorts') && data?.data?.shorts?.length > 0 && (
+                                <section className="space-y-6">
+                                    <div className="flex items-center justify-between px-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                                                <Film className="w-5 h-5 text-orange-400" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Rapid Stream</h3>
+                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Instant Motion</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {data.data.posts.map((post: any, idx: number) => (
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                                        {data.data.shorts.map((short: any, idx: number) => (
                                             <motion.div
-                                                key={post._id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
+                                                key={short._id || idx}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: idx * 0.03 }}
+                                                whileHover={{ y: -8, transition: { duration: 0.4 } }}
+                                                className="group"
                                             >
                                                 <Link
-                                                    to={`/app/feed`}
-                                                    className="block p-6 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/[0.04] hover:border-white/20 transition-all group"
+                                                    to="/app/shorts"
+                                                    className="aspect-[9/16] relative rounded-[1.8rem] overflow-hidden block bg-[#0c0c0e] border border-white/5 shadow-2xl transition-all duration-700 group-hover:border-orange-500/40"
                                                 >
-                                                    <div className="flex items-center gap-3 mb-4">
-                                                        <Avatar className="w-9 h-9 border border-white/10 rounded-lg">
-                                                            <AvatarImage src={post.userId?.avatar} />
-                                                            <AvatarFallback className="bg-slate-800 text-xs font-bold">{post.userId?.name?.[0]}</AvatarFallback>
-                                                        </Avatar>
-                                                        <div>
-                                                            <span className="text-sm font-bold text-white">{post.userId?.name}</span>
-                                                            <span className="text-xs text-slate-500 ml-2">
-                                                                {new Date(post.createdAt).toLocaleDateString()}
+                                                    {short.thumbnailUrl ? (
+                                                        <img
+                                                            src={short.thumbnailUrl}
+                                                            alt=""
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.23,1,0.32,1)]"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-800 gap-3 bg-gradient-to-br from-[#0c0c0e] to-[#1a1a1e]">
+                                                            <Video className="w-12 h-12 opacity-40 group-hover:scale-110 transition-transform duration-700" />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
+
+                                                    <div className="absolute bottom-5 left-5 right-5 z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-700">
+                                                        <p className="text-white text-xs font-black italic uppercase tracking-tight line-clamp-2 leading-tight mb-2 group-hover:text-orange-400 transition-colors">
+                                                            {short.caption || 'No Data'}
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="w-5 h-5 border border-white/20">
+                                                                <AvatarImage src={short.creator?.avatar} />
+                                                                <AvatarFallback className="bg-slate-900 text-[8px] font-black">V</AvatarFallback>
+                                                            </Avatar>
+                                                            <span className="text-[8px] font-black text-white/50 uppercase tracking-widest group-hover:text-white transition-colors">
+                                                                @{short.creator?.handle || 'user'}
                                                             </span>
                                                         </div>
                                                     </div>
 
-                                                    <p className="text-slate-300 text-sm leading-relaxed group-hover:text-white transition-colors line-clamp-3 mb-4">{post.content}</p>
-
-                                                    <div className="flex items-center gap-4 text-xs text-slate-500">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Heart className="w-3.5 h-3.5" />
-                                                            {post.likesCount || 0}
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <MessageCircle className="w-3.5 h-3.5" />
-                                                            {post.commentsCount || 0}
-                                                        </div>
-                                                    </div>
-                                                </Link>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Shorts */}
-                            {(activeTab === 'all' || activeTab === 'shorts') && data?.data?.shorts?.length > 0 && (
-                                <section className="space-y-5">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                            <Film className="w-4 h-4 text-rose-500" />
-                                            Shorts
-                                        </h3>
-                                        <span className="text-xs text-slate-500">{data.data.shorts.length} found</span>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                        {data.data.shorts.map((short: any) => (
-                                            <motion.div
-                                                key={short._id}
-                                                whileHover={{ y: -6, scale: 1.02 }}
-                                                className="group"
-                                            >
-                                                <Link
-                                                    to={`/app/shorts`}
-                                                    className="aspect-[9/16] relative rounded-2xl overflow-hidden block bg-slate-900 border border-white/10 shadow-xl"
-                                                >
-                                                    {short.thumbnailUrl ? (
-                                                        <img src={short.thumbnailUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 gap-2 bg-gradient-to-br from-slate-900 to-slate-800">
-                                                            <Film className="w-10 h-10" />
-                                                        </div>
-                                                    )}
-
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                                    <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <p className="text-white text-xs font-medium line-clamp-2">{short.caption}</p>
-                                                    </div>
+                                                    {/* Glow Overlay */}
+                                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-orange-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                                                 </Link>
                                             </motion.div>
                                         ))}
@@ -333,21 +445,22 @@ export default function SearchPage() {
                             key="no-results"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex flex-col items-center justify-center py-24 text-center"
+                            className="flex flex-col items-center justify-center py-32 text-center"
                         >
-                            <div className="w-20 h-20 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center mb-6">
-                                <Search className="w-9 h-9 text-slate-500" />
+                            <div className="w-24 h-24 bg-white/[0.03] border border-white/10 rounded-3xl flex items-center justify-center mb-8 relative">
+                                <div className="absolute inset-0 bg-rose-500/10 blur-2xl rounded-full" />
+                                <Search className="w-10 h-10 text-slate-700" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">No results found</h3>
-                            <p className="text-sm text-slate-400 max-w-sm mx-auto">
-                                We couldn't find anything matching "{debouncedQuery}". Try a different search term.
+                            <h3 className="text-2xl font-black text-white mb-3 tracking-tighter uppercase italic">Sync Failure</h3>
+                            <p className="text-sm text-slate-500 max-w-sm mx-auto font-medium uppercase tracking-wide">
+                                We couldn't establish a bridge for "{debouncedQuery}". Reparameterize and try again.
                             </p>
                             <Button
                                 variant="ghost"
                                 onClick={() => setQuery("")}
-                                className="mt-6 text-primary font-medium hover:bg-primary/10 rounded-xl"
+                                className="mt-10 text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:bg-primary/5 rounded-xl px-8 h-12 border border-primary/10"
                             >
-                                Clear search
+                                Force Reset
                             </Button>
                         </motion.div>
                     )}
