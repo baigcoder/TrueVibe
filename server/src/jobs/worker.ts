@@ -228,7 +228,15 @@ const aiAnalysisWorker = new Worker(
     },
     {
         connection: getRedisClient(),
-        concurrency: 5,
+        concurrency: 2, // Reduced concurrency
+        // Rate limiting to reduce Redis calls (critical for Upstash free tier)
+        limiter: {
+            max: 5, // Max 5 jobs per duration
+            duration: 60000, // Per 60 seconds
+        },
+        lockDuration: 60000, // Extend lock duration
+        stalledInterval: 60000, // Check for stalled jobs less frequently
+        maxStalledCount: 2,
     }
 );
 
@@ -255,7 +263,10 @@ const notificationWorker = new Worker(
     },
     {
         connection: getRedisClient(),
-        concurrency: 10,
+        concurrency: 3,
+        limiter: { max: 10, duration: 60000 },
+        lockDuration: 60000,
+        stalledInterval: 60000,
     }
 );
 
@@ -273,7 +284,10 @@ const analyticsWorker = new Worker(
     },
     {
         connection: getRedisClient(),
-        concurrency: 3,
+        concurrency: 1,
+        limiter: { max: 3, duration: 60000 },
+        lockDuration: 60000,
+        stalledInterval: 120000,
     }
 );
 
