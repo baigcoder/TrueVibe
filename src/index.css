@@ -62,7 +62,9 @@
     @apply border-border;
   }
 
-  html {\n    @apply scroll-smooth;\n    background-color: #030712;\n  }
+  html {
+    @apply scroll-smooth;
+  }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
