@@ -22,15 +22,16 @@ const startServer = async (): Promise<void> => {
         // Initialize Socket.IO
         initializeSocketIO(server);
 
-        // Start server
-        server.listen(config.port, () => {
+        // Start server - explicitly bind to 0.0.0.0 for container environments
+        server.listen(config.port, '0.0.0.0', () => {
+            const host = '0.0.0.0';
             console.log(`
 🚀 TrueVibe Server is running!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 Environment: ${config.env}
-🌐 URL: http://localhost:${config.port}
-📚 API: http://localhost:${config.port}/api/v1
-💓 Health: http://localhost:${config.port}/health
+🌐 URL: http://${host}:${config.port}
+📚 API: http://${host}:${config.port}/api/v1
+💓 Health: http://${host}:${config.port}/health
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       `);
         });
