@@ -29,6 +29,16 @@ import voiceRoomRoutes from './modules/chat/voiceRoom.routes.js';
 export const createApp = (): Application => {
     const app = express();
 
+    // Health check (no rate limiting, top priority for deployment health checks)
+    app.get('/health', (req: Request, res: Response) => {
+        res.json({
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            version: '1.0.0',
+            uptime: process.uptime(),
+        });
+    });
+
     // Security middleware
     app.use(helmet({
         crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -55,15 +65,7 @@ export const createApp = (): Application => {
     // Input sanitization (after body parsing, before routes)
     app.use(sanitize);
 
-    // Health check (no rate limiting)
-    app.get('/health', (req: Request, res: Response) => {
-        res.json({
-            status: 'healthy',
-            timestamp: new Date().toISOString(),
-            version: '1.0.0',
-            uptime: process.uptime(),
-        });
-    });
+
 
     // Apply rate limiters
     // Note: authLimiter removed from auth routes - sync endpoint requires JWT auth

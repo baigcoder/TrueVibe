@@ -8,6 +8,7 @@ import { initializeSocketIO } from './socket/index.js';
 import './jobs/worker.js';
 
 const startServer = async (): Promise<void> => {
+    console.log('🏁 Starting server initialization...');
     try {
         // Connect to databases
         await connectDatabase();
