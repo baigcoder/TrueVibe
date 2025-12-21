@@ -231,7 +231,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="relative w-full h-full max-w-[430px] max-h-[92vh] mx-auto bg-black shadow-2xl shadow-primary/20 rounded-[40px] overflow-hidden z-10"
+                    className="relative w-full h-full sm:max-w-[430px] sm:max-h-[92vh] mx-auto bg-black shadow-2xl shadow-primary/20 sm:rounded-[40px] overflow-hidden z-10"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Progress Bars */}
@@ -347,10 +347,10 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                     </div>
 
                     {/* Bottom Interactivity */}
-                    <div className="absolute bottom-8 left-0 right-0 z-30 px-6 space-y-6">
+                    <div className="absolute bottom-20 sm:bottom-8 left-0 right-0 z-30 px-4 sm:px-6 space-y-4 sm:space-y-6 pb-[env(safe-area-inset-bottom,0px)]">
                         {!isOwner ? (
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-5 py-3 shadow-2xl flex-1 focus-within:bg-white/20 transition-all">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-5 py-2.5 sm:py-3 shadow-2xl flex-1 focus-within:bg-white/20 transition-all">
                                     <input
                                         type="text"
                                         placeholder="Vibe back..."
@@ -359,7 +359,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                                         onFocus={() => setIsPaused(true)}
                                         onBlur={() => setIsPaused(false)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSendComment()}
-                                        className="bg-transparent border-none text-white text-[14px] font-medium focus:outline-none flex-1 placeholder:text-white/30"
+                                        className="bg-transparent border-none text-white text-sm sm:text-[14px] font-medium focus:outline-none flex-1 placeholder:text-white/30 min-w-0"
                                     />
                                     <div className="flex items-center gap-2">
                                         <button
@@ -377,19 +377,19 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                                     <button
                                         onClick={handleLike}
                                         className={cn(
-                                            "w-12 h-12 rounded-full border flex items-center justify-center transition-all shadow-xl backdrop-blur-md",
+                                            "w-11 h-11 sm:w-12 sm:h-12 rounded-full border flex items-center justify-center transition-all shadow-xl backdrop-blur-md",
                                             isLiked
                                                 ? "bg-primary border-primary text-white shadow-primary/40 scale-110"
                                                 : "bg-white/10 border-white/10 text-white hover:bg-white/20"
                                         )}
                                     >
-                                        <Heart className={cn("w-6 h-6", isLiked && "fill-white")} />
+                                        <Heart className={cn("w-5 h-5 sm:w-6 sm:h-6", isLiked && "fill-white")} />
                                     </button>
                                     <button
                                         onClick={() => { setIsPaused(true); setShowComments(true); }}
-                                        className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-xl"
+                                        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-xl"
                                     >
-                                        <MessageCircle className="w-6 h-6" />
+                                        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                                     </button>
                                 </div>
                             </div>
@@ -429,12 +429,12 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
 
                         {/* Quick Reactions (only for viewers) */}
                         {!isOwner && !replyText && (
-                            <div className="flex justify-between items-center px-2">
+                            <div className="flex justify-between items-center px-1 sm:px-2">
                                 {['❤️', '😂', '😮', '😢', '🔥', '👏'].map(emoji => (
                                     <button
                                         key={emoji}
                                         onClick={() => handleReact(emoji)}
-                                        className="text-[22px] hover:scale-150 transition-transform active:scale-95 drop-shadow-lg"
+                                        className="text-lg sm:text-[22px] hover:scale-150 transition-transform active:scale-95 drop-shadow-lg p-1"
                                     >
                                         {emoji}
                                     </button>
@@ -620,7 +620,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                     </AnimatePresence>
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence >
     );
 }
 
