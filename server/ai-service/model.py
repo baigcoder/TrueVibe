@@ -40,7 +40,7 @@ SUSPICIOUS_THRESHOLD = 0.42
 DEBUG_DIR = os.path.join(os.path.dirname(__file__), "debug_images")
 
 # Video settings
-VIDEO_FRAME_COUNT = 10  # Increased for better analysis
+VIDEO_FRAME_COUNT = 5  # Reduced from 10
 VIDEO_TEMPORAL_WEIGHT = 1.3
 
 # Face detection settings
@@ -48,8 +48,8 @@ FACE_MARGIN = 0.30  # Increased margin for better context
 MIN_FACE_SIZE = 40  # Lower threshold for smaller faces
 FACE_CONFIDENCE_THRESHOLD = 0.6
 
-# v5 Enhancement settings
-MULTI_SCALE_SIZES = [1.0, 0.75, 0.5]  # Scale factors for multi-scale analysis
+# v5 Enhancement settings - Optimized for 1GB RAM
+MULTI_SCALE_SIZES = [1.0, 0.7]  # Reduced from [1.0, 0.75, 0.5]
 FREQUENCY_WEIGHT = 1.5  # Weight for frequency domain analysis
 COLOR_WEIGHT = 1.2  # Weight for color consistency
 
@@ -84,9 +84,9 @@ class DeepfakeDetector:
     def __init__(self):
         self.model = None
         self.processor = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu" # Force CPU for free tier predictability
         self._loaded = False
-        self.optimal_size = 512
+        self.optimal_size = 384 # Reduced from 512
         self.face_cascade = None
         self._face_detector_loaded = False
         
@@ -788,6 +788,10 @@ class DeepfakeDetector:
             print(f"   👁️  Eye Boost: +{details['eye_boost']*100:.1f}%")
         
         print(f"{'='*70}\n")
+        
+        # Free memory
+        import gc
+        gc.collect()
         
         return probs, classification, confidence, details
 
