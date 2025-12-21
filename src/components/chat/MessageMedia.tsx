@@ -51,21 +51,16 @@ function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
 }
 
 function VideoPlayer({ src, thumbnail }: { src: string; thumbnail?: string }) {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
-    const [showControls, setShowControls] = useState(true);
+    const [_isPlaying, setIsPlaying] = useState(false);
 
     return (
         <div
             className="relative rounded-2xl overflow-hidden bg-black group"
-            onMouseEnter={() => setShowControls(true)}
-            onMouseLeave={() => !isPlaying && setShowControls(true)}
         >
             <video
                 src={src}
                 poster={thumbnail}
                 className="max-w-full max-h-[300px] object-contain"
-                muted={isMuted}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onClick={(e) => {

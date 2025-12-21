@@ -411,7 +411,7 @@ export function PostCard({ post }: PostCardProps) {
                                 <BarChart3 className="w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-110 shadow-glow-primary" />
                             </Button>
                         )}
-                        <TipButton postId={postId} authorName={userName} />
+                        <TipButton authorName={userName} />
                     </div>
                     <Button
                         variant="ghost"

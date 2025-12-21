@@ -13,7 +13,7 @@ import {
     Loader2, Save, User, Bell, Lock, Palette, Shield,
     Camera, MapPin, Link as LinkIcon, ChevronRight, Smartphone,
     ShieldCheck, Eye, Monitor, KeyRound, Globe, Download,
-    UserX, Trash2, LogOut, Check, Languages, Moon, Sun
+    UserX, Trash2, LogOut, Check, Moon, Sun
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,11 +90,12 @@ export default function SettingsPage() {
                 location: profile.location || '',
                 website: profile.website || '',
             });
-            // Load saved settings from profile
-            if (profile.settings) {
-                setNotifications(prev => ({ ...prev, ...profile.settings.notifications }));
-                setPrivacy(prev => ({ ...prev, ...profile.settings.privacy }));
-                setAppearance(prev => ({ ...prev, ...profile.settings.appearance }));
+            // Load saved settings from profile if available
+            const profileSettings = (profile as any).settings;
+            if (profileSettings) {
+                setNotifications(prev => ({ ...prev, ...profileSettings.notifications }));
+                setPrivacy(prev => ({ ...prev, ...profileSettings.privacy }));
+                setAppearance(prev => ({ ...prev, ...profileSettings.appearance }));
             }
         }
     }, [profile]);
@@ -135,7 +136,7 @@ export default function SettingsPage() {
         try {
             const formData = new FormData();
             formData.append('avatar', file);
-            const response = await api.patch('/profile/avatar', formData);
+            const response = await api.patch('/profile/avatar', formData) as { success?: boolean };
             if (response.success) {
                 toast.success('Avatar updated!');
             }
@@ -170,7 +171,7 @@ export default function SettingsPage() {
     const handleExportData = async () => {
         toast.info('Preparing your data export...');
         try {
-            const response = await api.get('/profile/export');
+            const response = await api.get('/profile/export') as { data?: any };
             const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

@@ -8,7 +8,7 @@ import {
     Users, Settings, X, Compass, MessageCircle, Loader2,
     MoreVertical, Sparkles, Shield, Share2, Mic,
     Volume2, LogIn, Server, Monitor, MicOff, MonitorOff, VideoOff, LogOut,
-    Activity, Fingerprint, Terminal, Cpu, Radio, Send, ArrowRight, Lock
+    Activity, Fingerprint, Terminal, Cpu, Radio, Send, ArrowRight, Lock, Trash2
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
@@ -26,6 +26,7 @@ import { useCall } from "@/context/CallContext";
 import { useSearch } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { api } from "@/api/client";
 
 // Media components
 import { MediaUploader } from "@/components/chat/MediaUploader";
@@ -560,12 +561,12 @@ export default function ChatPage() {
                                                                 toast.success('Server deleted successfully');
                                                                 if (selectedServerId === server._id) {
                                                                     setSelectedServerId(null);
-                                                                    setSelectedServer(null);
-                                                                    setSelectedChannel(null);
+                                                                    setSelectedChannelId(null);
+                                                                    setSelectedChannelId(null);
                                                                 }
                                                                 queryClient.invalidateQueries({ queryKey: ['servers'] });
                                                             })
-                                                            .catch((err) => toast.error(err.message || 'Failed to delete server'));
+                                                            .catch((err: Error) => toast.error(err.message || 'Failed to delete server'));
                                                     }
                                                 }}
                                                 className="absolute -bottom-1 -right-1 w-5 h-5 bg-rose-500/90 rounded-md items-center justify-center shadow-lg border-2 border-[#161B22] z-30 opacity-0 group-hover:opacity-100 transition-opacity hidden group-hover:flex"
@@ -1234,8 +1235,7 @@ export default function ChatPage() {
                                                     const senderIds = [msg.senderId, msg.sender?.userId].filter(Boolean);
                                                     const isMe = myIds.some(myId => senderIds.includes(myId));
 
-                                                    const prevMsg = currentMessages[idx - 1];
-                                                    const showAvatar = !prevMsg || (prevMsg.senderId !== msg.senderId && prevMsg.sender?.userId !== msg.sender?.userId);
+                                                    // Avatar grouping logic available if needed
 
                                                     return (
                                                         <motion.div

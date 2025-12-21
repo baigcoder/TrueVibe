@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, BarChart, Bar } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
 import {
-    Loader2, TrendingUp, Users, Heart, ShieldCheck, ArrowUpRight, ArrowDownRight,
+    Loader2, Users, Heart, ShieldCheck, ArrowUpRight, ArrowDownRight,
     Eye, MessageCircle, Share2, Play, Image as ImageIcon, Video, BarChart2,
-    Calendar, Clock, Zap, Award, Target, Activity
+    Calendar, Zap, Award, Target, Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -172,7 +172,7 @@ export default function AnalyticsPage() {
     const { data: overview, isLoading: loadingOverview } = useAnalyticsOverview();
     const { data: reachData, isLoading: loadingReach } = useAnalyticsReach(period);
     const { data: trustData, isLoading: loadingTrust } = useAnalyticsTrust();
-    const { data: engagementData } = useAnalyticsEngagement();
+    useAnalyticsEngagement(); // hook called for side-effects
 
     // Get user's posts and shorts
     const { data: userPosts } = useUserPosts(profile?._id || '');
@@ -192,7 +192,7 @@ export default function AnalyticsPage() {
 
     const reach = (reachData as any)?.data?.metrics || [];
     const trust = (trustData as any)?.data || { distribution: [], trustScore: 0 };
-    const engagement = (engagementData as any)?.data || { breakdown: [], topPosts: [] };
+    // engagementData is available for future use
 
     // Process posts data
     const posts = ((userPosts as any)?.data?.posts || []).map((post: any) => ({

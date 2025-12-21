@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
     Eye, ShieldAlert, AlertTriangle, CheckCircle,
-    Info, Lightbulb, TrendingDown, Flag, Shield,
+    Info, Lightbulb, Flag, Shield,
     Fingerprint, Brain, Search
 } from "lucide-react";
 import { useFeed } from "@/api/hooks";

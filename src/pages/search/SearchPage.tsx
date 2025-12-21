@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearch } from "@/api/hooks";
 import { Input } from "@/components/ui/input";
-import { Search, User, FileText, Film, Loader2, ShieldCheck, TrendingUp, Heart, MessageCircle, X } from "lucide-react";
+import { Search, User, FileText, Film, Loader2, ShieldCheck, Heart, MessageCircle, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";

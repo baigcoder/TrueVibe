@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Square, Trash2, Send, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mic, Square, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface VoiceRecorderProps {
     onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -17,8 +16,8 @@ export function VoiceRecorder({ onRecordingComplete, onCancel, maxDuration = 120
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const analyserRef = useRef<AnalyserNode | null>(null);
-    const animationFrameRef = useRef<number>();
-    const timerRef = useRef<NodeJS.Timeout>();
+    const animationFrameRef = useRef<number>(0);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const startRecording = useCallback(async () => {
         try {

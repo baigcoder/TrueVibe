@@ -9,8 +9,8 @@ import {
 import { usePostAnalytics } from "@/api/hooks";
 import { cn } from "@/lib/utils";
 import {
-    BarChart, Bar, XAxis, YAxis, Tooltip,
-    ResponsiveContainer, Cell, AreaChart, Area
+    Tooltip,
+    ResponsiveContainer, AreaChart, Area
 } from "recharts";
 
 interface PostAnalyticsProps {
