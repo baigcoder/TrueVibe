@@ -102,7 +102,7 @@ const ShortItem = ({
     };
 
     return (
-        <div className="h-[100dvh] w-full relative bg-black flex items-center justify-center snap-start overflow-hidden">
+        <div className="h-full w-full relative bg-black flex items-center justify-center snap-start overflow-hidden">
             {/* Desktop Background Blur */}
             <div className="hidden md:block absolute inset-0 z-0 opacity-40">
                 <img src={short.thumbnailUrl} className="w-full h-full object-cover blur-[100px] scale-150" alt="" />
@@ -497,7 +497,7 @@ export default function ShortsPage() {
     }
 
     return (
-        <div className="relative w-full h-[100dvh] flex flex-col items-center bg-black overflow-hidden overscroll-none">
+        <div className="relative w-full h-full flex flex-col items-center bg-black overflow-hidden overscroll-none">
             {/* Main Scrolling Feed */}
             <div
                 ref={containerRef}
