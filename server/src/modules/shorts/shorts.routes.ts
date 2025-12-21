@@ -125,21 +125,27 @@ router.get('/user/:userId', optionalAuth, async (req, res, next) => {
     }
 });
 
-// Like short
+// Like short (idempotent - won't fail if already liked)
 router.post('/:id/like', authenticate, async (req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user!.userId;
 
-        const short = await Short.findOneAndUpdate(
+        // First try to add the like
+        let short = await Short.findOneAndUpdate(
             { _id: id, isDeleted: false, likes: { $ne: userId } },
             { $push: { likes: userId }, $inc: { likesCount: 1 } },
             { new: true }
         );
 
+        // If no update happened, check if already liked
         if (!short) {
-            res.status(404).json({ success: false, error: { message: 'Short not found or already liked' } });
-            return;
+            short = await Short.findOne({ _id: id, isDeleted: false });
+            if (!short) {
+                res.status(404).json({ success: false, error: { message: 'Short not found' } });
+                return;
+            }
+            // Already liked - return current state
         }
 
         res.json({ success: true, data: { likesCount: short.likesCount, isLiked: true } });
@@ -148,21 +154,27 @@ router.post('/:id/like', authenticate, async (req, res, next) => {
     }
 });
 
-// Unlike short
+// Unlike short (idempotent - won't fail if not liked)
 router.delete('/:id/like', authenticate, async (req, res, next) => {
     try {
         const { id } = req.params;
         const userId = req.user!.userId;
 
-        const short = await Short.findOneAndUpdate(
+        // First try to remove the like
+        let short = await Short.findOneAndUpdate(
             { _id: id, likes: userId },
             { $pull: { likes: userId }, $inc: { likesCount: -1 } },
             { new: true }
         );
 
+        // If no update happened, check if short exists
         if (!short) {
-            res.status(404).json({ success: false, error: { message: 'Short not found or not liked' } });
-            return;
+            short = await Short.findOne({ _id: id, isDeleted: false });
+            if (!short) {
+                res.status(404).json({ success: false, error: { message: 'Short not found' } });
+                return;
+            }
+            // Not liked - return current state
         }
 
         res.json({ success: true, data: { likesCount: short.likesCount, isLiked: false } });
