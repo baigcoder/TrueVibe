@@ -1,5 +1,5 @@
 import {
-    Hand, Users, Star, ArrowUp, ArrowUpRight, Zap
+    Hand, Users, Star, ArrowUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
