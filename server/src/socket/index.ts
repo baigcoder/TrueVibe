@@ -80,7 +80,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
         }
         userSockets.get(userId)!.add(socket.id);
 
-        // Set online status in Upstash Redis
+        // Set online status in Redis
         setPresence(userId, 'online', 300);
 
         // Broadcast online status
@@ -352,7 +352,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
                 if (sockets.size === 0) {
                     userSockets.delete(userId);
 
-                    // Set offline in Upstash Redis
+                    // Set offline in Redis
                     await setPresence(userId, 'offline');
 
                     // Broadcast offline status

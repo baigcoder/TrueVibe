@@ -2,7 +2,6 @@ import http from 'http';
 import { createApp } from './app.js';
 import { config } from './config/index.js';
 import { connectDatabase } from './config/database.js';
-import { getRedisClient } from './config/redis.js';
 import { initializeSocketIO } from './socket/index.js';
 // Import workers to start BullMQ job processors
 import './jobs/worker.js';
@@ -42,9 +41,6 @@ const startServer = async (): Promise<void> => {
         // 5. Connect to databases in the background/after listening
         console.log('🔌 Connecting to MongoDB...');
         await connectDatabase();
-
-        console.log('🔌 Connecting to Redis...');
-        getRedisClient(); // Initialize Redis connection
 
         console.log('✅ All services initialized successfully.');
 

@@ -1,34 +1,17 @@
-import { Redis as UpstashRedis } from '@upstash/redis';
 import { Redis as IORedis } from 'ioredis';
 import { config } from './index.js';
 
 // ============================================
-// UPSTASH REDIS CLIENT (for caching & presence)
+// REDIS CLIENT (for caching, presence & BullMQ)
 // ============================================
-let upstashClient: UpstashRedis | null = null;
+let redisClient: IORedis | null = null;
 
-export const getUpstashClient = (): UpstashRedis => {
-    if (!upstashClient) {
-        upstashClient = new UpstashRedis({
-            url: config.redis.upstash.url,
-            token: config.redis.upstash.token,
-        });
-        console.log('✅ Upstash Redis client initialized');
-    }
-    return upstashClient;
-};
-
-// ============================================
-// IOREDIS CLIENT (for BullMQ job queues)
-// ============================================
-let ioRedisClient: IORedis | null = null;
-
-export const getIORedisClient = (): IORedis => {
-    if (!ioRedisClient) {
-        const redisUrl = config.redis.local.url;
+export const getRedisClient = (): IORedis => {
+    if (!redisClient) {
+        const redisUrl = config.redis.url;
         const isTLS = redisUrl.startsWith('rediss://');
 
-        ioRedisClient = new IORedis(redisUrl, {
+        redisClient = new IORedis(redisUrl, {
             maxRetriesPerRequest: null, // Required for BullMQ
             enableReadyCheck: false,
             tls: isTLS ? { rejectUnauthorized: false } : undefined,
@@ -41,37 +24,42 @@ export const getIORedisClient = (): IORedis => {
             },
         });
 
-        ioRedisClient.on('connect', () => {
-            console.log('✅ Redis (ioredis) connected for BullMQ');
+        redisClient.on('connect', () => {
+            console.log('✅ Redis connected');
         });
 
-        ioRedisClient.on('error', (err) => {
+        redisClient.on('error', (err) => {
             console.error('Redis connection error:', err.message);
         });
     }
-    return ioRedisClient;
+    return redisClient;
 };
 
 // Legacy alias for backwards compatibility
-export const getRedisClient = getIORedisClient;
+export const getIORedisClient = getRedisClient;
 
 export const disconnectRedis = async (): Promise<void> => {
-    if (ioRedisClient) {
-        await ioRedisClient.quit();
-        ioRedisClient = null;
-        console.log('Local Redis disconnected');
+    if (redisClient) {
+        await redisClient.quit();
+        redisClient = null;
+        console.log('Redis disconnected');
     }
-    upstashClient = null;
-    console.log('Upstash client cleared');
 };
 
 // ============================================
-// CACHING UTILITIES (using Upstash)
+// CACHING UTILITIES
 // ============================================
 export const cacheGet = async <T>(key: string): Promise<T | null> => {
-    const client = getUpstashClient();
-    const data = await client.get<T>(key);
-    return data ?? null;
+    const client = getRedisClient();
+    const data = await client.get(key);
+    if (data) {
+        try {
+            return JSON.parse(data) as T;
+        } catch {
+            return data as unknown as T;
+        }
+    }
+    return null;
 };
 
 export const cacheSet = async <T>(
@@ -79,7 +67,7 @@ export const cacheSet = async <T>(
     value: T,
     expiresInSeconds?: number
 ): Promise<void> => {
-    const client = getUpstashClient();
+    const client = getRedisClient();
 
     if (expiresInSeconds) {
         await client.setex(key, expiresInSeconds, JSON.stringify(value));
@@ -89,12 +77,12 @@ export const cacheSet = async <T>(
 };
 
 export const cacheDelete = async (key: string): Promise<void> => {
-    const client = getUpstashClient();
+    const client = getRedisClient();
     await client.del(key);
 };
 
 export const cacheDeletePattern = async (pattern: string): Promise<void> => {
-    const client = getUpstashClient();
+    const client = getRedisClient();
     const keys = await client.keys(pattern);
     if (keys.length > 0) {
         await client.del(...keys);
@@ -102,14 +90,14 @@ export const cacheDeletePattern = async (pattern: string): Promise<void> => {
 };
 
 // ============================================
-// PRESENCE UTILITIES (using Upstash)
+// PRESENCE UTILITIES
 // ============================================
 export const setPresence = async (userId: string, status: 'online' | 'offline', ttlSeconds = 300): Promise<void> => {
-    const client = getUpstashClient();
+    const client = getRedisClient();
     await client.setex(`presence:${userId}`, ttlSeconds, status);
 };
 
 export const getPresence = async (userId: string): Promise<string | null> => {
-    const client = getUpstashClient();
-    return await client.get<string>(`presence:${userId}`);
+    const client = getRedisClient();
+    return await client.get(`presence:${userId}`);
 };

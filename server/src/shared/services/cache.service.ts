@@ -1,4 +1,4 @@
-import { getUpstashClient } from '../../config/redis.js';
+import { getRedisClient } from '../../config/redis.js';
 
 /**
  * Cache Service for Redis-based caching
@@ -29,9 +29,16 @@ export const CACHE_KEYS = {
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
     try {
-        const redis = getUpstashClient();
-        const value = await redis.get<T>(key);
-        return value || null;
+        const redis = getRedisClient();
+        const value = await redis.get(key);
+        if (value) {
+            try {
+                return JSON.parse(value) as T;
+            } catch {
+                return value as unknown as T;
+            }
+        }
+        return null;
     } catch (error) {
         console.error('Cache get error:', error);
         return null;
@@ -47,8 +54,7 @@ export async function cacheSet(
     ttlSeconds: number = CACHE_TTL.MEDIUM
 ): Promise<boolean> {
     try {
-        const redis = getUpstashClient();
-        // Upstash Redis uses setex for setting with expiration
+        const redis = getRedisClient();
         await redis.setex(key, ttlSeconds, JSON.stringify(value));
         return true;
     } catch (error) {
@@ -62,7 +68,7 @@ export async function cacheSet(
  */
 export async function cacheDelete(key: string): Promise<boolean> {
     try {
-        const redis = getUpstashClient();
+        const redis = getRedisClient();
         await redis.del(key);
         return true;
     } catch (error) {
@@ -76,10 +82,10 @@ export async function cacheDelete(key: string): Promise<boolean> {
  */
 export async function cacheDeletePattern(pattern: string): Promise<boolean> {
     try {
-        const redis = getUpstashClient();
+        const redis = getRedisClient();
         const keys = await redis.keys(pattern);
         if (keys.length > 0) {
-            await Promise.all(keys.map((key) => redis.del(key)));
+            await Promise.all(keys.map((key: string) => redis.del(key)));
         }
         return true;
     } catch (error) {

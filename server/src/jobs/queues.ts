@@ -4,6 +4,7 @@ import { getRedisClient } from '../config/redis.js';
 // AI Analysis Queue
 export const aiAnalysisQueue = new Queue('ai-analysis', {
     connection: getRedisClient(),
+    skipVersionCheck: true, // Suppress eviction policy warnings
     defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -18,6 +19,7 @@ export const aiAnalysisQueue = new Queue('ai-analysis', {
 // Analytics Aggregation Queue
 export const analyticsQueue = new Queue('analytics', {
     connection: getRedisClient(),
+    skipVersionCheck: true,
     defaultJobOptions: {
         attempts: 2,
         removeOnComplete: 50,
@@ -27,6 +29,7 @@ export const analyticsQueue = new Queue('analytics', {
 // Notification Queue
 export const notificationQueue = new Queue('notifications', {
     connection: getRedisClient(),
+    skipVersionCheck: true,
     defaultJobOptions: {
         attempts: 3,
         removeOnComplete: 100,

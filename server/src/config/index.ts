@@ -17,13 +17,7 @@ export const config = {
     },
 
     redis: {
-        upstash: {
-            url: process.env.UPSTASH_REDIS_REST_URL || '',
-            token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-        },
-        local: {
-            url: process.env.REDIS_URL || 'redis://localhost:6379',
-        },
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
     },
 
     jwt: {
