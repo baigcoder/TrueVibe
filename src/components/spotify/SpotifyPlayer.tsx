@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
 import { useSpotify } from '@/hooks/useSpotify';
 import { useState, useEffect, useRef } from 'react';
 
@@ -59,18 +59,64 @@ export const SpotifyPlayer = () => {
         }
     }, [nowPlaying?.track?.albumArt]);
 
-    if (isLoading || !nowPlaying?.playing) return null;
+    // Show idle state when connected but not playing
+    if (isLoading) return null;
 
-    const { track } = nowPlaying;
-    if (!track) return null;
+    const { track } = nowPlaying || {};
+    const hasTrack = track && nowPlaying?.playing;
 
-    const handlePlayPause = () => {
+    const handlePlayPause = (e: React.MouseEvent) => {
+        e.stopPropagation();
         if (isPlaying) {
             pause();
         } else {
             play();
         }
     };
+
+    const handleNext = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        next();
+    };
+
+    const handlePrevious = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        previous();
+    };
+
+    // Not playing - show idle state
+    if (!hasTrack) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full bg-[#1DB954]/5 backdrop-blur-3xl border border-[#1DB954]/10 rounded-3xl p-4 relative overflow-hidden"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-[#1DB954]/10 flex items-center justify-center">
+                        <Music className="w-5 h-5 text-[#1DB954]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black text-white uppercase tracking-tight aether-font italic">
+                            Spotify Connected
+                        </p>
+                        <p className="text-[8px] text-[#1DB954] font-bold uppercase tracking-widest tech-font">
+                            Play something to see it here
+                        </p>
+                    </div>
+                    <div className="flex gap-0.5 items-end h-4">
+                        {[0.3, 0.5, 0.4].map((h, i) => (
+                            <div
+                                key={i}
+                                className="w-[2px] bg-[#1DB954]/40 rounded-full"
+                                style={{ height: `${h * 100}%` }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div
@@ -154,7 +200,7 @@ export const SpotifyPlayer = () => {
                 {/* Playback Controls */}
                 <div className="shrink-0 flex items-center gap-1">
                     <button
-                        onClick={() => previous()}
+                        onClick={handlePrevious}
                         className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
                     >
                         <SkipBack className="w-3 h-3 text-white/70" />
@@ -176,7 +222,7 @@ export const SpotifyPlayer = () => {
                     </button>
 
                     <button
-                        onClick={() => next()}
+                        onClick={handleNext}
                         className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
                     >
                         <SkipForward className="w-3 h-3 text-white/70" />
