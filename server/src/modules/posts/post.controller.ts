@@ -4,11 +4,13 @@ import { Post } from './Post.model.js';
 import { Media } from './Media.model.js';
 import { Draft } from './Draft.model.js';
 import { AIAnalysis } from './AIAnalysis.model.js';
+import { AIReport } from './AIReport.model.js';
 import { Profile } from '../users/Profile.model.js';
 import { Comment } from '../comments/Comment.model.js';
 import { NotFoundError, ForbiddenError } from '../../shared/middleware/error.middleware.js';
 import { addAIAnalysisJob } from '../../jobs/queues.js';
 import { createNotification } from '../notifications/notification.service.js';
+import { config } from '../../config/index.js';
 
 // Create post
 export const createPost = async (
@@ -1059,6 +1061,160 @@ export const getPostAnalytics = async (
         res.status(200).json({
             status: 'success',
             data: { analytics },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ============ AI REPORTS ============
+
+/**
+ * Generate AI authenticity report for a post
+ * Only accessible by post owner
+ */
+export const generateReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        // Get the post
+        const post = await Post.findById(id);
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        // Only the author can generate a report
+        if (post.userId.toString() !== userId) {
+            throw new ForbiddenError('Only the post owner can generate AI reports');
+        }
+
+        // Check if report already exists
+        const existingReport = await AIReport.findOne({ postId: id, userId });
+        if (existingReport) {
+            res.json({
+                success: true,
+                data: { report: existingReport, cached: true },
+            });
+            return;
+        }
+
+        // Get AI analysis for the post
+        const analysis = await AIAnalysis.findOne({ postId: id });
+        if (!analysis || analysis.status !== 'completed') {
+            res.status(400).json({
+                success: false,
+                error: 'AI analysis not completed yet. Please wait for analysis to finish.',
+            });
+            return;
+        }
+
+        // Call Python AI service to generate report
+        const aiServiceUrl = config.ai.serviceUrl?.replace('/analyze', '') || 'http://localhost:8000';
+
+        const analysisResults = {
+            fake_score: analysis.analysisDetails?.deepfakeAnalysis?.fakeScore || 0,
+            real_score: analysis.analysisDetails?.deepfakeAnalysis?.realScore || 1,
+            classification: analysis.analysisDetails?.deepfakeAnalysis?.classification || 'real',
+            confidence: analysis.confidenceScore / 100,
+            faces_detected: analysis.analysisDetails?.faceDetection?.detected ? 1 : 0,
+            processing_time_ms: analysis.processingTimeMs,
+            model_version: analysis.modelVersion,
+        };
+
+        console.log(`📝 Generating AI report for post ${id}...`);
+
+        const response = await fetch(`${aiServiceUrl}/generate-report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ analysis_results: analysisResults }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`AI service error: ${errorText}`);
+        }
+
+        const reportData = await response.json() as {
+            verdict: string;
+            confidence: number;
+            summary: string;
+            detectionBreakdown: Array<{ category: string; detected: boolean; severity: string; explanation: string; score?: number }>;
+            technicalDetails: Array<{ metric: string; value: string; interpretation: string }>;
+            recommendations: string[];
+            modelUsed: string;
+        };
+
+        // Store the report
+        const report = await AIReport.create({
+            postId: id,
+            userId,
+            analysisId: analysis._id,
+            report: {
+                verdict: reportData.verdict,
+                confidence: reportData.confidence,
+                summary: reportData.summary,
+                detectionBreakdown: reportData.detectionBreakdown || [],
+                technicalDetails: reportData.technicalDetails || [],
+                recommendations: reportData.recommendations || [],
+            },
+            modelUsed: reportData.modelUsed || 'fallback',
+            generatedAt: new Date(),
+        });
+
+        console.log(`✅ AI report generated for post ${id} using ${report.modelUsed}`);
+
+        res.status(201).json({
+            success: true,
+            data: { report, cached: false },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get AI authenticity report for a post
+ * Only accessible by post owner
+ */
+export const getReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        // Get the post
+        const post = await Post.findById(id);
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        // Only the author can view reports
+        if (post.userId.toString() !== userId) {
+            throw new ForbiddenError('Only the post owner can view AI reports');
+        }
+
+        // Get the report
+        const report = await AIReport.findOne({ postId: id, userId });
+
+        if (!report) {
+            res.status(404).json({
+                success: false,
+                error: 'Report not found. Generate one first.',
+            });
+            return;
+        }
+
+        res.json({
+            success: true,
+            data: { report },
         });
     } catch (error) {
         next(error);

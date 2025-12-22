@@ -6,7 +6,8 @@ import {
     votePoll, pinPost, unpinPost, createQuotePost,
     saveDraft, getDrafts, deleteDraft, publishDraft,
     getScheduledPosts, cancelScheduledPost,
-    recordView, getPostAnalytics
+    recordView, getPostAnalytics,
+    generateReport, getReport
 } from './post.controller.js';
 import { authenticate, optionalAuth } from '../../shared/middleware/auth.middleware.js';
 import { validateBody } from '../../shared/middleware/validate.middleware.js';
@@ -62,6 +63,13 @@ router.delete('/:id/pin', authenticate, unpinPost);
 // ============ QUOTE POSTS ============
 // Create quote post
 router.post('/:id/quote', authenticate, createQuotePost);
+
+// ============ AI REPORTS ============
+// Generate AI authenticity report (owner-only)
+router.post('/:id/generate-report', authenticate, generateReport);
+
+// Get AI report (owner-only)
+router.get('/:id/report', authenticate, getReport);
 
 // ============ DRAFTS ============
 // Save draft

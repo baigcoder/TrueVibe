@@ -63,7 +63,7 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                         <div className="w-full max-w-lg">
                             <div className="glass-luxe border border-white/10 rounded-3xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] relative overflow-hidden group">
                                 {/* Decorative Aura */}
-                                <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 blur-[100px] rounded-full -mr-40 -mt-40 pointer-events-none" />
+                                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] rounded-full -mr-40 -mt-40 pointer-events-none" />
                                 <div className="absolute bottom-0 left-0 w-80 h-80 bg-violet-500/10 blur-[100px] rounded-full -ml-40 -mb-40 pointer-events-none" />
 
                                 {/* Header */}
@@ -71,9 +71,9 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                                     <div className="flex items-center gap-5">
                                         <div className="w-14 h-14 rounded-2xl glass-luxe-light flex items-center justify-center border border-white/10 shadow-xl">
                                             {waitingForApproval ? (
-                                                <Clock className="w-7 h-7 text-cyan-400 animate-pulse" />
+                                                <Clock className="w-7 h-7 text-primary animate-pulse" />
                                             ) : (
-                                                <Fingerprint className="w-7 h-7 text-cyan-400 animate-pulse" />
+                                                <Fingerprint className="w-7 h-7 text-primary animate-pulse" />
                                             )}
                                         </div>
                                         <div>
@@ -105,15 +105,15 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                                                 <motion.div
                                                     animate={{ rotate: 360 }}
                                                     transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                                                    className="absolute inset-0 rounded-full border-2 border-cyan-500/10 border-t-cyan-500 shadow-[0_0_40px_rgba(0,245,255,0.2)]"
+                                                    className="absolute inset-0 rounded-full border-2 border-primary/10 border-t-primary shadow-[0_0_40px_rgba(129,140,248,0.2)]"
                                                 />
                                                 <motion.div
                                                     animate={{ rotate: -360 }}
                                                     transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                                                    className="absolute inset-4 rounded-full border-2 border-white/5 border-b-cyan-500/40"
+                                                    className="absolute inset-4 rounded-full border-2 border-white/5 border-b-primary/40"
                                                 />
                                                 <div className="absolute inset-0 flex items-center justify-center">
-                                                    <ShieldAlert className="w-10 h-10 text-cyan-400 animate-pulse" />
+                                                    <ShieldAlert className="w-10 h-10 text-primary animate-pulse" />
                                                 </div>
                                             </div>
 
@@ -142,23 +142,23 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                                                     <label className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">
                                                         Identifier
                                                     </label>
-                                                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[8px] text-cyan-400 font-bold uppercase">REQUIRED</span>
+                                                    <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[8px] text-primary font-bold uppercase">REQUIRED</span>
                                                 </div>
                                                 <div className="relative group">
-                                                    <Key className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-cyan-400 transition-colors" />
+                                                    <Key className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-primary transition-colors" />
                                                     <input
                                                         type="text"
                                                         value={roomId}
                                                         onChange={(e) => setRoomId(e.target.value)}
                                                         placeholder="Enter node ID..."
-                                                        className="w-full pl-14 pr-8 py-5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:outline-none focus:border-cyan-500/40 focus:ring-0 transition-all font-medium text-base tracking-[0.1em] uppercase shadow-inner"
+                                                        className="w-full pl-14 pr-8 py-5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:outline-none focus:border-primary/40 focus:ring-0 transition-all font-medium text-base tracking-[0.1em] uppercase shadow-inner"
                                                     />
                                                 </div>
                                             </div>
 
                                             {/* Info */}
                                             <div className="flex items-start gap-4 p-6 glass-luxe-light rounded-2xl border border-white/5">
-                                                <Activity className="w-5 h-5 text-cyan-400/60 flex-shrink-0 mt-0.5" />
+                                                <Activity className="w-5 h-5 text-primary/60 flex-shrink-0 mt-0.5" />
                                                 <p className="text-[11px] text-slate-400 leading-relaxed uppercase tracking-tighter">
                                                     Some nodes may require a manual verification protocol before the sync can be completed.
                                                 </p>
@@ -179,7 +179,7 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                                         <button
                                             onClick={handleJoin}
                                             disabled={!roomId.trim() || isConnecting}
-                                            className="h-16 px-12 rounded-2xl text-xs font-bold uppercase tracking-[0.3em] text-white bg-cyan-500 hover:bg-cyan-400 disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_16px_48px_rgba(0,245,255,0.3)] transition-all flex items-center gap-4 group"
+                                            className="h-16 px-12 rounded-2xl text-xs font-bold uppercase tracking-[0.3em] text-white bg-primary hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_16px_48px_rgba(129,140,248,0.3)] transition-all flex items-center gap-4 group"
                                         >
                                             {isConnecting ? (
                                                 <>
@@ -199,8 +199,9 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                         </div>
                     </motion.div>
                 </>
-            )}
-        </AnimatePresence>
+            )
+            }
+        </AnimatePresence >
     );
 }
 

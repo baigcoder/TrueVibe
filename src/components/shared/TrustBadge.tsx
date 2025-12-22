@@ -1,4 +1,4 @@
-import { ShieldCheck, AlertTriangle, XOctagon, Clock, RefreshCw, ChevronDown, Scan, Brain, Activity, Target } from "lucide-react";
+import { ShieldCheck, AlertTriangle, XOctagon, Clock, RefreshCw, ChevronDown, Scan, Brain, Activity, Target, FileText, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -23,6 +23,9 @@ interface TrustBadgeProps {
     onRefresh?: () => void;
     isRefreshing?: boolean;
     compact?: boolean;
+    isOwner?: boolean;
+    onGenerateReport?: () => void;
+    isGeneratingReport?: boolean;
 }
 
 export function TrustBadge({
@@ -31,7 +34,10 @@ export function TrustBadge({
     score = 94,
     analysisDetails,
     isRefreshing = false,
-    compact = false
+    compact = false,
+    isOwner = false,
+    onGenerateReport,
+    isGeneratingReport = false
 }: TrustBadgeProps) {
     const [showDetails, setShowDetails] = useState(false);
 
@@ -130,64 +136,69 @@ export function TrustBadge({
             <motion.div
                 onClick={() => setShowDetails(!showDetails)}
                 className={cn(
-                    "inline-flex items-center gap-3 p-1 pr-3 rounded-full border bg-slate-900/60 backdrop-blur-xl transition-all duration-300 hover:bg-slate-900/80 cursor-pointer",
+                    "inline-flex items-center gap-3 p-1 pr-4 rounded-full border bg-slate-900/40 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/60 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
                     current.borderColor,
-                    current.glow,
+                    "shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-primary/5",
                     className
                 )}
             >
                 {/* HUD Icon Circle */}
                 <div className="relative flex-shrink-0">
                     <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center border border-white/5 bg-white/5",
+                        "w-9 h-9 rounded-full flex items-center justify-center border border-white/10 bg-white/5 transition-transform duration-500 group-hover/badge:rotate-[360deg]",
                         current.textColor
                     )}>
                         {(level === 'analyzing' || isRefreshing) ? (
                             <RefreshCw className="w-4 h-4 animate-spin-slow" />
                         ) : (
-                            <current.icon className="w-4 h-4" />
+                            <current.icon className="w-5 h-5 shadow-sm" />
                         )}
                     </div>
-                    {/* Signal Status Dot */}
+                    {/* Signal Status Dot with Ping Animation */}
                     <div className={cn(
-                        "absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-900",
-                        current.signalColor
+                        "absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-950",
+                        current.signalColor,
+                        "shadow-[0_0_8px_currentColor]"
                     )}>
-                        <div className={cn("absolute inset-0 rounded-full animate-ping opacity-40", current.signalColor)} />
+                        <div className={cn("absolute inset-0 rounded-full animate-ping opacity-50", current.signalColor)} />
                     </div>
                 </div>
 
                 {/* Technical Info Layout */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-5">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                            <span className={cn("text-[10px] font-black italic tracking-wider leading-none", current.textColor)}>
+                            <span className={cn("text-xs font-black italic tracking-tight uppercase leading-none", current.textColor)}>
                                 {current.label}
                             </span>
-                            <div className="h-1.5 w-[1px] bg-white/20" />
-                            <span className="text-[8px] font-mono font-bold text-slate-500 leading-none tracking-tighter">
+                            <div className="h-2 w-[1px] bg-white/10" />
+                            <span className="text-[9px] font-mono font-bold text-slate-500 leading-none tracking-widest opacity-80">
                                 PROB:0.{realPercent < 10 ? `0${realPercent}` : realPercent}
                             </span>
                         </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                            <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="flex items-center gap-2 mt-1 px-0.5">
+                            <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden relative">
                                 <motion.div
-                                    className={cn("h-full", current.signalColor)}
+                                    className={cn("h-full relative z-10", current.signalColor)}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${realPercent}%` }}
-                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    transition={{ duration: 1.5, ease: "circOut" }}
                                 />
+                                {/* Progress background glow */}
+                                <div className={cn("absolute inset-0 opacity-20 blur-[2px]", current.signalColor)} />
                             </div>
-                            <span className={cn("text-[9px] font-mono leading-none", realPercent > 80 ? "text-emerald-400" : realPercent > 50 ? "text-amber-400" : "text-red-400")}>
+                            <span className={cn("text-[10px] font-mono font-bold leading-none tracking-tighter", realPercent > 80 ? "text-emerald-400" : realPercent > 50 ? "text-amber-400" : "text-red-400")}>
                                 {realPercent}%
                             </span>
                         </div>
                     </div>
 
-                    <ChevronDown className={cn(
-                        "w-3 h-3 text-slate-600 transition-transform duration-300",
-                        showDetails && "rotate-180"
-                    )} />
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/5 group-hover/badge:bg-white/10 transition-colors">
+                        <ChevronDown className={cn(
+                            "w-3.5 h-3.5 text-slate-500 transition-transform duration-500 ease-in-out",
+                            showDetails && "rotate-180"
+                        )} />
+                    </div>
                 </div>
             </motion.div>
 
@@ -267,6 +278,42 @@ export function TrustBadge({
                                     {realPercent > 80 ? "✓ VALIDATED AS REAL" : "⚠ MANIPULATION DETECTED"}
                                 </span>
                             </div>
+
+                            {/* Generate Report Button - Owner Only */}
+                            {isOwner && onGenerateReport && level !== 'analyzing' && level !== 'pending' && (
+                                <motion.button
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onGenerateReport();
+                                    }}
+                                    disabled={isGeneratingReport}
+                                    className="mt-4 w-full relative group/btn overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 opacity-80 group-hover/btn:opacity-100 transition-opacity" />
+                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] group-hover/btn:animate-[shimmer_2s_infinite]" />
+
+                                    <div className="relative flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-white/20">
+                                        {isGeneratingReport ? (
+                                            <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                                        ) : (
+                                            <div className="relative">
+                                                <FileText className="w-4 h-4 text-white" />
+                                                <motion.div
+                                                    className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full border border-violet-600"
+                                                    animate={{ scale: [1, 1.2, 1] }}
+                                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                                />
+                                            </div>
+                                        )}
+                                        <span className="text-[11px] font-black tracking-[0.1em] uppercase text-white">
+                                            {isGeneratingReport ? "Decoding Neural Core..." : "Access Analysis Report"}
+                                        </span>
+                                        <Sparkles className="w-3.5 h-3.5 text-white/80 group-hover/btn:rotate-12 transition-transform" />
+                                    </div>
+                                </motion.button>
+                            )}
                         </div>
                     </motion.div>
                 )}

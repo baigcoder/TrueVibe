@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/api/client";
+import { SpotifyConnect } from "@/components/spotify/SpotifyConnect";
+import { Music } from "lucide-react";
 
 interface SettingsSection {
     id: string;
@@ -33,6 +35,7 @@ const settingsSections: SettingsSection[] = [
     { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Control alert preferences' },
     { id: 'privacy', label: 'Privacy', icon: Lock, description: 'Secure your account data' },
     { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Customize your experience' },
+    { id: 'spotify', label: 'Spotify', icon: Music, description: 'Sync your music vibe' },
     { id: 'trust', label: 'Trust Score', icon: Shield, description: 'Verify your authenticity' },
     { id: 'data', label: 'Data & Export', icon: Download, description: 'Download your data' },
 ];
@@ -647,6 +650,48 @@ export default function SettingsPage() {
                                         <Save className="w-4 h-4 mr-2" />
                                         Save Appearance
                                     </Button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Spotify Section */}
+                        {activeSection === 'spotify' && (
+                            <motion.div
+                                key="spotify"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="space-y-6"
+                            >
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                    <h3 className="text-white font-semibold flex items-center gap-2 mb-6">
+                                        <Music className="w-4 h-4 text-[#1DB954]" />
+                                        Music Integration
+                                    </h3>
+                                    <div className="flex justify-center">
+                                        <SpotifyConnect />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Spotify Section */}
+                        {activeSection === 'spotify' && (
+                            <motion.div
+                                key="spotify"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="space-y-6"
+                            >
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                    <h3 className="text-white font-semibold flex items-center gap-2 mb-6">
+                                        <Music className="w-4 h-4 text-[#1DB954]" />
+                                        Music Integration
+                                    </h3>
+                                    <div className="flex justify-center">
+                                        <SpotifyConnect />
+                                    </div>
                                 </div>
                             </motion.div>
                         )}

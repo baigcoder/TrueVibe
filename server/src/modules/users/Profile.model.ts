@@ -23,6 +23,13 @@ export interface IProfile extends Document {
     };
     createdAt: Date;
     updatedAt: Date;
+    // Spotify Integration
+    spotifyAccessToken?: string;
+    spotifyRefreshToken?: string;
+    spotifyTokenExpiry?: Date;
+    spotifyUserId?: string;
+    spotifyDisplayName?: string;
+    spotifyConnected?: boolean;
 }
 
 const profileSchema = new Schema<IProfile>(
@@ -119,6 +126,16 @@ const profileSchema = new Schema<IProfile>(
                 enum: ['everyone', 'followers', 'none'],
                 default: 'everyone',
             },
+        },
+        // Spotify Integration
+        spotifyAccessToken: String,
+        spotifyRefreshToken: String,
+        spotifyTokenExpiry: Date,
+        spotifyUserId: String,
+        spotifyDisplayName: String,
+        spotifyConnected: {
+            type: Boolean,
+            default: false,
         },
     },
     {

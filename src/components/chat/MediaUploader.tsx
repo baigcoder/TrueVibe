@@ -122,14 +122,14 @@ export function MediaUploader({
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         className="absolute bottom-full left-0 mb-6 z-50 min-w-[320px]"
                     >
-                        <div className="glass-luxe rounded-[2rem] border border-cyan-500/20 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.9)] relative overflow-hidden">
+                        <div className="glass-luxe rounded-[2rem] border border-primary/20 p-4 shadow-[0_20px_80px_rgba(0,0,0,0.9)] relative overflow-hidden">
                             {/* Background Accents */}
                             <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
-                            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+                            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
                             <div className="flex items-center gap-3 px-4 pb-4 mb-4 border-b border-white/5 relative z-10">
-                                <div className="w-8 h-8 rounded-lg glass-luxe-light flex items-center justify-center border border-cyan-500/30">
-                                    <Camera className="w-4 h-4 text-cyan-400" />
+                                <div className="w-8 h-8 rounded-lg glass-luxe-light flex items-center justify-center border border-primary/30">
+                                    <Camera className="w-4 h-4 text-primary" />
                                 </div>
                                 <span className="text-[10px] font-black text-white italic uppercase tracking-[0.2em] tech-font">
                                     ATTACH_PROTOCOL_V4
@@ -156,7 +156,7 @@ export function MediaUploader({
                                             "flex flex-col items-center gap-3 p-5 rounded-3xl border transition-all group relative overflow-hidden shadow-lg",
                                             item.bgColor,
                                             item.borderColor,
-                                            "hover:border-white/20 active:border-cyan-500/40"
+                                            "hover:border-white/20 active:border-primary/40"
                                         )}
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -176,7 +176,7 @@ export function MediaUploader({
 
                             <div className="mt-4 px-4 py-3 bg-[#060a16]/60 rounded-2xl border border-white/5 relative z-10">
                                 <div className="flex items-center gap-2 mb-1.5 opacity-40">
-                                    <Shield className="w-3 h-3 text-cyan-400" />
+                                    <Shield className="w-3 h-3 text-primary" />
                                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">Security Parameters</span>
                                 </div>
                                 <p className="text-[9px] text-slate-600 font-bold tracking-tight uppercase">

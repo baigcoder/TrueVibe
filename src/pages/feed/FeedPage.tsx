@@ -196,12 +196,12 @@ export default function FeedPage() {
                                         }}
                                     />
                                 ) : (
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20" />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/20 to-secondary/20 animate-gradient-xy" />
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90" />
                             </div>
                         ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/80 via-purple-500/80 to-rose-500/80 opacity-90" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-rose-500 animate-gradient-xy opacity-90" />
                         )}
 
                         {/* Content Overlay */}
@@ -304,8 +304,8 @@ export default function FeedPage() {
                             <div className="absolute inset-0 p-5 flex flex-col justify-between">
                                 <div className="flex justify-between items-center">
                                     {storyGroup.hasUnwatched && (
-                                        <div className="px-2 py-0.5 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30">
-                                            <span className="text-[8px] font-black text-primary uppercase tracking-tighter">NEW</span>
+                                        <div className="px-2 py-0.5 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_10px_rgba(129,140,248,0.3)]">
+                                            <span className="text-[8px] font-black text-primary uppercase tracking-tighter">LIVE</span>
                                         </div>
                                     )}
                                     <div className="w-6 h-6 rounded-lg bg-black/40 backdrop-blur-md flex items-center justify-center opacity-0 group-hover/story:opacity-100 transition-opacity">
@@ -317,7 +317,7 @@ export default function FeedPage() {
                                     <div className={cn(
                                         "w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-xl sm:rounded-2xl p-0.5 transition-all duration-700 group-hover/story:p-1",
                                         storyGroup.hasUnwatched
-                                            ? "bg-gradient-to-tr from-primary via-purple-500 to-rose-400 animate-gradient-xy"
+                                            ? "bg-gradient-to-tr from-primary via-purple-500 to-rose-400 animate-gradient-xy shadow-[0_0_15px_rgba(129,140,248,0.4)]"
                                             : "bg-white/20"
                                     )}>
                                         <Avatar className="w-full h-full rounded-lg sm:rounded-xl border border-black/40">
@@ -328,11 +328,11 @@ export default function FeedPage() {
                                         </Avatar>
                                     </div>
                                     <div className="text-center w-full px-1">
-                                        <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-wide sm:tracking-widest block truncate drop-shadow-md max-w-[75px] sm:max-w-[90px] mx-auto">
+                                        <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-wide sm:tracking-widest block truncate drop-shadow-md max-w-[75px] sm:max-w-[90px] mx-auto group-hover:text-primary transition-colors">
                                             {storyGroup.user.name.split(' ')[0].slice(0, 8)}
                                         </span>
                                         <span className="text-[7px] sm:text-[8px] font-bold text-white/40 uppercase tracking-tighter">
-                                            {storyGroup.stories.length}
+                                            {storyGroup.stories.length} VIBES
                                         </span>
                                     </div>
                                 </div>
@@ -372,10 +372,17 @@ export default function FeedPage() {
                         <tab.icon className={cn(
                             "w-4 h-4 relative z-10 transition-all",
                             activeFeed === tab.id
-                                ? "text-primary drop-shadow-[0_0_8px_rgba(129,140,248,0.8)]"
+                                ? "text-primary drop-shadow-[0_0_12px_rgba(129,140,248,0.8)] scale-110"
                                 : "text-slate-500 group-hover:text-white"
                         )} />
-                        <span className="relative z-10">{tab.label}</span>
+                        <span className={cn(
+                            "relative z-10 transition-all duration-500",
+                            activeFeed === tab.id
+                                ? "bg-gradient-to-r from-white via-primary to-secondary bg-clip-text text-transparent italic font-black"
+                                : ""
+                        )}>
+                            {tab.label}
+                        </span>
                     </motion.button>
                 ))}
             </div>
@@ -431,21 +438,21 @@ export default function FeedPage() {
                     </div>
                 </motion.div>
             ) : (
-            <AnimatePresence mode="popLayout">
-                <div className="space-y-8">
-                    {posts.map((post, index) => (
-                        <motion.div
-                            key={post._id}
-                            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        >
-                            <PostCard post={post} />
-                        </motion.div>
-                    ))}
-                </div>
-            </AnimatePresence>
+                <AnimatePresence mode="popLayout">
+                    <div className="space-y-8">
+                        {posts.map((post, index) => (
+                            <motion.div
+                                key={post._id}
+                                initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+                                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                            >
+                                <PostCard post={post} />
+                            </motion.div>
+                        ))}
+                    </div>
+                </AnimatePresence>
             )}
 
             {/* Story Viewer Modal */}

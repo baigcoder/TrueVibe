@@ -8,10 +8,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import traceback
 
 from model import get_detector
+from llm_service import generate_report, AIReport
 
 
 # Request/Response models
@@ -44,6 +45,38 @@ class ErrorResponse(BaseModel):
     """Error response model."""
     error: str
     detail: Optional[str] = None
+
+
+# Report Generation Models
+class ReportRequest(BaseModel):
+    """Request model for report generation."""
+    image_url: Optional[HttpUrl] = None
+    analysis_results: Dict[str, Any]
+
+
+class DetectionItemModel(BaseModel):
+    category: str
+    detected: bool
+    severity: str
+    explanation: str
+    score: Optional[float] = None
+
+
+class TechnicalDetailModel(BaseModel):
+    metric: str
+    value: str
+    interpretation: str
+
+
+class ReportResponse(BaseModel):
+    """Response model for generated report."""
+    verdict: str
+    confidence: float
+    summary: str
+    detectionBreakdown: List[DetectionItemModel]
+    technicalDetails: List[TechnicalDetailModel]
+    recommendations: List[str]
+    modelUsed: str
 
 
 # Lifespan context manager for model loading
@@ -155,17 +188,60 @@ async def analyze_image(request: AnalyzeRequest):
         )
 
 
+@app.post("/generate-report", response_model=ReportResponse, responses={
+    400: {"model": ErrorResponse},
+    500: {"model": ErrorResponse}
+})
+async def generate_ai_report(request: ReportRequest):
+    """
+    Generate a detailed AI authenticity report.
+    
+    Uses multiple LLMs (Gemini, Groq, GPT) to create a comprehensive
+    explanation of the deepfake detection results.
+    
+    Args:
+        request: Contains analysis results and optional image URL
+        
+    Returns:
+        Detailed report with verdict, explanations, and recommendations
+    """
+    try:
+        print(f"\n{'='*50}")
+        print(f"📝 GENERATING AI AUTHENTICITY REPORT")
+        print(f"{'='*50}")
+        
+        # Generate report using LLM service
+        report = await generate_report(request.analysis_results)
+        
+        print(f"✅ Report generated using {report.model_used}")
+        print(f"   Verdict: {report.verdict} ({report.confidence * 100:.1f}%)")
+        print(f"{'='*50}\n")
+        
+        return ReportResponse(**report.to_dict())
+        
+    except Exception as e:
+        print(f"❌ Report generation error: {str(e)}")
+        traceback.print_exc()
+        
+        raise HTTPException(
+            status_code=500,
+            detail=f"Report generation failed: {str(e)}"
+        )
+
+
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
     return {
         "service": "Deepfake Detection API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "endpoints": {
             "health": "GET /health",
-            "analyze": "POST /analyze"
+            "analyze": "POST /analyze",
+            "generate_report": "POST /generate-report"
         },
-        "model": "deepfake-detector-model-v1 (SigLIP2-based)"
+        "model": "deepfake-detector-model-v1 (SigLIP2-based)",
+        "llm_support": ["gemini", "groq", "gpt"]
     }
 
 

@@ -4,29 +4,65 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    Search, Phone, Video, Smile, Pin, Reply, Plus,
-    Users, Settings, X, Compass, MessageCircle, Loader2,
-    MoreVertical, Sparkles, Mic, ArrowUpRight,
-    Volume2, LogIn, Server, Monitor, MicOff, MonitorOff, VideoOff, LogOut,
-    Activity, Terminal, Cpu, Radio, Send, ArrowRight, Lock
+  Search,
+  Phone,
+  Video,
+  Smile,
+  Pin,
+  Reply,
+  Plus,
+  Users,
+  Settings,
+  X,
+  Compass,
+  MessageCircle,
+  Loader2,
+  MoreVertical,
+  Sparkles,
+  Mic,
+  ArrowUpRight,
+  Volume2,
+  LogIn,
+  Server,
+  Monitor,
+  MicOff,
+  MonitorOff,
+  VideoOff,
+  LogOut,
+  Activity,
+  Terminal,
+  Cpu,
+  Radio,
+  Send,
+  ArrowRight,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    useServers, useDiscoverServers, useServer, useCreateServer, useJoinServer,
-    useChannels, useChannelMessages, useSendChannelMessage,
-    useConversations, useMessages, useSendMessage, useAddReaction, useRemoveReaction,
-    useCreateConversation,
-    useSearchUsers
+  useServers,
+  useDiscoverServers,
+  useServer,
+  useCreateServer,
+  useJoinServer,
+  useChannels,
+  useChannelMessages,
+  useSendChannelMessage,
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useAddReaction,
+  useRemoveReaction,
+  useCreateConversation,
+  useSearchUsers,
 } from "@/api/hooks";
 import { useSocket } from "@/context/SocketContext";
 import { useCall } from "@/context/CallContext";
 import { useSearch } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
 
 // Media components
 import { MediaUploader } from "@/components/chat/MediaUploader";
@@ -38,54 +74,60 @@ import { ParticipantsGrid } from "@/components/chat/VoiceRoomPanel";
 import { useMediaUpload, type MediaAttachment } from "@/hooks/useMediaUpload";
 
 interface Message {
-    _id: string;
-    senderId: string;
-    sender?: { name: string; avatar?: string; userId?: string };
-    content: string;
-    media?: { type: string; url: string }[];
-    reactions?: { emoji: string; users: string[] }[];
-    replyTo?: { _id: string; content: string; sender?: { name: string } };
-    createdAt: Date;
-    isPinned?: boolean;
-    readBy?: { userId: string; readAt: Date }[];
-    status?: 'sending' | 'sent' | 'delivered' | 'read';
+  _id: string;
+  senderId: string;
+  sender?: { name: string; avatar?: string; userId?: string };
+  content: string;
+  media?: { type: string; url: string }[];
+  reactions?: { emoji: string; users: string[] }[];
+  replyTo?: { _id: string; content: string; sender?: { name: string } };
+  createdAt: Date;
+  isPinned?: boolean;
+  readBy?: { userId: string; readAt: Date }[];
+  status?: "sending" | "sent" | "delivered" | "read";
 }
 
 interface Channel {
-    _id: string;
-    name: string;
-    type: 'text' | 'voice' | 'announcement';
+  _id: string;
+  name: string;
+  type: "text" | "voice" | "announcement";
 }
 
 interface Server {
-    _id: string;
-    name: string;
-    icon?: string;
-    memberCount: number;
-    ownerId: string;
-    inviteCode?: string;
-    channels?: Channel[];
-    memberProfiles?: any[];
+  _id: string;
+  name: string;
+  icon?: string;
+  memberCount: number;
+  ownerId: string;
+  inviteCode?: string;
+  channels?: Channel[];
+  memberProfiles?: any[];
 }
 
 interface Conversation {
+  _id: string;
+  type: "direct" | "group";
+  groupName?: string;
+  participants: {
     _id: string;
-    type: 'direct' | 'group';
-    groupName?: string;
-    participants: { _id: string; userId?: string; name: string; avatar?: string }[];
-    lastMessage?: { content: string; timestamp: Date };
+    userId?: string;
+    name: string;
+    avatar?: string;
+  }[];
+  lastMessage?: { content: string; timestamp: Date };
 }
 
 const AetherStyles = () => (
-    <style dangerouslySetInnerHTML={{
-        __html: `
+  <style
+    dangerouslySetInnerHTML={{
+      __html: `
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
 
         :root {
             --aether-glass: rgba(10, 10, 14, 0.7);
             --aether-border: rgba(255, 255, 255, 0.08);
-            --aether-primary: #00f3ff;
+            --aether-primary: var(--primary);
             --aether-secondary: #7000ff;
         }
 
@@ -116,11 +158,11 @@ const AetherStyles = () => (
         }
 
         .neon-text-primary {
-            text-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+            text-shadow: 0 0 12px rgba(129, 140, 248, 0.4);
         }
 
         .neon-border-primary {
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15), inset 0 0 10px rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.15), inset 0 0 10px rgba(129, 140, 248, 0.1);
         }
 
         .aether-gradient-text {
@@ -129,16 +171,7 @@ const AetherStyles = () => (
             -webkit-text-fill-color: transparent;
         }
 
-        @keyframes aura-flow {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(2%, 2%) scale(1.1); }
-            66% { transform: translate(-1%, 3%) scale(0.95); }
-            100% { transform: translate(0, 0) scale(1); }
-        }
-
-        .animate-aura {
-            animation: aura-flow 15s infinite ease-in-out;
-        }
+        /* Removed animate-aura since it was too intrusive */
 
         ::-webkit-scrollbar {
             width: 5px;
@@ -153,7 +186,7 @@ const AetherStyles = () => (
             transition: all 0.3s;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 243, 255, 0.3);
+            background: rgba(129, 140, 248, 0.3);
         }
 
         .hide-scrollbar::-webkit-scrollbar {
@@ -163,1853 +196,2534 @@ const AetherStyles = () => (
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-    `}} />
+
+                .chat-gradient-text {
+                    background: linear-gradient(to right, #fff, var(--primary), #a78bfa, var(--primary), #fff);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-size: 300% auto;
+                    animation: textShine 5s linear infinite;
+                }
+
+                @keyframes textShine {
+                    to { background-position: 300% center; }
+                }
+
+                .glass-premium {
+                    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+                    backdrop-filter: blur(16px);
+                    border: 1px solid rgba(255,255,255,0.08);
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+                }
+
+                .chat-hologram {
+                  filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.3));
+                  animation: hologramPulse 6s ease-in-out infinite;
+                }
+
+                @keyframes hologramPulse {
+                  0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.1)); }
+                  50% { opacity: 0.6; filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.4)); }
+                }
+
+        .cyber-pulse {
+            animation: cyberPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes cyberPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .scan-line {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-line::after {
+            content: "";
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.08), transparent);
+            animation: scanMove 4s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanMove {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+    `,
+    }}
+  />
 );
 
-
 export default function ChatPage() {
-    const { profile, user } = useAuth();
-    const { socket } = useSocket();
-    const queryClient = useQueryClient();
-    const search = useSearch({ from: '/app/chat' }) as { userId?: string; conversationId?: string; room?: string };
+  const { profile, user } = useAuth();
+  const { socket } = useSocket();
+  const queryClient = useQueryClient();
+  const search = useSearch({ from: "/app/chat" }) as {
+    userId?: string;
+    conversationId?: string;
+    room?: string;
+  };
 
-    const [view, setView] = useState<'dms' | 'server' | 'discover'>('dms');
-    const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
-    const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
-    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-    const [messageInput, setMessageInput] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-    const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-    const [showMembers, setShowMembers] = useState(true);
-    const [typingUsers, setTypingUsers] = useState<string[]>([]);
-    const [showCreateServer, setShowCreateServer] = useState(false);
-    const [showJoinServer, setShowJoinServer] = useState(false);
-    const [newServerName, setNewServerName] = useState('');
-    const [inviteCode, setInviteCode] = useState('');
+  const [view, setView] = useState<"dms" | "server" | "discover">("dms");
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(
+    null,
+  );
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
+  const [messageInput, setMessageInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
+    null,
+  );
+  const [showMembers, setShowMembers] = useState(true);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [showCreateServer, setShowCreateServer] = useState(false);
+  const [showJoinServer, setShowJoinServer] = useState(false);
+  const [newServerName, setNewServerName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
 
-    // Media attachment state
-    const [showMediaPicker, setShowMediaPicker] = useState(false);
-    const [pendingFiles, setPendingFiles] = useState<PreviewFile[]>([]);
-    const [isRecordingVoice, setIsRecordingVoice] = useState(false);
-    const {
-        isInRoom,
-        roomId,
-        isMuted,
-        isVideoOff,
-        isScreenSharing,
-        toggleMute,
-        toggleVideo,
-        startScreenShare,
-        stopScreenShare,
-        leaveRoom,
-        joinRoom,
-    } = useVoiceRoom();
+  // Media attachment state
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PreviewFile[]>([]);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const {
+    isInRoom,
+    roomId,
+    isMuted,
+    isVideoOff,
+    isScreenSharing,
+    toggleMute,
+    toggleVideo,
+    startScreenShare,
+    stopScreenShare,
+    leaveRoom,
+    joinRoom,
+  } = useVoiceRoom();
 
-    const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
-    const [showJoinRoomModal, setShowJoinRoomModal] = useState(false);
-    const [showPlusMenu, setShowPlusMenu] = useState(false);
-    const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
-    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
+  const [showJoinRoomModal, setShowJoinRoomModal] = useState(false);
+  const [showPlusMenu, setShowPlusMenu] = useState(false);
+  const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
-    // Handle room URL parameter for join by link
-    useEffect(() => {
-        if (search.room && !isInRoom) {
-            setPendingRoomId(search.room);
-            setShowJoinRoomModal(true);
-        }
-    }, [search.room, isInRoom]);
+  // Handle room URL parameter for join by link
+  useEffect(() => {
+    if (search.room && !isInRoom) {
+      setPendingRoomId(search.room);
+      setShowJoinRoomModal(true);
+    }
+  }, [search.room, isInRoom]);
 
-    // Auto-show mobile sidebar when no conversation is selected on mobile
-    useEffect(() => {
-        if (!selectedConversationId && !selectedChannelId && view === 'dms') {
-            // Only on mobile (lg breakpoint is 1024px)
-            const isMobile = window.innerWidth < 1024;
-            if (isMobile) {
-                setShowMobileSidebar(true);
-            }
-        }
-    }, [selectedConversationId, selectedChannelId, view]);
+  // Auto-show mobile sidebar when no conversation is selected on mobile
+  useEffect(() => {
+    if (!selectedConversationId && !selectedChannelId && view === "dms") {
+      // Only on mobile (lg breakpoint is 1024px)
+      const isMobile = window.innerWidth < 1024;
+      if (isMobile) {
+        setShowMobileSidebar(true);
+      }
+    }
+  }, [selectedConversationId, selectedChannelId, view]);
 
-    const { uploadMedia, isUploading } = useMediaUpload();
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadMedia, isUploading } = useMediaUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (files) {
-            const newFiles: PreviewFile[] = Array.from(files).map(file => ({
-                file,
-                url: URL.createObjectURL(file),
-                type: file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : 'file'
-            }));
-            setPendingFiles(prev => [...prev, ...newFiles]);
-        }
-        // Reset input so same file can be selected again
-        e.target.value = '';
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles: PreviewFile[] = Array.from(files).map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+        type: file.type.startsWith("image")
+          ? "image"
+          : file.type.startsWith("video")
+            ? "video"
+            : "file",
+      }));
+      setPendingFiles((prev) => [...prev, ...newFiles]);
+    }
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  };
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { data: serversData, isLoading: serversLoading } = useServers();
+  const { data: discoverData } = useDiscoverServers(searchQuery);
+  const { data: serverData } = useServer(selectedServerId || "");
+  const { data: channelsData } = useChannels(selectedServerId || "");
+  const { data: conversationsData, isLoading: convsLoading } =
+    useConversations();
+  const { data: channelMessagesData, isLoading: channelMsgsLoading } =
+    useChannelMessages(selectedServerId || "", selectedChannelId || "");
+  const { data: dmMessagesData, isLoading: dmMsgsLoading } = useMessages(
+    selectedConversationId || "",
+  );
+
+  const sendChannelMessage = useSendChannelMessage();
+  const sendDmMessage = useSendMessage();
+  const createServer = useCreateServer();
+  const joinServer = useJoinServer();
+  const addReaction = useAddReaction();
+  const removeReaction = useRemoveReaction();
+  const createConversation = useCreateConversation();
+  const { initiateCall } = useCall();
+  const { data: searchUsersData, isLoading: searchLoading } =
+    useSearchUsers(searchQuery);
+
+  const servers = (serversData as any)?.data?.servers || [];
+  const discoverServers = (discoverData as any)?.data?.servers || [];
+  const conversations = (conversationsData as any)?.data?.conversations || [];
+  const channels =
+    (serverData as any)?.data?.server?.channels ||
+    (channelsData as any)?.data?.channels ||
+    [];
+  const selectedServer = (serverData as any)?.data?.server;
+  const currentMessages =
+    view === "server"
+      ? channelMessagesData?.pages?.flatMap(
+        (p: any) => p.data?.messages || [],
+      ) || []
+      : dmMessagesData?.pages?.flatMap((p: any) => p.data?.messages || []) ||
+      [];
+  const selectedConversation = conversations.find(
+    (c: Conversation) => c._id === selectedConversationId,
+  );
+  const selectedChannel = channels.find(
+    (c: Channel) => c._id === selectedChannelId,
+  );
+  const messagesLoading =
+    view === "server" ? channelMsgsLoading : dmMsgsLoading;
+
+  useEffect(() => {
+    if (!socket) return;
+    servers.forEach((s: Server) =>
+      socket.emit("server:join", { serverId: s._id }),
+    );
+
+    const handleChannelMessage = (data: any) => {
+      if (data.channelId === selectedChannelId)
+        queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+    };
+    const handleDmMessage = () => {
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    };
+    const handleTyping = (data: any) => {
+      if (data.userId !== profile?._id) {
+        setTypingUsers((prev) =>
+          data.isTyping
+            ? [...new Set([...prev, data.userId])]
+            : prev.filter((id) => id !== data.userId),
+        );
+      }
+    };
+    const handleReaction = () => {
+      queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
     };
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    socket.on("channel:message", handleChannelMessage);
+    socket.on("message:new", handleDmMessage);
+    socket.on("channel:typing", handleTyping);
+    socket.on("typing:update", handleTyping);
+    socket.on("message:reaction:add", handleReaction);
+    socket.on("message:reaction:remove", handleReaction);
 
-    const { data: serversData, isLoading: serversLoading } = useServers();
-    const { data: discoverData } = useDiscoverServers(searchQuery);
-    const { data: serverData } = useServer(selectedServerId || '');
-    const { data: channelsData } = useChannels(selectedServerId || '');
-    const { data: conversationsData, isLoading: convsLoading } = useConversations();
-    const { data: channelMessagesData, isLoading: channelMsgsLoading } = useChannelMessages(selectedServerId || '', selectedChannelId || '');
-    const { data: dmMessagesData, isLoading: dmMsgsLoading } = useMessages(selectedConversationId || '');
-
-    const sendChannelMessage = useSendChannelMessage();
-    const sendDmMessage = useSendMessage();
-    const createServer = useCreateServer();
-    const joinServer = useJoinServer();
-    const addReaction = useAddReaction();
-    const removeReaction = useRemoveReaction();
-    const createConversation = useCreateConversation();
-    const { initiateCall } = useCall();
-    const { data: searchUsersData, isLoading: searchLoading } = useSearchUsers(searchQuery);
-
-    const servers = (serversData as any)?.data?.servers || [];
-    const discoverServers = (discoverData as any)?.data?.servers || [];
-    const conversations = (conversationsData as any)?.data?.conversations || [];
-    const channels = (serverData as any)?.data?.server?.channels || (channelsData as any)?.data?.channels || [];
-    const selectedServer = (serverData as any)?.data?.server;
-    const currentMessages = view === 'server'
-        ? (channelMessagesData?.pages?.flatMap((p: any) => p.data?.messages || []) || [])
-        : (dmMessagesData?.pages?.flatMap((p: any) => p.data?.messages || []) || []);
-    const selectedConversation = conversations.find((c: Conversation) => c._id === selectedConversationId);
-    const selectedChannel = channels.find((c: Channel) => c._id === selectedChannelId);
-    const messagesLoading = view === 'server' ? channelMsgsLoading : dmMsgsLoading;
-
-    useEffect(() => {
-        if (!socket) return;
-        servers.forEach((s: Server) => socket.emit('server:join', { serverId: s._id }));
-
-        const handleChannelMessage = (data: any) => {
-            if (data.channelId === selectedChannelId) queryClient.invalidateQueries({ queryKey: ['channelMessages'] });
-        };
-        const handleDmMessage = () => {
-            queryClient.invalidateQueries({ queryKey: ['messages'] });
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        };
-        const handleTyping = (data: any) => {
-            if (data.userId !== profile?._id) {
-                setTypingUsers(prev => data.isTyping ? [...new Set([...prev, data.userId])] : prev.filter(id => id !== data.userId));
-            }
-        };
-        const handleReaction = () => {
-            queryClient.invalidateQueries({ queryKey: ['channelMessages'] });
-            queryClient.invalidateQueries({ queryKey: ['messages'] });
-        };
-
-        socket.on('channel:message', handleChannelMessage);
-        socket.on('message:new', handleDmMessage);
-        socket.on('channel:typing', handleTyping);
-        socket.on('typing:update', handleTyping);
-        socket.on('message:reaction:add', handleReaction);
-        socket.on('message:reaction:remove', handleReaction);
-
-        return () => {
-            socket.off('channel:message', handleChannelMessage);
-            socket.off('message:new', handleDmMessage);
-            socket.off('channel:typing', handleTyping);
-            socket.off('typing:update', handleTyping);
-            socket.off('message:reaction:add', handleReaction);
-            socket.off('message:reaction:remove', handleReaction);
-        };
-    }, [socket, servers, selectedChannelId, profile?._id, queryClient]);
-
-    useEffect(() => {
-        if (socket && selectedChannelId) {
-            socket.emit('channel:join', { channelId: selectedChannelId });
-            return () => { socket.emit('channel:leave', { channelId: selectedChannelId }); };
-        }
-    }, [socket, selectedChannelId]);
-
-    // Handle search params (userId / conversationId)
-    useEffect(() => {
-        if (search.conversationId) {
-            setSelectedConversationId(search.conversationId);
-            setView('dms');
-        } else if (search.userId && conversationsData && !convsLoading) {
-            // Find existing DM with this user - check both userId AND _id for fallback
-            const existingConv = conversations.find((c: Conversation) =>
-                c.type === 'direct' && c.participants.some(p => p.userId === search.userId || p._id === search.userId)
-            );
-
-            if (existingConv) {
-                setSelectedConversationId(existingConv._id);
-                setView('dms');
-            } else {
-                // Create new conversation
-                createConversation.mutate({ participantIds: [search.userId] }, {
-                    onSuccess: (response: any) => {
-                        const newConvId = response.data?.conversation?._id;
-                        if (newConvId) {
-                            setSelectedConversationId(newConvId);
-                            setView('dms');
-                        }
-                    }
-                });
-            }
-        }
-    }, [search.userId, search.conversationId, conversationsData]);
-
-    useEffect(() => {
-        if (view === 'server' && selectedServerId && !selectedChannelId && channels.length > 0) {
-            setSelectedChannelId(channels[0]._id);
-        }
-    }, [view, selectedServerId, selectedChannelId, channels]);
-
-    // Only scroll to bottom on initial load, not on every message update
-    const hasScrolledRef = useRef(false);
-    useEffect(() => {
-        if (currentMessages.length > 0 && !hasScrolledRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
-            hasScrolledRef.current = true;
-        }
-    }, [currentMessages.length]);
-
-    // Reset scroll flag when conversation changes
-    useEffect(() => {
-        hasScrolledRef.current = false;
-    }, [selectedConversationId, selectedChannelId]);
-
-    const handleSendMessage = useCallback(async () => {
-        if (!messageInput.trim() && pendingFiles.length === 0) return;
-
-        try {
-            // Upload any pending media files
-            let uploadedMedia: MediaAttachment[] = [];
-            if (pendingFiles.length > 0) {
-                toast.loading('Uploading media...', { id: 'upload-media' });
-                uploadedMedia = await Promise.all(
-                    pendingFiles.map(pf => uploadMedia(pf.file, pf.type))
-                );
-                toast.success('Media uploaded!', { id: 'upload-media' });
-            }
-
-            const messageContent = messageInput.trim() || (uploadedMedia.length > 0 ? '[Media]' : '');
-
-            if (view === 'server' && selectedServerId && selectedChannelId) {
-                sendChannelMessage.mutate({
-                    serverId: selectedServerId,
-                    channelId: selectedChannelId,
-                    content: messageContent,
-                    media: uploadedMedia,
-                    replyTo: replyingTo?._id
-                });
-            } else if (selectedConversationId) {
-                sendDmMessage.mutate({
-                    conversationId: selectedConversationId,
-                    content: messageContent,
-                    media: uploadedMedia,
-                    replyTo: replyingTo?._id
-                });
-            }
-
-            setMessageInput('');
-            setReplyingTo(null);
-            setPendingFiles([]);
-        } catch (error) {
-            console.error('Failed to send message:', error);
-            toast.error('Failed to send message');
-        }
-    }, [messageInput, pendingFiles, view, selectedServerId, selectedChannelId, selectedConversationId, replyingTo, sendChannelMessage, sendDmMessage, uploadMedia]);
-
-    const removeFile = (index: number) => {
-        setPendingFiles(prev => prev.filter((_, i) => i !== index));
+    return () => {
+      socket.off("channel:message", handleChannelMessage);
+      socket.off("message:new", handleDmMessage);
+      socket.off("channel:typing", handleTyping);
+      socket.off("typing:update", handleTyping);
+      socket.off("message:reaction:add", handleReaction);
+      socket.off("message:reaction:remove", handleReaction);
     };
+  }, [socket, servers, selectedChannelId, profile?._id, queryClient]);
 
-    // Handle files selected from media picker
-    const handleFilesSelected = useCallback((files: File[], type: 'image' | 'video' | 'file') => {
-        const newPreviews: PreviewFile[] = files.map(file => ({
-            file,
-            previewUrl: (type === 'image' || type === 'video') ? URL.createObjectURL(file) : undefined,
-            type,
-        }));
-        setPendingFiles(prev => [...prev, ...newPreviews]);
-    }, []);
+  useEffect(() => {
+    if (socket && selectedChannelId) {
+      socket.emit("channel:join", { channelId: selectedChannelId });
+      return () => {
+        socket.emit("channel:leave", { channelId: selectedChannelId });
+      };
+    }
+  }, [socket, selectedChannelId]);
 
+  // Handle search params (userId / conversationId)
+  useEffect(() => {
+    if (search.conversationId) {
+      setSelectedConversationId(search.conversationId);
+      setView("dms");
+    } else if (search.userId && conversationsData && !convsLoading) {
+      // Find existing DM with this user - check both userId AND _id for fallback
+      const existingConv = conversations.find(
+        (c: Conversation) =>
+          c.type === "direct" &&
+          c.participants.some(
+            (p) => p.userId === search.userId || p._id === search.userId,
+          ),
+      );
 
-    const handleTyping = useCallback(() => {
-        if (!socket) return;
-        if (view === 'server' && selectedChannelId) socket.emit('channel:typing:start', { channelId: selectedChannelId });
-        else if (selectedConversationId) socket.emit('typing:start', { conversationId: selectedConversationId });
-    }, [socket, view, selectedChannelId, selectedConversationId]);
+      if (existingConv) {
+        setSelectedConversationId(existingConv._id);
+        setView("dms");
+      } else {
+        // Create new conversation
+        createConversation.mutate(
+          { participantIds: [search.userId] },
+          {
+            onSuccess: (response: any) => {
+              const newConvId = response.data?.conversation?._id;
+              if (newConvId) {
+                setSelectedConversationId(newConvId);
+                setView("dms");
+              }
+            },
+          },
+        );
+      }
+    }
+  }, [search.userId, search.conversationId, conversationsData]);
 
-    const handleReaction = useCallback((messageId: string, emoji: string, hasReacted: boolean) => {
-        if (hasReacted) removeReaction.mutate({ messageId, emoji });
-        else addReaction.mutate({ messageId, emoji });
-    }, [addReaction, removeReaction]);
+  useEffect(() => {
+    if (
+      view === "server" &&
+      selectedServerId &&
+      !selectedChannelId &&
+      channels.length > 0
+    ) {
+      setSelectedChannelId(channels[0]._id);
+    }
+  }, [view, selectedServerId, selectedChannelId, channels]);
 
-    const handleCreateServer = useCallback(() => {
-        if (!newServerName.trim()) return;
-        createServer.mutate({ name: newServerName.trim(), isPublic: true }, {
-            onSuccess: () => { setShowCreateServer(false); setNewServerName(''); }
+  // Only scroll to bottom on initial load, not on every message update
+  const hasScrolledRef = useRef(false);
+  useEffect(() => {
+    if (currentMessages.length > 0 && !hasScrolledRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+      hasScrolledRef.current = true;
+    }
+  }, [currentMessages.length]);
+
+  // Reset scroll flag when conversation changes
+  useEffect(() => {
+    hasScrolledRef.current = false;
+  }, [selectedConversationId, selectedChannelId]);
+
+  const handleSendMessage = useCallback(async () => {
+    if (!messageInput.trim() && pendingFiles.length === 0) return;
+
+    try {
+      // Upload any pending media files
+      let uploadedMedia: MediaAttachment[] = [];
+      if (pendingFiles.length > 0) {
+        toast.loading("Uploading media...", { id: "upload-media" });
+        uploadedMedia = await Promise.all(
+          pendingFiles.map((pf) => uploadMedia(pf.file, pf.type)),
+        );
+        toast.success("Media uploaded!", { id: "upload-media" });
+      }
+
+      const messageContent =
+        messageInput.trim() || (uploadedMedia.length > 0 ? "[Media]" : "");
+
+      if (view === "server" && selectedServerId && selectedChannelId) {
+        sendChannelMessage.mutate({
+          serverId: selectedServerId,
+          channelId: selectedChannelId,
+          content: messageContent,
+          media: uploadedMedia,
+          replyTo: replyingTo?._id,
         });
-    }, [newServerName, createServer]);
-
-    const handleJoinServer = useCallback(() => {
-        if (!inviteCode.trim()) return;
-        joinServer.mutate({ inviteCode: inviteCode.trim() }, {
-            onSuccess: () => { setShowJoinServer(false); setInviteCode(''); }
+      } else if (selectedConversationId) {
+        sendDmMessage.mutate({
+          conversationId: selectedConversationId,
+          content: messageContent,
+          media: uploadedMedia,
+          replyTo: replyingTo?._id,
         });
-    }, [inviteCode, joinServer]);
+      }
 
-    const handleSelectServer = (server: Server) => {
-        setSelectedServerId(server._id);
-        setView('server');
-        setSelectedConversationId(null);
-        setSelectedChannelId(null); // Clear selected channel to avoid 404 with new server
-    };
+      setMessageInput("");
+      setReplyingTo(null);
+      setPendingFiles([]);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Failed to send message");
+    }
+  }, [
+    messageInput,
+    pendingFiles,
+    view,
+    selectedServerId,
+    selectedChannelId,
+    selectedConversationId,
+    replyingTo,
+    sendChannelMessage,
+    sendDmMessage,
+    uploadMedia,
+  ]);
 
+  const removeFile = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
-    const formatTime = (date: Date | string) => new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Handle files selected from media picker
+  const handleFilesSelected = useCallback(
+    (files: File[], type: "image" | "video" | "file") => {
+      const newPreviews: PreviewFile[] = files.map((file) => ({
+        file,
+        previewUrl:
+          type === "image" || type === "video"
+            ? URL.createObjectURL(file)
+            : undefined,
+        type,
+      }));
+      setPendingFiles((prev) => [...prev, ...newPreviews]);
+    },
+    [],
+  );
 
-    return (
-        <div className="relative h-[calc(100vh-80px)] lg:h-screen w-full flex bg-[#030303] overflow-hidden aether-font">
-            <AetherStyles />
+  const handleTyping = useCallback(() => {
+    if (!socket) return;
+    if (view === "server" && selectedChannelId)
+      socket.emit("channel:typing:start", { channelId: selectedChannelId });
+    else if (selectedConversationId)
+      socket.emit("typing:start", { conversationId: selectedConversationId });
+  }, [socket, view, selectedChannelId, selectedConversationId]);
 
-            {/* Immersive Background Layers */}
-            <div className="absolute inset-0 aether-grid opacity-30 pointer-events-none" />
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full animate-aura opacity-50" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/10 blur-[120px] rounded-full animate-aura opacity-50 delay-1000" />
+  const handleReaction = useCallback(
+    (messageId: string, emoji: string, hasReacted: boolean) => {
+      if (hasReacted) removeReaction.mutate({ messageId, emoji });
+      else addReaction.mutate({ messageId, emoji });
+    },
+    [addReaction, removeReaction],
+  );
 
-            <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10">
-                {/* PRIMARY SIDEBAR - Server / DM selection */}
-                <div className="hidden lg:flex w-24 bg-[#0a0a0e]/40 backdrop-blur-3xl flex-col items-center py-8 gap-6 relative z-20 border-r border-white/5 group/sidebar px-3">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => { setView('dms'); setSelectedServerId(null); }}
-                        className={cn(
-                            "w-14 h-14 rounded-2xl flex items-center justify-center transition-all relative group overflow-hidden border",
-                            view === 'dms'
-                                ? "bg-primary/10 text-primary border-primary/40 shadow-[0_0_25px_rgba(0,243,255,0.2)]"
-                                : "bg-white/5 text-slate-500 hover:bg-white/10 hover:text-primary border-white/5 hover:border-primary/20"
-                        )}
+  const handleCreateServer = useCallback(() => {
+    if (!newServerName.trim()) return;
+    createServer.mutate(
+      { name: newServerName.trim(), isPublic: true },
+      {
+        onSuccess: () => {
+          setShowCreateServer(false);
+          setNewServerName("");
+        },
+      },
+    );
+  }, [newServerName, createServer]);
+
+  const handleJoinServer = useCallback(() => {
+    if (!inviteCode.trim()) return;
+    joinServer.mutate(
+      { inviteCode: inviteCode.trim() },
+      {
+        onSuccess: () => {
+          setShowJoinServer(false);
+          setInviteCode("");
+        },
+      },
+    );
+  }, [inviteCode, joinServer]);
+
+  const handleSelectServer = (server: Server) => {
+    setSelectedServerId(server._id);
+    setView("server");
+    setSelectedConversationId(null);
+    setSelectedChannelId(null); // Clear selected channel to avoid 404 with new server
+  };
+
+  const formatTime = (date: Date | string) =>
+    new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  return (
+    <div className="relative h-[calc(100vh-80px)] lg:h-screen w-full flex bg-transparent overflow-hidden aether-font lg:p-3 lg:gap-3">
+      <AetherStyles />
+
+      <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/5 bg-[#030712]/80 backdrop-blur-xl shadow-2xl">
+        {/* PRIMARY SIDEBAR - Server / DM selection */}
+        <div className="hidden lg:flex w-24 bg-transparent backdrop-blur-3xl flex-col items-center py-8 gap-6 relative z-20 border-r border-white/5 px-3">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setView("dms");
+              setSelectedServerId(null);
+            }}
+            className={cn(
+              "w-14 h-14 rounded-2xl flex items-center justify-center transition-all relative group overflow-hidden border",
+              view === "dms"
+                ? "bg-primary/10 text-primary border-primary/40 shadow-[0_0_25px_rgba(0,243,255,0.2)]"
+                : "bg-white/5 text-slate-500 hover:bg-white/10 hover:text-primary border-white/5 hover:border-primary/20",
+            )}
+          >
+            <MessageCircle className="w-6 h-6 z-10 transition-transform group-hover:scale-110" />
+            {view === "dms" && (
+              <motion.div
+                layoutId="active-server-indicator"
+                className="absolute -left-1 w-1.5 h-8 bg-primary rounded-r-full shadow-[0_0_20px_rgba(0,243,255,0.8)] z-20"
+              />
+            )}
+          </motion.button>
+
+          <div className="w-10 h-[1px] bg-white/10 my-1 flex justify-center items-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          </div>
+
+          <ScrollArea className="w-full flex-1 hide-scrollbar">
+            <div className="flex flex-col items-center gap-5 py-2">
+              {serversLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="w-12 h-12 rounded-2xl bg-white/5 animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : (
+                servers.map((server: Server) => (
+                  <motion.button
+                    key={server._id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleSelectServer(server)}
+                    className="relative group"
+                  >
+                    <div
+                      className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-all overflow-hidden border relative group",
+                        selectedServerId === server._id
+                          ? "bg-primary/10 border-primary/40 shadow-[0_0_25px_rgba(0,243,255,0.15)]"
+                          : "bg-white/5 border-white/5 hover:border-primary/30",
+                      )}
                     >
-                        <MessageCircle className="w-6 h-6 z-10 transition-transform group-hover:scale-110" />
-                        {view === 'dms' && (
-                            <motion.div
-                                layoutId="active-server-indicator"
-                                className="absolute -left-1 w-1.5 h-8 bg-primary rounded-r-full shadow-[0_0_20px_rgba(0,243,255,0.8)] z-20"
-                            />
-                        )}
-                    </motion.button>
-
-                    <div className="w-10 h-[1px] bg-white/10 my-1 flex justify-center items-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                      {server.icon ? (
+                        <img
+                          src={server.icon}
+                          alt={server.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                        />
+                      ) : (
+                        <span className="text-xs font-bold tracking-wider text-white group-hover:text-primary transition-colors tech-font">
+                          {server.name
+                            .split(" ")
+                            .map((w) => w[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </span>
+                      )}
+                      {selectedServerId === server._id && (
+                        <motion.div
+                          layoutId="active-server-indicator"
+                          className="absolute -left-1 w-1.5 h-8 bg-primary rounded-r-full shadow-[0_0_20px_rgba(0,243,255,0.8)] z-20"
+                        />
+                      )}
                     </div>
 
-                    <ScrollArea className="w-full flex-1 hide-scrollbar">
-                        <div className="flex flex-col items-center gap-5 py-2">
-                            {serversLoading ? (
-                                <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="w-12 h-12 rounded-2xl bg-white/5 animate-pulse" />)}</div>
-                            ) : (
-                                servers.map((server: Server) => (
-                                    <motion.button
-                                        key={server._id}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => handleSelectServer(server)}
-                                        className="relative group"
-                                    >
-                                        <div className={cn(
-                                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all overflow-hidden border relative group",
-                                            selectedServerId === server._id
-                                                ? "bg-primary/10 border-primary/40 shadow-[0_0_25px_rgba(0,243,255,0.15)]"
-                                                : "bg-white/5 border-white/5 hover:border-primary/30"
-                                        )}>
-                                            {server.icon ? (
-                                                <img src={server.icon} alt={server.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                                            ) : (
-                                                <span className="text-xs font-bold tracking-wider text-white group-hover:text-primary transition-colors tech-font">
-                                                    {server.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                                                </span>
-                                            )}
-                                            {selectedServerId === server._id && (
-                                                <motion.div
-                                                    layoutId="active-server-indicator"
-                                                    className="absolute -left-1 w-1.5 h-8 bg-primary rounded-r-full shadow-[0_0_20px_rgba(0,243,255,0.8)] z-20"
-                                                />
-                                            )}
-                                        </div>
+                    {/* Tooltip */}
+                    <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-3 py-2 glass-aether rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap z-50 shadow-2xl border border-white/10">
+                      <span className="text-[10px] font-bold text-white tracking-widest uppercase">
+                        {server.name}
+                      </span>
+                    </div>
+                  </motion.button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
 
-                                        {/* Tooltip */}
-                                        <div className="absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-3 py-2 glass-aether rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap z-50 shadow-2xl border border-white/10">
-                                            <span className="text-[10px] font-bold text-white tracking-widest uppercase">{server.name}</span>
-                                        </div>
-                                    </motion.button>
-                                ))
+          <div className="mt-auto flex flex-col items-center gap-4">
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowPlusMenu(!showPlusMenu)}
+                className={cn(
+                  "w-12 h-12 rounded-2xl transition-all flex items-center justify-center border",
+                  showPlusMenu
+                    ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
+                    : "bg-white/5 text-primary hover:bg-primary/10 border-white/5",
+                )}
+              >
+                <Plus
+                  className={cn(
+                    "w-5 h-5 transition-transform",
+                    showPlusMenu && "rotate-45",
+                  )}
+                />
+              </motion.button>
+
+              <AnimatePresence>
+                {showPlusMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                    className="absolute left-[calc(100%+16px)] bottom-0 w-64 glass-aether rounded-2xl overflow-hidden z-50 p-2 border border-white/10"
+                  >
+                    <div className="p-2 space-y-1 relative z-10">
+                      <div className="px-3 py-2 mb-2">
+                        <span className="text-[10px] font-black text-primary/80 uppercase tracking-widest">
+                          Connect Network
+                        </span>
+                      </div>
+
+                      {[
+                        {
+                          icon: Server,
+                          label: "Create Node",
+                          sub: "New instance",
+                          onClick: () => {
+                            setShowPlusMenu(false);
+                            setShowCreateServer(true);
+                          },
+                        },
+                        {
+                          icon: Volume2,
+                          label: "Voice Bridge",
+                          sub: "Audio relay",
+                          onClick: () => {
+                            setShowPlusMenu(false);
+                            setShowCreateRoomModal(true);
+                          },
+                        },
+                        {
+                          icon: LogIn,
+                          label: "Sync Link",
+                          sub: "Join bridge",
+                          onClick: () => {
+                            setShowPlusMenu(false);
+                            setShowJoinRoomModal(true);
+                          },
+                        },
+                      ].map((item, idx) => (
+                        <button
+                          key={idx}
+                          onClick={item.onClick}
+                          className="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all text-left group"
+                        >
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-all",
+                              item.label === "Create Node" &&
+                              "shadow-glow-primary",
                             )}
-                        </div>
-                    </ScrollArea>
+                          >
+                            <item.icon className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <p className="text-[11px] font-bold text-white tracking-wide">
+                              {item.label}
+                            </p>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-tighter">
+                              {item.sub}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-                    <div className="mt-auto flex flex-col items-center gap-4">
-                        <div className="relative">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setShowPlusMenu(!showPlusMenu)}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setView("discover")}
+              className={cn(
+                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all border",
+                view === "discover"
+                  ? "bg-secondary text-white border-secondary shadow-[0_8px_25px_rgba(112,0,255,0.3)]"
+                  : "bg-white/5 text-slate-400 hover:bg-white/10 border-white/5",
+              )}
+            >
+              <Compass className="w-5 h-5" />
+            </motion.button>
+          </div>
+        </div>
+
+        {/* SECONDARY SIDEBAR - Conversations / Channels list */}
+        <div className="hidden lg:flex w-[300px] bg-transparent backdrop-blur-xl flex-col border-r border-white/5 z-10 relative">
+          {view === "dms" ? (
+            <div className="flex flex-col h-full">
+              <div className="p-6 border-b border-white/5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary))]" />
+                  <h3 className="text-xl font-black text-white italic tracking-tighter uppercase aether-font">
+                    Direct Intel
+                  </h3>
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <Search className="w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                  </div>
+                  <Input
+                    placeholder="Sync with user..."
+                    className="pl-10 h-11 bg-white/[0.03] border-white/5 text-sm rounded-xl focus:border-primary/40 focus:ring-0 placeholder:text-slate-600 transition-all tech-font"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              <ScrollArea className="flex-1 px-3 py-4 hide-scrollbar">
+                <div className="space-y-1.5">
+                  {/* Show search results when searching */}
+                  {searchQuery.length >= 2 ? (
+                    searchLoading ? (
+                      <div className="space-y-4 px-3 py-4">
+                        {[1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="h-16 bg-white/5 rounded-2xl animate-pulse"
+                          />
+                        ))}
+                      </div>
+                    ) : (searchUsersData as any)?.data?.users?.length > 0 ? (
+                      <div className="space-y-2 py-2">
+                        <p className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em] px-3 mb-3">
+                          Found Entities
+                        </p>
+                        {(searchUsersData as any).data.users.map(
+                          (user: any) => {
+                            const targetId = String(user.userId || user._id);
+                            const isCreatingConv = createConversation.isPending;
+
+                            return (
+                              <motion.button
+                                key={user._id}
+                                whileHover={{
+                                  x: 4,
+                                  backgroundColor: "rgba(255,255,255,0.05)",
+                                }}
+                                disabled={isCreatingConv}
+                                onClick={() => {
+                                  const existingConv = conversations.find(
+                                    (c: Conversation) =>
+                                      c.type === "direct" &&
+                                      c.participants.some(
+                                        (p) =>
+                                          String(p.userId) === targetId ||
+                                          String(p._id) === targetId,
+                                      ),
+                                  );
+
+                                  if (existingConv) {
+                                    setSelectedConversationId(existingConv._id);
+                                    setSearchQuery("");
+                                    toast.success(
+                                      `Opening chat with ${user.name}`,
+                                    );
+                                  } else {
+                                    toast.loading(
+                                      "Initializing secure link...",
+                                      { id: "create-conv" },
+                                    );
+                                    createConversation.mutate(
+                                      { participantIds: [targetId] },
+                                      {
+                                        onSuccess: (response: any) => {
+                                          const newConvId =
+                                            response.data?.conversation?._id;
+                                          if (newConvId) {
+                                            setSelectedConversationId(
+                                              newConvId,
+                                            );
+                                            setSearchQuery("");
+                                            toast.success(
+                                              `Bridge established with ${user.name}`,
+                                              { id: "create-conv" },
+                                            );
+                                          } else {
+                                            toast.error(
+                                              "Initialization failed",
+                                              { id: "create-conv" },
+                                            );
+                                          }
+                                        },
+                                        onError: (error: any) => {
+                                          toast.error(
+                                            error?.message ||
+                                            "Initialization failed",
+                                            { id: "create-conv" },
+                                          );
+                                        },
+                                      },
+                                    );
+                                  }
+                                }}
                                 className={cn(
-                                    "w-12 h-12 rounded-2xl transition-all flex items-center justify-center border",
-                                    showPlusMenu
-                                        ? "bg-primary text-black border-primary shadow-lg shadow-primary/20"
-                                        : "bg-white/5 text-primary hover:bg-primary/10 border-white/5"
+                                  "w-full flex items-center gap-4 p-3 rounded-2xl transition-all border border-transparent",
+                                  isCreatingConv &&
+                                  "opacity-50 cursor-not-allowed",
                                 )}
+                              >
+                                <Avatar className="w-11 h-11 border border-white/10 rounded-xl">
+                                  <AvatarImage src={user.avatar} />
+                                  <AvatarFallback className="bg-white/5 text-sm font-black uppercase">
+                                    {user.name?.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 text-left min-w-0">
+                                  <p className="text-sm font-bold text-white truncate">
+                                    {user.name}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 font-medium tech-font">
+                                    @{user.handle}
+                                  </p>
+                                </div>
+                                {isCreatingConv ? (
+                                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                                ) : (
+                                  <ArrowUpRight className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
+                                )}
+                              </motion.button>
+                            );
+                          },
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-10">
+                        <p className="text-[11px] text-slate-600 font-bold uppercase tracking-widest">
+                          No matching entities
+                        </p>
+                      </div>
+                    )
+                  ) : convsLoading ? (
+                    <div className="space-y-4 px-2">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div
+                          key={i}
+                          className="h-20 bg-white/5 rounded-2xl animate-pulse"
+                        />
+                      ))}
+                    </div>
+                  ) : conversations.length === 0 ? (
+                    <div className="text-center py-20 px-6 group relative">
+                      <div className="relative w-24 h-24 mx-auto mb-8">
+                        {/* Holographic Projection Base */}
+                        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full chat-hologram opacity-40" />
+                        <div className="relative w-24 h-24 flex items-center justify-center border border-white/5 rounded-full group-hover:border-primary/20 transition-all duration-700">
+                          <MessageCircle className="w-10 h-10 text-primary/40 group-hover:text-primary transition-all duration-700 chat-hologram" />
+                        </div>
+                        {/* Scanning beam effect */}
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent blur-sm animate-pulse" />
+                      </div>
+                      <p className="text-sm font-black chat-gradient-text uppercase tracking-[0.2em] mb-3">
+                        No Active Bridges
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed opacity-60">
+                        Node Standby // Awaiting Link
+                      </p>
+                    </div>
+                  ) : (
+                    conversations.map((conv: Conversation) => {
+                      const other = conv.participants[0];
+                      const name =
+                        conv.type === "group" ? conv.groupName : other?.name;
+                      const isActive = selectedConversationId === conv._id;
+                      return (
+                        <motion.button
+                          key={conv._id}
+                          whileHover={{ x: 4 }}
+                          onClick={() => {
+                            setSelectedConversationId(conv._id);
+                            setView("dms");
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all relative group overflow-hidden border mb-1",
+                            isActive
+                              ? "bg-white/[0.04] border-white/10 shadow-2xl"
+                              : "bg-transparent border-transparent hover:bg-white/[0.02]",
+                          )}
+                        >
+                          {isActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary shadow-[0_0_12px_rgba(129,140,248,0.6)]" />
+                          )}
+                          <div className="relative">
+                            <Avatar className="w-12 h-12 rounded-xl border border-white/10">
+                              <AvatarImage
+                                src={other?.avatar}
+                                className="object-cover"
+                              />
+                              <AvatarFallback className="bg-white/5 text-xs font-bold text-white/40">
+                                {name?.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div
+                              className={cn(
+                                "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#030712] transition-all z-20",
+                                isActive
+                                  ? "bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                                  : "bg-slate-700",
+                              )}
+                            />
+                          </div>
+
+                          <div className="flex-1 text-left min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <p
+                                className={cn(
+                                  "text-[13px] font-bold tracking-tight transition-colors",
+                                  isActive
+                                    ? "text-primary neon-text-primary"
+                                    : "text-slate-200",
+                                )}
+                              >
+                                {name}
+                              </p>
+                              <span className="text-[8px] text-slate-600 font-bold uppercase tracking-widest tech-font opacity-40">
+                                CHL_{conversations.indexOf(conv)}
+                              </span>
+                            </div>
+                            {conv.lastMessage && (
+                              <p className="text-[11px] text-slate-500 truncate font-medium tech-font opacity-60">
+                                <span className="text-primary/40">::</span>{" "}
+                                {conv.lastMessage.content}
+                              </p>
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          ) : view === "server" && selectedServer ? (
+            <div className="flex flex-col h-full">
+              <div className="p-6 border-b border-white/5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary))]" />
+                    <h3 className="text-xl font-black text-white italic tracking-tighter uppercase aether-font">
+                      {selectedServer.name}
+                    </h3>
+                  </div>
+                  <Terminal className="w-4 h-4 text-slate-600" />
+                </div>
+              </div>
+              <ScrollArea className="flex-1 hide-scrollbar">
+                <div className="p-4 space-y-10">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-3 mb-6">
+                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
+                        Audio Layers
+                      </p>
+                      <div className="p-2 bg-white/[0.03] rounded-xl cursor-pointer hover:text-primary transition-all border border-white/5">
+                        <Cpu className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    {channels
+                      .filter((c: Channel) => c.type !== "voice")
+                      .map((ch: Channel) => (
+                        <motion.button
+                          key={ch._id}
+                          whileHover={{ x: 4 }}
+                          onClick={() => setSelectedChannelId(ch._id)}
+                          className={cn(
+                            "w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all relative group overflow-hidden border",
+                            selectedChannelId === ch._id
+                              ? "bg-primary/10 border-primary/30 text-primary shadow-[0_0_15px_rgba(129,140,248,0.2)]"
+                              : "text-slate-400 border-transparent hover:bg-white/5 hover:text-white",
+                          )}
+                        >
+                          <span className="font-bold tracking-widest text-[11px] uppercase truncate">
+                            {ch.name}
+                          </span>
+                          {selectedChannelId === ch._id && (
+                            <div className="ml-auto w-1 h-4 bg-primary rounded-full shadow-[0_0_10px_rgba(129,140,248,0.6)]" />
+                          )}
+                        </motion.button>
+                      ))}
+                  </div>
+                  {channels.some((c: Channel) => c.type === "voice") && (
+                    <div className="space-y-2">
+                      <p className="px-3 mb-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
+                        Tactical Voice
+                      </p>
+                      {channels
+                        .filter((c: Channel) => c.type === "voice")
+                        .map((ch: Channel) => {
+                          const isActive = roomId === ch._id;
+                          return (
+                            <motion.button
+                              key={ch._id}
+                              whileHover={{ x: 4 }}
+                              onClick={() => {
+                                setSelectedChannelId(ch._id);
+                                joinRoom(ch._id);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all relative group overflow-hidden border",
+                                isActive || selectedChannelId === ch._id
+                                  ? "glass-luxe border-primary/30 text-primary"
+                                  : "text-slate-400 border-transparent hover:bg-white/5 hover:text-white",
+                              )}
                             >
-                                <Plus className={cn("w-5 h-5 transition-transform", showPlusMenu && "rotate-45")} />
-                            </motion.button>
-
-                            <AnimatePresence>
-                                {showPlusMenu && (
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -10, scale: 0.95 }}
-                                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                                        exit={{ opacity: 0, x: -10, scale: 0.95 }}
-                                        className="absolute left-[calc(100%+16px)] bottom-0 w-64 glass-aether rounded-2xl overflow-hidden z-50 p-2 border border-white/10"
-                                    >
-                                        <div className="p-2 space-y-1 relative z-10">
-                                            <div className="px-3 py-2 mb-2">
-                                                <span className="text-[10px] font-black text-primary/80 uppercase tracking-widest">Connect Network</span>
-                                            </div>
-
-                                            {[
-                                                { icon: Server, label: 'Create Node', sub: 'New instance', onClick: () => { setShowPlusMenu(false); setShowCreateServer(true); } },
-                                                { icon: Volume2, label: 'Voice Bridge', sub: 'Audio relay', onClick: () => { setShowPlusMenu(false); setShowCreateRoomModal(true); } },
-                                                { icon: LogIn, label: 'Sync Link', sub: 'Join bridge', onClick: () => { setShowPlusMenu(false); setShowJoinRoomModal(true); } }
-                                            ].map((item, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={item.onClick}
-                                                    className="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all text-left group"
-                                                >
-                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-all">
-                                                        <item.icon className="w-4 h-4 text-primary" />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <p className="text-[11px] font-bold text-white tracking-wide">{item.label}</p>
-                                                        <p className="text-[9px] text-slate-500 uppercase tracking-tighter">{item.sub}</p>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </motion.div>
+                              <Radio
+                                className={cn(
+                                  "w-4 h-4",
+                                  isActive
+                                    ? "text-primary animate-pulse"
+                                    : "text-slate-600",
                                 )}
-                            </AnimatePresence>
+                              />
+                              <span className="font-bold tracking-widest text-[11px] uppercase truncate">
+                                {ch.name}
+                              </span>
+                              {isActive && (
+                                <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-ping shadow-[0_0_10px_rgba(129,140,248,0.8)]" />
+                              )}
+                            </motion.button>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              <div className="mt-auto shrink-0 p-4 glass-luxe border-t border-white/5 relative z-20">
+                <div className="flex items-center gap-4 p-4 glass-luxe-light rounded-2xl border border-white/5">
+                  <div className="relative">
+                    <Avatar className="w-10 h-10 border border-white/10 rounded-xl">
+                      <AvatarImage src={profile?.avatar} />
+                      <AvatarFallback className="glass-luxe text-xs font-bold">
+                        {profile?.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-primary rounded-full border-2 border-[#0F1117] shadow-[0_0_10px_rgba(129,140,248,0.4)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">
+                      {profile?.name}
+                    </p>
+                    <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest">
+                      Active Link
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 rounded-xl text-slate-500 hover:bg-white/10"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : view === "discover" ? (
+            <div className="flex flex-col h-full uppercase tracking-tighter">
+              <div className="p-6">
+                <h2 className="text-2xl font-black text-white italic tracking-tighter mb-2 flex items-center gap-3">
+                  <Compass className="w-6 h-6 text-primary" />
+                  DISCOVER
+                </h2>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-6">
+                  Scan emerging networks
+                </p>
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Input
+                    placeholder="Scan protocols..."
+                    className="pl-10 h-11 bg-white/5 border-white/10 text-sm rounded-2xl focus:border-primary/30 transition-all font-medium"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              <ScrollArea className="flex-1 px-3">
+                <div className="space-y-3">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start h-14 text-slate-400 hover:text-white bg-white/5 border border-dashed border-white/10 rounded-2xl"
+                    onClick={() => setShowJoinServer(true)}
+                  >
+                    <Plus className="w-5 h-5 mr-3 text-primary" />
+                    <span className="text-xs font-black uppercase tracking-widest">
+                      Inject Invite Code
+                    </span>
+                  </Button>
+                  {discoverServers.map((s: Server) => (
+                    <motion.div
+                      key={s._id}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      onClick={() => joinServer.mutate({ serverId: s._id })}
+                      className="p-4 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/30 cursor-pointer transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-indigo-500/20 border border-white/10 flex items-center justify-center text-white font-black italic text-lg shadow-inner">
+                          {s.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-white uppercase italic truncate">
+                            {s.name}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter mt-1">
+                            {s.memberCount} OPERATIVES
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Main Chat Interface */}
+        {/* MAIN CHAT INTERFACE */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#030712]/60 backdrop-blur-3xl relative z-10 overflow-hidden">
+          {/* Header */}
+          <div className="h-16 lg:h-20 px-4 sm:px-6 lg:px-10 flex items-center justify-between border-b border-white/5 bg-[#030712]/60 backdrop-blur-xl relative overflow-hidden group shrink-0">
+            {/* Header Depth Layer */}
+            <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(circle_at_50%_0%,var(--aether-primary),transparent)] group-hover:opacity-20 transition-opacity" />
+
+            <div className="flex items-center gap-6 lg:gap-10 z-10">
+              {/* Mobile menu toggle */}
+              <button
+                onClick={() => setShowMobileSidebar(true)}
+                className="lg:hidden w-11 h-11 rounded-xl glass-aether flex items-center justify-center shadow-lg shrink-0 border border-white/10"
+              >
+                <MessageCircle className="w-5 h-5 text-primary" />
+              </button>
+
+              {view === "server" && selectedChannel ? (
+                <div className="flex items-center gap-4 lg:gap-8 min-w-0">
+                  <div className="hidden sm:flex w-10 lg:w-14 h-10 lg:h-14 rounded-xl lg:rounded-2xl glass-aether items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.1)] relative shrink-0">
+                    <Cpu className="w-6 h-6 text-primary relative z-10" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-3 lg:gap-5">
+                      <h2 className="font-black text-white text-base lg:text-2xl uppercase tracking-tight truncate aether-font italic">
+                        {selectedChannel.name}
+                      </h2>
+                      <div className="hidden md:flex px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] tech-font">
+                          LINK_SECURE
+                        </span>
+                      </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4 mt-2">
+                      <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">
+                        SIGNAL: STABLE
+                      </span>
+                      <div className="w-1 h-1 rounded-full bg-primary/20" />
+                      <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">
+                        MEMBERS: {selectedServer?.members?.length || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : selectedConversation ? (
+                <div className="flex items-center gap-4 lg:gap-8 min-w-0">
+                  <div className="relative shrink-0">
+                    <div className="absolute -inset-1 bg-primary/20 blur-md rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Avatar className="w-10 h-10 lg:w-16 lg:h-16 border border-white/10 rounded-xl lg:rounded-2xl shadow-2xl relative z-10">
+                      <AvatarImage
+                        src={selectedConversation.participants[0]?.avatar}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="glass-aether text-white text-lg font-black uppercase">
+                        {selectedConversation.participants[0]?.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#030303] shadow-[0_0_15px_rgba(129,140,248,1)] z-20" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-4">
+                      <h2 className="font-black text-white text-lg lg:text-2xl uppercase tracking-tight aether-font italic">
+                        {selectedConversation.type === "group"
+                          ? selectedConversation.groupName
+                          : selectedConversation.participants[0]?.name}
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(129,140,248,0.8)]" />
+                        <span className="text-[9px] text-primary/60 font-black uppercase tracking-[0.3em] tech-font hidden sm:block">
+                          ENCRYPTED
+                        </span>
+                      </div>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-4 mt-1.5">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">
+                        DIRECT_RELAY_v4.2
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-5 opacity-40">
+                  <Activity className="w-6 h-6 text-slate-500 animate-pulse" />
+                  <div>
+                    <p className="font-black text-slate-500 tracking-[0.3em] text-[10px] uppercase">
+                      Node Standby
+                    </p>
+                    <p className="font-bold text-slate-600 tracking-[0.1em] text-[11px] uppercase mt-1">
+                      Select a bridge to initialize transmission
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 lg:gap-8 z-10">
+              {selectedConversation &&
+                selectedConversation.type === "direct" && (
+                  <div className="flex gap-2 lg:border-r lg:border-white/5 lg:pr-8 lg:mr-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const otherId =
+                          selectedConversation.participants[0]?._id;
+                        if (otherId) initiateCall(otherId, "audio");
+                      }}
+                      className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white/[0.03] text-slate-400 hover:text-primary hover:bg-primary/10 transition-all border border-white/5 hover:border-primary/30"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const otherId =
+                          selectedConversation.participants[0]?._id;
+                        if (otherId) initiateCall(otherId, "video");
+                      }}
+                      className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white/[0.03] text-slate-400 hover:text-primary hover:bg-primary/10 transition-all border border-white/5 hover:border-primary/30"
+                    >
+                      <Video className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+
+              <div className="flex gap-2">
+                {view === "server" && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowMembers(!showMembers)}
+                    className={cn(
+                      "w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center rounded-xl transition-all border",
+                      showMembers
+                        ? "bg-primary/10 border-primary text-primary shadow-[0_0_20px_rgba(129,140,248,0.2)]"
+                        : "bg-white/[0.03] text-slate-500 border-white/5 hover:border-white/10",
+                    )}
+                  >
+                    <Users className="w-4 h-4" />
+                  </motion.button>
+                )}
+                <div className="hidden md:flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 lg:w-11 lg:h-11 bg-white/[0.03] text-slate-500 hover:text-primary rounded-xl border border-white/5 hover:border-primary/20"
+                  >
+                    <Pin className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 lg:w-11 lg:h-11 bg-white/[0.03] text-slate-500 hover:text-primary rounded-xl border border-white/5 hover:border-primary/20"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="hidden lg:block relative w-72 ml-4 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-all duration-300" />
+                <Input
+                  placeholder="SEARCH_TRANS_v4.0..."
+                  className="h-11 pl-12 bg-[#060a16]/60 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] focus:border-primary/40 focus:ring-0 transition-all placeholder:text-slate-700 tech-font shadow-inner"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Main Area Wrapper */}
+          <div className="flex-1 flex flex-row min-h-0 min-w-0 relative overflow-hidden">
+            {/* Main Chat Content */}
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#020617] relative overflow-hidden">
+              {view === "server" &&
+                selectedChannel?.type === "voice" &&
+                isInRoom &&
+                (roomId === selectedChannelId ||
+                  roomId === selectedChannel?._id) ? (
+                <div className="flex-1 flex flex-col bg-slate-900/30 relative">
+                  <ScrollArea className="flex-1 h-full">
+                    <div className="p-8 h-full">
+                      <div className="max-w-7xl mx-auto h-full">
+                        <ParticipantsGrid />
+                      </div>
+                    </div>
+                  </ScrollArea>
+
+                  {/* Premium Voice Controls */}
+                  <div className="h-24 lg:h-32 bg-[#030303]/80 backdrop-blur-3xl border-t border-primary/20 flex items-center justify-center gap-4 lg:gap-10 px-4 lg:px-8 relative z-20 shrink-0 shadow-[0_-20px_60px_rgba(0,0,0,0.8)]">
+                    {/* Control panel background effects */}
+                    <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
+
+                    <motion.button
+                      whileHover={{ scale: 1.1, y: -4 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={toggleMute}
+                      className={cn(
+                        "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex flex-col items-center justify-center transition-all border relative overflow-hidden group shadow-2xl",
+                        isMuted
+                          ? "bg-rose-500/10 text-rose-500 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
+                          : "bg-primary/5 text-primary border-primary/30 hover:border-primary/60 shadow-[0_0_20px_rgba(0,243,255,0.1)]",
+                      )}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {isMuted ? (
+                        <MicOff className="w-6 h-6" />
+                      ) : (
+                        <Mic className="w-6 h-6" />
+                      )}
+                      <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">
+                        {isMuted ? "MIC_OFF" : "MIC_ON"}
+                      </span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.1, y: -4 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={toggleVideo}
+                      className={cn(
+                        "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex flex-col items-center justify-center transition-all border relative overflow-hidden group shadow-2xl",
+                        isVideoOff
+                          ? "bg-rose-500/10 text-rose-500 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
+                          : "bg-primary/5 text-primary border-primary/30 hover:border-primary/60 shadow-[0_0_20px_rgba(0,243,255,0.1)]",
+                      )}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {isVideoOff ? (
+                        <VideoOff className="w-6 h-6" />
+                      ) : (
+                        <Video className="w-6 h-6" />
+                      )}
+                      <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">
+                        {isVideoOff ? "CAM_OFF" : "CAM_ON"}
+                      </span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.1, y: -4 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={
+                        isScreenSharing ? stopScreenShare : startScreenShare
+                      }
+                      className={cn(
+                        "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex flex-col items-center justify-center transition-all border relative overflow-hidden group shadow-2xl",
+                        isScreenSharing
+                          ? "bg-primary/20 text-primary border-primary/50 shadow-[0_0_30px_rgba(0,243,255,0.2)]"
+                          : "bg-primary/5 text-primary border-primary/30 hover:border-primary/60 shadow-[0_0_20px_rgba(0,243,255,0.1)]",
+                      )}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {isScreenSharing ? (
+                        <MonitorOff className="w-6 h-6" />
+                      ) : (
+                        <Monitor className="w-6 h-6" />
+                      )}
+                      <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">
+                        {isScreenSharing ? "STREAMING" : "SHARE_SCR"}
+                      </span>
+                    </motion.button>
+
+                    <div className="w-px h-12 bg-white/10 mx-2" />
+
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={leaveRoom}
+                      className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-rose-500/10 text-rose-500 flex flex-col items-center justify-center shadow-2xl border border-rose-500/40 hover:bg-rose-500 transition-all group hover:text-white"
+                    >
+                      <LogOut className="w-6 h-6 relative z-10 transition-transform group-hover:scale-110" />
+                      <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font relative z-10">
+                        DISCONNECT
+                      </span>
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (view === "server" && selectedChannelId) ||
+                (view === "dms" && selectedConversationId) ? (
+                <>
+                  <ScrollArea className="flex-1 h-full">
+                    <div className="p-3 sm:p-6 lg:p-8 space-y-1 min-h-full flex flex-col justify-end">
+                      {messagesLoading ? (
+                        <div className="space-y-8 py-10 flex-1">
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex gap-4 animate-pulse">
+                              <div className="w-12 h-12 rounded-2xl glass-luxe-light flex-shrink-0" />
+                              <div className="flex-1 space-y-3">
+                                <div className="h-3 bg-white/5 rounded w-32" />
+                                <div className="h-16 bg-white/5 rounded-3xl w-2/3" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : currentMessages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 select-none flex-1 relative">
+                          <motion.div
+                            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            className="relative mb-12"
+                          >
+                            <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full flex items-center justify-center relative group scan-line">
+                              <div className="absolute inset-0 border border-primary/10 rounded-full group-hover:border-primary/30 transition-all duration-700" />
+                              <MessageCircle className="w-14 h-14 lg:w-20 lg:h-20 text-primary/30 group-hover:text-primary/60 transition-all duration-700 chat-hologram" />
+                            </div>
+                          </motion.div>
+                          <h3 className="font-black text-2xl lg:text-4xl uppercase tracking-tighter mb-4 italic chat-gradient-text">
+                            Transmission Blank
+                          </h3>
+                          <p className="text-[10px] lg:text-xs text-slate-500 font-black uppercase tracking-[0.3em] opacity-40">
+                            Secure Link Established // Waiting for Data
+                          </p>
+                        </div>
+                      ) : (
+                        currentMessages.map((msg: Message, idx: number) => {
+                          // More robust isMe check - include Supabase user.id
+                          const myIds = [
+                            user?.id,
+                            profile?._id,
+                            profile?.userId,
+                          ].filter(Boolean);
+                          const senderIds = [
+                            msg.senderId,
+                            msg.sender?.userId,
+                          ].filter(Boolean);
+                          const isMe = myIds.some((myId) =>
+                            senderIds.includes(myId),
+                          );
+
+                          // Avatar grouping logic available if needed
+
+                          return (
+                            <motion.div
+                              key={msg._id}
+                              initial={{
+                                opacity: 0,
+                                x: isMe ? 20 : -20,
+                                scale: 0.95,
+                              }}
+                              animate={{ opacity: 1, x: 0, scale: 1 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 35,
+                                delay: Math.min(idx * 0.01, 0.2),
+                              }}
+                              className={cn(
+                                "group relative flex gap-4 transition-all py-3 px-4 sm:px-10 max-w-full",
+                                isMe ? "flex-row-reverse" : "flex-row",
+                                selectedMessageId === msg._id &&
+                                "bg-white/[0.02]",
+                              )}
+                              onMouseEnter={() => setSelectedMessageId(msg._id)}
+                              onMouseLeave={() => setSelectedMessageId(null)}
+                            >
+                              {/* Avatar */}
+                              <div className="shrink-0 pt-1">
+                                <div
+                                  className={cn(
+                                    "p-0.5 rounded-xl transition-all duration-500 border",
+                                    isMe
+                                      ? "border-primary/30"
+                                      : "border-white/5",
+                                  )}
+                                >
+                                  <Avatar className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg">
+                                    <AvatarImage
+                                      src={
+                                        isMe
+                                          ? profile?.avatar
+                                          : msg.sender?.avatar
+                                      }
+                                      className="object-cover"
+                                    />
+                                    <AvatarFallback className="glass-aether text-white/50 text-xs font-black uppercase">
+                                      {(isMe
+                                        ? profile?.name
+                                        : msg.sender?.name
+                                      )?.charAt(0) || "?"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </div>
+                              </div>
+
+                              <div
+                                className={cn(
+                                  "flex flex-col gap-1.5 max-w-[85%] sm:max-w-[80%]",
+                                  isMe && "items-end",
+                                )}
+                              >
+                                {/* Identifier */}
+                                <div
+                                  className={cn(
+                                    "flex items-center gap-3 px-1",
+                                    isMe ? "flex-row-reverse" : "flex-row",
+                                  )}
+                                >
+                                  <span className="text-[11px] font-black text-white/90 uppercase tracking-wider tech-font">
+                                    {isMe
+                                      ? "Local_Node"
+                                      : msg.sender?.name?.replace(
+                                        /\s+/g,
+                                        "_",
+                                      ) || "Remote_User"}
+                                  </span>
+                                  <span className="text-[9px] text-slate-600 font-bold tracking-widest tech-font">
+                                    [{formatTime(msg.createdAt)}]
+                                  </span>
+                                </div>
+
+                                <div
+                                  className={cn(
+                                    "relative px-6 py-4 rounded-2xl text-[14px] leading-relaxed transition-all duration-500 group/bubble border",
+                                    isMe
+                                      ? "bg-primary/10 text-primary border-primary/20 rounded-tr-none shadow-[0_4px_30px_rgba(129,140,248,0.1)]"
+                                      : "bg-white/[0.04] text-slate-200 border-white/5 rounded-tl-none backdrop-blur-xl",
+                                  )}
+                                >
+                                  {/* Depth Indicator */}
+                                  {isMe && (
+                                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                                  )}
+
+                                  {msg.replyTo && (
+                                    <div className="mb-4 pb-3 border-b border-white/5 flex items-center gap-3 opacity-60 text-[9px] font-black text-primary/80 tech-font uppercase tracking-widest italic">
+                                      <Reply className="w-3 h-3" />
+                                      <span className="truncate">
+                                        REF: {msg.replyTo.sender?.name}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  <div className="selection:bg-primary/30 relative z-10 font-medium tracking-tight">
+                                    {msg.content}
+                                  </div>
+
+                                  {msg.media && msg.media.length > 0 && (
+                                    <div className="mt-4 p-1 rounded-xl overflow-hidden glass-aether shadow-inner border border-white/5">
+                                      <MessageMedia media={msg.media as any} />
+                                    </div>
+                                  )}
+
+                                  {/* Encryption Badge */}
+                                  {isMe && (
+                                    <div className="absolute -left-8 bottom-4 opacity-0 group-hover/bubble:opacity-100 transition-all flex flex-col gap-1 items-center">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary))]" />
+                                      <span
+                                        className="text-[7px] font-black text-primary uppercase tracking-[0.3em] rotate-180"
+                                        style={{ writingMode: "vertical-rl" }}
+                                      >
+                                        AETHER
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* Reactions Panel */}
+                                  {msg.reactions &&
+                                    msg.reactions.length > 0 && (
+                                      <div
+                                        className={cn(
+                                          "flex flex-wrap gap-2 mt-4",
+                                          isMe
+                                            ? "justify-end"
+                                            : "justify-start",
+                                        )}
+                                      >
+                                        {msg.reactions.map((r) => (
+                                          <motion.button
+                                            key={r.emoji}
+                                            whileHover={{ scale: 1.1, y: -2 }}
+                                            onClick={() =>
+                                              handleReaction(
+                                                msg._id,
+                                                r.emoji,
+                                                r.users.includes(
+                                                  profile?._id || "",
+                                                ),
+                                              )
+                                            }
+                                            className={cn(
+                                              "px-3 py-1.5 rounded-xl border transition-all flex items-center gap-2 font-black tech-font",
+                                              r.users.includes(
+                                                profile?._id || "",
+                                              )
+                                                ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_15px_rgba(0,243,255,0.2)]"
+                                                : "bg-white/[0.03] border-white/5 text-slate-500 hover:text-white",
+                                            )}
+                                          >
+                                            <span className="text-sm">
+                                              {r.emoji}
+                                            </span>
+                                            <span className="text-[10px] opacity-60 font-bold">
+                                              {r.users.length}
+                                            </span>
+                                          </motion.button>
+                                        ))}
+                                      </div>
+                                    )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </ScrollArea>
+
+                  {/* Message Input Area */}
+                  <div className="px-3 sm:px-6 lg:px-8 pb-4 lg:pb-10 shrink-0 relative z-10">
+                    <div className="glass-premium rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-5 relative group focus-within:border-primary/40 transition-all duration-700 overflow-hidden">
+                      {/* Decorative Corner Accents */}
+                      <div className="absolute top-0 left-0 w-8 h-[1px] bg-primary/30" />
+                      <div className="absolute top-0 left-0 w-[1px] h-8 bg-primary/30" />
+                      <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-primary/30" />
+                      <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-primary/30" />
+
+                      {replyingTo && (
+                        <div className="absolute bottom-full left-4 right-4 mb-6 px-6 py-4 glass-premium border border-primary/20 rounded-2xl flex items-center justify-between animate-in slide-in-from-bottom-6 z-20 shadow-2xl">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <Reply className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-black text-primary uppercase tracking-widest tech-font">
+                                REFERENCE_NODE: {replyingTo.sender?.name}
+                              </span>
+                              <span className="text-[13px] text-slate-300 font-medium truncate max-w-[500px] mt-0.5 italic">
+                                {replyingTo.content}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-10 h-10 rounded-xl hover:bg-white/10 text-slate-500 hover:text-rose-500"
+                            onClick={() => setReplyingTo(null)}
+                          >
+                            <X className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {typingUsers.length > 0 && (
+                        <div className="absolute -top-12 left-10 flex items-center gap-4 px-5 py-2 glass-aether rounded-full border border-primary/20 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+                          <div className="flex gap-2">
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s] shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s] shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
+                          </div>
+                          <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em] tech-font">
+                            NODE_SYNCING...
+                          </span>
+                        </div>
+                      )}
+
+                      {pendingFiles.length > 0 && (
+                        <div className="mb-4">
+                          <MediaPreview
+                            files={pendingFiles}
+                            onRemove={removeFile}
+                            onClear={() => setPendingFiles([])}
+                          />
+                        </div>
+                      )}
+
+                      {/* Hidden file input for media upload */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,video/*"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+
+                      <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 px-1 sm:px-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1, rotate: 90 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-11 h-11 lg:w-14 lg:h-14 rounded-2xl glass-aether text-slate-400 hover:text-primary border border-white/5 hover:border-primary/40 transition-all flex items-center justify-center shrink-0 shadow-xl group/plus"
+                        >
+                          <Plus className="w-7 h-7 transition-transform group-hover:scale-110" />
+                        </motion.button>
+
+                        <div className="flex-1 min-h-[50px] lg:min-h-[64px] flex flex-col justify-center relative px-2">
+                          <Input
+                            value={messageInput}
+                            onChange={(e) => {
+                              setMessageInput(e.target.value);
+                              handleTyping();
+                            }}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" &&
+                              !e.shiftKey &&
+                              handleSendMessage()
+                            }
+                            placeholder="Initialize transmission..."
+                            className="bg-transparent border-0 focus-visible:ring-0 px-0 h-auto text-white text-sm lg:text-[16px] font-medium placeholder:text-slate-700 tech-font tracking-wide selection:bg-primary/30"
+                          />
+                          {/* Technical Loading Line Accent */}
+                          <div className="absolute -bottom-2 lg:-bottom-3 left-0 right-0 h-px bg-white/5 overflow-hidden">
+                            <motion.div
+                              animate={{ left: ["-100%", "100%"] }}
+                              transition={{
+                                duration: 4,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                              className="absolute inset-0 w-1/4 bg-gradient-to-r from-transparent via-primary/30 to-transparent"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="hidden sm:flex items-center gap-4 lg:gap-6 border-l border-white/5 pl-4 lg:pl-8 h-10">
+                          {isRecordingVoice ? (
+                            <motion.div
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="flex items-center gap-4 px-6 py-2 glass-aether border border-rose-500/30 rounded-2xl shadow-[0_0_30px_rgba(244,63,94,0.1)]"
+                            >
+                              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_12px_rgba(244,63,94,1)]" />
+                              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest tech-font">
+                                STREAM_REC
+                              </span>
+                              <button
+                                onClick={() => setIsRecordingVoice(false)}
+                                className="text-rose-500/40 hover:text-rose-500 transition-colors"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </motion.div>
+                          ) : (
+                            <motion.button
+                              whileHover={{ scale: 1.1, color: "#F43F5E" }}
+                              onClick={() => setIsRecordingVoice(true)}
+                              className="w-10 h-10 flex items-center justify-center text-slate-500 transition-all hover:text-rose-400 opacity-60 hover:opacity-100"
+                            >
+                              <Mic className="w-5 h-5" />
+                            </motion.button>
+                          )}
+
+                          <motion.button
+                            whileHover={{ scale: 1.1, color: "var(--primary)" }}
+                            className="w-10 h-10 flex items-center justify-center text-slate-500 transition-all opacity-60 hover:opacity-100"
+                          >
+                            <Smile className="w-5 h-5" />
+                          </motion.button>
                         </div>
 
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setView('discover')}
-                            className={cn(
-                                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all border",
-                                view === 'discover'
-                                    ? "bg-secondary text-white border-secondary shadow-[0_8px_25px_rgba(112,0,255,0.3)]"
-                                    : "bg-white/5 text-slate-400 hover:bg-white/10 border-white/5"
-                            )}
+                          whileHover={{ scale: 1.05, x: 2 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleSendMessage}
+                          disabled={
+                            (!messageInput.trim() &&
+                              pendingFiles.length === 0) ||
+                            sendChannelMessage.isPending ||
+                            sendDmMessage.isPending ||
+                            isUploading
+                          }
+                          className={cn(
+                            "w-11 h-11 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-2xl flex-shrink-0 relative overflow-hidden group/send border",
+                            messageInput.trim() || pendingFiles.length > 0
+                              ? "bg-primary/20 text-primary border-primary/30 shadow-[0_0_40px_rgba(129,140,248,0.2)] hover:bg-primary/30"
+                              : "bg-white/[0.03] border-white/5 text-slate-700 cursor-not-allowed shadow-none",
+                          )}
                         >
-                            <Compass className="w-5 h-5" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover/send:opacity-100 transition-opacity" />
+                          <Send className="w-6 h-6 lg:w-7 lg:h-7 relative z-10 transition-transform group-hover/send:translate-x-1 group-hover/send:-translate-y-1" />
                         </motion.button>
+                      </div>
                     </div>
-                </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 text-center select-none animate-in fade-in zoom-in duration-1000 relative overflow-hidden bg-transparent">
+                  <div className="relative mb-12 lg:mb-20">
 
-                {/* SECONDARY SIDEBAR - Conversations / Channels list */}
-                <div className="hidden lg:flex w-[300px] bg-[#0a0a0e]/60 backdrop-blur-2xl flex-col border-r border-white/5 z-10 relative">
-                    {view === 'dms' ? (
-                        <div className="flex flex-col h-full">
-                            <div className="p-6 border-b border-white/5">
-                                <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-2.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(0,243,255,0.8)]" />
-                                    Direct Intel
-                                </h2>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                        <Search className="w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-                                    </div>
-                                    <Input
-                                        placeholder="Sync with user..."
-                                        className="pl-10 h-11 bg-white/[0.03] border-white/5 text-sm rounded-xl focus:border-primary/40 focus:ring-0 placeholder:text-slate-600 transition-all tech-font"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <ScrollArea className="flex-1 px-3 py-4 hide-scrollbar">
-                                <div className="space-y-1.5">
-                                    {/* Show search results when searching */}
-                                    {searchQuery.length >= 2 ? (
-                                        searchLoading ? (
-                                            <div className="space-y-4 px-3 py-4">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />)}</div>
-                                        ) : (searchUsersData as any)?.data?.users?.length > 0 ? (
-                                            <div className="space-y-2 py-2">
-                                                <p className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em] px-3 mb-3">Found Entities</p>
-                                                {(searchUsersData as any).data.users.map((user: any) => {
-                                                    const targetId = String(user.userId || user._id);
-                                                    const isCreatingConv = createConversation.isPending;
+                    {/* Aether Core Hologram - Simplified as requested */}
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="w-32 h-32 lg:w-48 lg:h-48 flex items-center justify-center relative group"
+                    >
+                      {/* Subtler background glow */}
+                      <div className="absolute inset-4 bg-primary/5 blur-2xl rounded-full group-hover:bg-primary/10 transition-colors duration-1000" />
 
-                                                    return (
-                                                        <motion.button
-                                                            key={user._id}
-                                                            whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.05)" }}
-                                                            disabled={isCreatingConv}
-                                                            onClick={() => {
-                                                                const existingConv = conversations.find((c: Conversation) =>
-                                                                    c.type === 'direct' && c.participants.some(p =>
-                                                                        String(p.userId) === targetId || String(p._id) === targetId
-                                                                    )
-                                                                );
-
-                                                                if (existingConv) {
-                                                                    setSelectedConversationId(existingConv._id);
-                                                                    setSearchQuery('');
-                                                                    toast.success(`Opening chat with ${user.name}`);
-                                                                } else {
-                                                                    toast.loading('Initializing secure link...', { id: 'create-conv' });
-                                                                    createConversation.mutate({ participantIds: [targetId] }, {
-                                                                        onSuccess: (response: any) => {
-                                                                            const newConvId = response.data?.conversation?._id;
-                                                                            if (newConvId) {
-                                                                                setSelectedConversationId(newConvId);
-                                                                                setSearchQuery('');
-                                                                                toast.success(`Bridge established with ${user.name}`, { id: 'create-conv' });
-                                                                            } else {
-                                                                                toast.error('Initialization failed', { id: 'create-conv' });
-                                                                            }
-                                                                        },
-                                                                        onError: (error: any) => {
-                                                                            toast.error(error?.message || 'Initialization failed', { id: 'create-conv' });
-                                                                        }
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className={cn(
-                                                                "w-full flex items-center gap-4 p-3 rounded-2xl transition-all border border-transparent",
-                                                                isCreatingConv && "opacity-50 cursor-not-allowed"
-                                                            )}
-                                                        >
-                                                            <Avatar className="w-11 h-11 border border-white/10 rounded-xl">
-                                                                <AvatarImage src={user.avatar} />
-                                                                <AvatarFallback className="bg-white/5 text-sm font-black uppercase">{user.name?.charAt(0)}</AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="flex-1 text-left min-w-0">
-                                                                <p className="text-sm font-bold text-white truncate">{user.name}</p>
-                                                                <p className="text-[10px] text-slate-500 font-medium tech-font">@{user.handle}</p>
-                                                            </div>
-                                                            {isCreatingConv ? (
-                                                                <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                                                            ) : (
-                                                                <ArrowUpRight className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
-                                                            )}
-                                                        </motion.button>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-10">
-                                                <p className="text-[11px] text-slate-600 font-bold uppercase tracking-widest">No matching entities</p>
-                                            </div>
-                                        )
-                                    ) : convsLoading ? (
-                                        <div className="space-y-4 px-2">{[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />)}</div>
-                                    ) : conversations.length === 0 ? (
-                                        <div className="text-center py-24 px-8 group">
-                                            <div className="w-20 h-20 bg-white/[0.03] rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/5 group-hover:border-primary/20 transition-all duration-500">
-                                                <MessageCircle className="w-8 h-8 text-primary/40 group-hover:text-primary transition-colors" />
-                                            </div>
-                                            <p className="text-[11px] font-black text-white uppercase tracking-[0.25em] mb-2">No Active Bridges</p>
-                                            <p className="text-[10px] text-slate-600 font-medium tech-font">Initialize new link to start transmission</p>
-                                        </div>
-                                    ) : (
-                                        conversations.map((conv: Conversation) => {
-                                            const other = conv.participants[0];
-                                            const name = conv.type === 'group' ? conv.groupName : other?.name;
-                                            const isActive = selectedConversationId === conv._id;
-                                            return (
-                                                <motion.button
-                                                    key={conv._id}
-                                                    whileHover={{ x: 4 }}
-                                                    onClick={() => { setSelectedConversationId(conv._id); setView('dms'); }}
-                                                    className={cn(
-                                                        "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all relative group overflow-hidden border mb-1",
-                                                        isActive
-                                                            ? "bg-white/[0.04] border-white/10 shadow-2xl"
-                                                            : "bg-transparent border-transparent hover:bg-white/[0.02]"
-                                                    )}
-                                                >
-                                                    {isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary shadow-[0_0_15px_rgba(0,243,255,1)]" />}
-                                                    <div className="relative">
-                                                        <Avatar className="w-12 h-12 rounded-xl border border-white/10">
-                                                            <AvatarImage src={other?.avatar} className="object-cover" />
-                                                            <AvatarFallback className="bg-white/5 text-xs font-bold text-white/40">{name?.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <div className={cn(
-                                                            "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#030303] transition-all z-20",
-                                                            isActive ? "bg-primary shadow-[0_0_8px_rgba(0,243,255,1)]" : "bg-slate-700"
-                                                        )} />
-                                                    </div>
-
-                                                    <div className="flex-1 text-left min-w-0">
-                                                        <div className="flex items-center justify-between mb-0.5">
-                                                            <p className={cn(
-                                                                "text-[13px] font-bold tracking-tight transition-colors",
-                                                                isActive ? "text-primary neon-text-primary" : "text-slate-200"
-                                                            )}>
-                                                                {name}
-                                                            </p>
-                                                            <span className="text-[8px] text-slate-600 font-bold uppercase tracking-widest tech-font opacity-40">CHL_{conversations.indexOf(conv)}</span>
-                                                        </div>
-                                                        {conv.lastMessage && (
-                                                            <p className="text-[11px] text-slate-500 truncate font-medium tech-font opacity-60">
-                                                                <span className="text-primary/40">::</span> {conv.lastMessage.content}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </motion.button>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                    ) : view === 'server' && selectedServer ? (
-                        <div className="flex flex-col h-full">
-                            <div className="px-6 py-8 border-b border-white/5 bg-white/[0.02]">
-                                <motion.div
-                                    className="w-full flex items-center justify-between p-3.5 bg-white/[0.03] rounded-2xl border border-white/5 transition-all group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(0,243,255,1)]" />
-                                        <h2 className="font-black text-white text-xs uppercase tracking-[0.2em] truncate">
-                                            {selectedServer.name}
-                                        </h2>
-                                    </div>
-                                    <Terminal className="w-4 h-4 text-slate-600 group-hover:text-primary transition-colors" />
-                                </motion.div>
-                            </div>
-                            <ScrollArea className="flex-1 hide-scrollbar">
-                                <div className="p-4 space-y-10">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between px-3 mb-6">
-                                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Audio Layers</p>
-                                            <div className="p-2 bg-white/[0.03] rounded-xl cursor-pointer hover:text-primary transition-all border border-white/5">
-                                                <Cpu className="w-3.5 h-3.5" />
-                                            </div>
-                                        </div>
-                                        {channels.filter((c: Channel) => c.type !== 'voice').map((ch: Channel) => (
-                                            <motion.button
-                                                key={ch._id}
-                                                whileHover={{ x: 4 }}
-                                                onClick={() => setSelectedChannelId(ch._id)}
-                                                className={cn(
-                                                    "w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all relative group overflow-hidden border",
-                                                    selectedChannelId === ch._id
-                                                        ? "glass-luxe border-cyan-500/30 text-cyan-400"
-                                                        : "text-slate-400 border-transparent hover:bg-white/5 hover:text-white"
-                                                )}
-                                            >
-                                                <span className="font-bold tracking-widest text-[11px] uppercase truncate">{ch.name}</span>
-                                                {selectedChannelId === ch._id && (
-                                                    <div className="ml-auto w-1 h-4 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(0,245,255,0.6)]" />
-                                                )}
-                                            </motion.button>
-                                        ))}
-                                    </div>
-                                    {channels.some((c: Channel) => c.type === 'voice') && (
-                                        <div className="space-y-2">
-                                            <p className="px-3 mb-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Tactical Voice</p>
-                                            {channels.filter((c: Channel) => c.type === 'voice').map((ch: Channel) => {
-                                                const isActive = roomId === ch._id;
-                                                return (
-                                                    <motion.button
-                                                        key={ch._id}
-                                                        whileHover={{ x: 4 }}
-                                                        onClick={() => {
-                                                            setSelectedChannelId(ch._id);
-                                                            joinRoom(ch._id);
-                                                        }}
-                                                        className={cn(
-                                                            "w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all relative group overflow-hidden border",
-                                                            isActive || selectedChannelId === ch._id
-                                                                ? "glass-luxe border-cyan-500/30 text-cyan-400"
-                                                                : "text-slate-400 border-transparent hover:bg-white/5 hover:text-white"
-                                                        )}
-                                                    >
-                                                        <Radio className={cn("w-4 h-4", isActive ? "text-cyan-400 animate-pulse" : "text-slate-600")} />
-                                                        <span className="font-bold tracking-widest text-[11px] uppercase truncate">{ch.name}</span>
-                                                        {isActive && (
-                                                            <div className="ml-auto w-2 h-2 rounded-full bg-cyan-400 animate-ping shadow-[0_0_10px_rgba(0,245,255,0.8)]" />
-                                                        )}
-                                                    </motion.button>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                            <div className="mt-auto shrink-0 p-4 glass-luxe border-t border-white/5 relative z-20">
-                                <div className="flex items-center gap-4 p-4 glass-luxe-light rounded-2xl border border-white/5">
-                                    <div className="relative">
-                                        <Avatar className="w-10 h-10 border border-white/10 rounded-xl">
-                                            <AvatarImage src={profile?.avatar} />
-                                            <AvatarFallback className="glass-luxe text-xs font-bold">{profile?.name?.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0F1117] shadow-[0_0_10px_rgba(0,245,255,0.4)]" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-white truncate">{profile?.name}</p>
-                                        <p className="text-[10px] text-cyan-400/80 font-bold uppercase tracking-widest">Active Link</p>
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl text-slate-500 hover:bg-white/10"><Settings className="w-4 h-4" /></Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : view === 'discover' ? (
-                        <div className="flex flex-col h-full uppercase tracking-tighter">
-                            <div className="p-6">
-                                <h2 className="text-2xl font-black text-white italic tracking-tighter mb-2 flex items-center gap-3">
-                                    <Compass className="w-6 h-6 text-cyan-400" />
-                                    DISCOVER
-                                </h2>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-6">Scan emerging networks</p>
-                                <div className="relative group">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                    <Input
-                                        placeholder="Scan protocols..."
-                                        className="pl-10 h-11 bg-white/5 border-white/10 text-sm rounded-2xl focus:border-cyan-500/30 transition-all font-medium"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <ScrollArea className="flex-1 px-3">
-                                <div className="space-y-3">
-                                    <Button variant="ghost" className="w-full justify-start h-14 text-slate-400 hover:text-white bg-white/5 border border-dashed border-white/10 rounded-2xl" onClick={() => setShowJoinServer(true)}>
-                                        <Plus className="w-5 h-5 mr-3 text-cyan-400" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Inject Invite Code</span>
-                                    </Button>
-                                    {discoverServers.map((s: Server) => (
-                                        <motion.div
-                                            key={s._id}
-                                            whileHover={{ scale: 1.02, y: -2 }}
-                                            onClick={() => joinServer.mutate({ serverId: s._id })}
-                                            className="p-4 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 cursor-pointer transition-all group"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center text-white font-black italic text-lg shadow-inner">
-                                                    {s.name.charAt(0)}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-black text-white uppercase italic truncate">{s.name}</p>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter mt-1">{s.memberCount} OPERATIVES</p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                    ) : null}
-                </div>
-
-                {/* Main Chat Interface */}
-                {/* MAIN CHAT INTERFACE */}
-                <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#030303]/40 backdrop-blur-3xl relative z-10 overflow-hidden">
-                    {/* Header */}
-                    <div className="h-16 lg:h-24 px-4 sm:px-8 lg:px-12 flex items-center justify-between border-b border-white/5 bg-[#0a0a0e]/40 backdrop-blur-xl relative overflow-hidden group shrink-0">
-                        {/* Header Depth Layer */}
-                        <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(circle_at_50%_0%,var(--aether-primary),transparent)] group-hover:opacity-20 transition-opacity" />
-
-                        <div className="flex items-center gap-6 lg:gap-10 z-10">
-                            {/* Mobile menu toggle */}
-                            <button
-                                onClick={() => setShowMobileSidebar(true)}
-                                className="lg:hidden w-11 h-11 rounded-xl glass-aether flex items-center justify-center shadow-lg shrink-0 border border-white/10"
-                            >
-                                <MessageCircle className="w-5 h-5 text-primary" />
-                            </button>
-
-                            {view === 'server' && selectedChannel ? (
-                                <div className="flex items-center gap-4 lg:gap-8 min-w-0">
-                                    <div className="hidden sm:flex w-10 lg:w-14 h-10 lg:h-14 rounded-xl lg:rounded-2xl glass-aether items-center justify-center shadow-[0_0_20px_rgba(0,243,255,0.1)] relative shrink-0">
-                                        <Cpu className="w-6 h-6 text-primary relative z-10" />
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <div className="flex items-center gap-3 lg:gap-5">
-                                            <h2 className="font-black text-white text-base lg:text-2xl uppercase tracking-tight truncate aether-font italic">
-                                                {selectedChannel.name}
-                                            </h2>
-                                            <div className="hidden md:flex px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
-                                                <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] tech-font">LINK_SECURE</span>
-                                            </div>
-                                        </div>
-                                        <div className="hidden lg:flex items-center gap-4 mt-2">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">SIGNAL: STABLE</span>
-                                            <div className="w-1 h-1 rounded-full bg-primary/20" />
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">MEMBERS: {selectedServer?.members?.length || 0}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : selectedConversation ? (
-                                <div className="flex items-center gap-4 lg:gap-8 min-w-0">
-                                    <div className="relative shrink-0">
-                                        <div className="absolute -inset-1 bg-primary/20 blur-md rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <Avatar className="w-10 h-10 lg:w-16 lg:h-16 border border-white/10 rounded-xl lg:rounded-2xl shadow-2xl relative z-10">
-                                            <AvatarImage src={selectedConversation.participants[0]?.avatar} className="object-cover" />
-                                            <AvatarFallback className="glass-aether text-white text-lg font-black uppercase">
-                                                {selectedConversation.participants[0]?.name?.charAt(0)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#030303] shadow-[0_0_15px_rgba(0,243,255,1)] z-20" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <div className="flex items-center gap-4">
-                                            <h2 className="font-black text-white text-lg lg:text-2xl uppercase tracking-tight aether-font italic">
-                                                {selectedConversation.type === 'group' ? selectedConversation.groupName : selectedConversation.participants[0]?.name}
-                                            </h2>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(0,243,255,0.8)]" />
-                                                <span className="text-[9px] text-primary/60 font-black uppercase tracking-[0.3em] tech-font hidden sm:block">ENCRYPTED</span>
-                                            </div>
-                                        </div>
-                                        <div className="hidden sm:flex items-center gap-4 mt-1.5">
-                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">DIRECT_RELAY_v4.2</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-5 opacity-40">
-                                    <Activity className="w-6 h-6 text-slate-500 animate-pulse" />
-                                    <div>
-                                        <p className="font-black text-slate-500 tracking-[0.3em] text-[10px] uppercase">Node Standby</p>
-                                        <p className="font-bold text-slate-600 tracking-[0.1em] text-[11px] uppercase mt-1">Select a bridge to initialize transmission</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex items-center gap-2 lg:gap-8 z-10">
-                            {selectedConversation && selectedConversation.type === 'direct' && (
-                                <div className="flex gap-2 lg:border-r lg:border-white/5 lg:pr-8 lg:mr-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => {
-                                            const otherId = selectedConversation.participants[0]?._id;
-                                            if (otherId) initiateCall(otherId, 'audio');
-                                        }}
-                                        className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white/[0.03] text-slate-400 hover:text-primary hover:bg-primary/10 transition-all border border-white/5 hover:border-primary/30"
-                                    >
-                                        <Phone className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => {
-                                            const otherId = selectedConversation.participants[0]?._id;
-                                            if (otherId) initiateCall(otherId, 'video');
-                                        }}
-                                        className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white/[0.03] text-slate-400 hover:text-primary hover:bg-primary/10 transition-all border border-white/5 hover:border-primary/30"
-                                    >
-                                        <Video className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            )}
-
-                            <div className="flex gap-2">
-                                {view === 'server' && (
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setShowMembers(!showMembers)}
-                                        className={cn(
-                                            "w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center rounded-xl transition-all border",
-                                            showMembers
-                                                ? "bg-primary/10 border-primary text-primary shadow-[0_0_20px_rgba(0,243,255,0.2)]"
-                                                : "bg-white/[0.03] text-slate-500 border-white/5 hover:border-white/10"
-                                        )}
-                                    >
-                                        <Users className="w-4 h-4" />
-                                    </motion.button>
-                                )}
-                                <div className="hidden md:flex gap-2">
-                                    <Button variant="ghost" size="icon" className="w-10 h-10 lg:w-11 lg:h-11 bg-white/[0.03] text-slate-500 hover:text-primary rounded-xl border border-white/5 hover:border-primary/20"><Pin className="w-4 h-4" /></Button>
-                                    <Button variant="ghost" size="icon" className="w-10 h-10 lg:w-11 lg:h-11 bg-white/[0.03] text-slate-500 hover:text-primary rounded-xl border border-white/5 hover:border-primary/20"><MoreVertical className="w-4 h-4" /></Button>
-                                </div>
-                            </div>
-
-                            <div className="hidden lg:block relative w-64 ml-4">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600" />
-                                <Input
-                                    placeholder="Search in transmission..."
-                                    className="h-11 pl-11 bg-white/[0.03] border-white/5 rounded-xl text-[11px] font-bold uppercase tracking-widest focus:border-primary/30 focus:ring-0 transition-all placeholder:text-slate-600 tech-font"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Main Area Wrapper */}
-                    <div className="flex-1 flex flex-row min-h-0 min-w-0 relative overflow-hidden" >
-                        {/* Main Chat Content */}
-                        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#020617] relative overflow-hidden" >
-                            {view === 'server' && selectedChannel?.type === 'voice' && isInRoom && (roomId === selectedChannelId || roomId === selectedChannel?._id) ? (
-                                <div className="flex-1 flex flex-col bg-slate-900/30 relative">
-                                    <ScrollArea className="flex-1 h-full">
-                                        <div className="p-8 h-full">
-                                            <div className="max-w-7xl mx-auto h-full">
-                                                <ParticipantsGrid />
-                                            </div>
-                                        </div>
-                                    </ScrollArea>
-
-                                    {/* Premium Voice Controls */}
-                                    <div className="h-24 lg:h-32 bg-[#030303]/80 backdrop-blur-3xl border-t border-primary/20 flex items-center justify-center gap-4 lg:gap-10 px-4 lg:px-8 relative z-20 shrink-0 shadow-[0_-20px_60px_rgba(0,0,0,0.8)]">
-                                        {/* Control panel background effects */}
-                                        <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
-
-                                        <motion.button
-                                            whileHover={{ scale: 1.1, y: -4 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={toggleMute}
-                                            className={cn(
-                                                "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex flex-col items-center justify-center transition-all border relative overflow-hidden group shadow-2xl",
-                                                isMuted
-                                                    ? "bg-rose-500/10 text-rose-500 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
-                                                    : "bg-primary/5 text-primary border-primary/30 hover:border-primary/60 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                            )}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                                            <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">{isMuted ? "MIC_OFF" : "MIC_ON"}</span>
-                                        </motion.button>
-
-                                        <motion.button
-                                            whileHover={{ scale: 1.1, y: -4 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={toggleVideo}
-                                            className={cn(
-                                                "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex flex-col items-center justify-center transition-all border relative overflow-hidden group shadow-2xl",
-                                                isVideoOff
-                                                    ? "bg-rose-500/10 text-rose-500 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
-                                                    : "bg-primary/5 text-primary border-primary/30 hover:border-primary/60 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                            )}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            {isVideoOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
-                                            <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">{isVideoOff ? "CAM_OFF" : "CAM_ON"}</span>
-                                        </motion.button>
-
-                                        <motion.button
-                                            whileHover={{ scale: 1.1, y: -4 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={isScreenSharing ? stopScreenShare : startScreenShare}
-                                            className={cn(
-                                                "w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex flex-col items-center justify-center transition-all border relative overflow-hidden group shadow-2xl",
-                                                isScreenSharing
-                                                    ? "bg-primary/20 text-primary border-primary/50 shadow-[0_0_30px_rgba(0,243,255,0.2)]"
-                                                    : "bg-primary/5 text-primary border-primary/30 hover:border-primary/60 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                            )}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            {isScreenSharing ? <MonitorOff className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
-                                            <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">{isScreenSharing ? "STREAMING" : "SHARE_SCR"}</span>
-                                        </motion.button>
-
-                                        <div className="w-px h-12 bg-white/10 mx-2" />
-
-                                        <motion.button
-                                            whileHover={{ scale: 1.1, rotate: 90 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={leaveRoom}
-                                            className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-rose-500/10 text-rose-500 flex flex-col items-center justify-center shadow-2xl border border-rose-500/40 hover:bg-rose-500 transition-all group hover:text-white"
-                                        >
-                                            <LogOut className="w-6 h-6 relative z-10 transition-transform group-hover:scale-110" />
-                                            <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font relative z-10">DISCONNECT</span>
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            ) : (view === 'server' && selectedChannelId) || (view === 'dms' && selectedConversationId) ? (
-                                <>
-                                    <ScrollArea className="flex-1 h-full">
-                                        <div className="p-3 sm:p-6 lg:p-8 space-y-1 min-h-full flex flex-col justify-end">
-                                            {messagesLoading ? (
-                                                <div className="space-y-8 py-10 flex-1">
-                                                    {[1, 2, 3].map(i => (
-                                                        <div key={i} className="flex gap-4 animate-pulse">
-                                                            <div className="w-12 h-12 rounded-2xl glass-luxe-light flex-shrink-0" />
-                                                            <div className="flex-1 space-y-3">
-                                                                <div className="h-3 bg-white/5 rounded w-32" />
-                                                                <div className="h-16 bg-white/5 rounded-3xl w-2/3" />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : currentMessages.length === 0 ? (
-                                                <div className="flex flex-col items-center justify-center py-20 select-none flex-1">
-                                                    <motion.div
-                                                        initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                                                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                                                        className="relative mb-10"
-                                                    >
-                                                        <div className="absolute -inset-10 bg-primary/5 blur-[80px] rounded-full animate-pulse" />
-                                                        <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-[2rem] lg:rounded-[2.5rem] glass-aether flex items-center justify-center relative shadow-2xl border border-white/5">
-                                                            <MessageCircle className="w-10 h-10 lg:w-14 lg:h-14 text-primary/40" />
-                                                        </div>
-                                                    </motion.div>
-                                                    <h3 className="font-black text-white text-xl lg:text-3xl uppercase tracking-tight mb-4 aether-font italic">Transmission Blank</h3>
-                                                    <p className="text-sm text-slate-500 text-center max-w-[320px] font-bold uppercase tracking-[0.1em] leading-relaxed opacity-60">Initialize a bridge to begin secure data stream</p>
-                                                </div>
-                                            ) : (
-                                                currentMessages.map((msg: Message, idx: number) => {
-                                                    // More robust isMe check - include Supabase user.id
-                                                    const myIds = [user?.id, profile?._id, profile?.userId].filter(Boolean);
-                                                    const senderIds = [msg.senderId, msg.sender?.userId].filter(Boolean);
-                                                    const isMe = myIds.some(myId => senderIds.includes(myId));
-
-                                                    // Avatar grouping logic available if needed
-
-                                                    return (
-                                                        <motion.div
-                                                            key={msg._id}
-                                                            initial={{ opacity: 0, x: isMe ? 20 : -20, scale: 0.95 }}
-                                                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                                                            transition={{
-                                                                type: "spring",
-                                                                stiffness: 400,
-                                                                damping: 35,
-                                                                delay: Math.min(idx * 0.01, 0.2)
-                                                            }}
-                                                            className={cn(
-                                                                "group relative flex gap-4 transition-all py-3 px-4 sm:px-10 max-w-full",
-                                                                isMe ? "flex-row-reverse" : "flex-row",
-                                                                selectedMessageId === msg._id && "bg-white/[0.02]"
-                                                            )}
-                                                            onMouseEnter={() => setSelectedMessageId(msg._id)}
-                                                            onMouseLeave={() => setSelectedMessageId(null)}
-                                                        >
-                                                            {/* Avatar */}
-                                                            <div className="shrink-0 pt-1">
-                                                                <div className={cn(
-                                                                    "p-0.5 rounded-xl transition-all duration-500 border",
-                                                                    isMe ? "border-primary/30" : "border-white/5"
-                                                                )}>
-                                                                    <Avatar className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg">
-                                                                        <AvatarImage src={isMe ? profile?.avatar : msg.sender?.avatar} className="object-cover" />
-                                                                        <AvatarFallback className="glass-aether text-white/50 text-xs font-black uppercase">
-                                                                            {(isMe ? profile?.name : msg.sender?.name)?.charAt(0) || '?'}
-                                                                        </AvatarFallback>
-                                                                    </Avatar>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className={cn("flex flex-col gap-1.5 max-w-[85%] sm:max-w-[80%]", isMe && "items-end")}>
-                                                                {/* Identifier */}
-                                                                <div className={cn("flex items-center gap-3 px-1", isMe ? "flex-row-reverse" : "flex-row")}>
-                                                                    <span className="text-[11px] font-black text-white/90 uppercase tracking-wider tech-font">
-                                                                        {isMe ? 'Local_Node' : (msg.sender?.name?.replace(/\s+/g, '_') || 'Remote_User')}
-                                                                    </span>
-                                                                    <span className="text-[9px] text-slate-600 font-bold tracking-widest tech-font">
-                                                                        [{formatTime(msg.createdAt)}]
-                                                                    </span>
-                                                                </div>
-
-                                                                <div className={cn(
-                                                                    "relative px-6 py-4 rounded-2xl text-[14px] leading-relaxed transition-all duration-500 group/bubble border",
-                                                                    isMe
-                                                                        ? "bg-[#0a0a0e]/90 text-primary border-primary/20 rounded-tr-none shadow-[0_4px_30px_rgba(0,243,255,0.05)]"
-                                                                        : "bg-white/[0.04] text-slate-200 border-white/5 rounded-tl-none backdrop-blur-xl"
-                                                                )}>
-                                                                    {/* Depth Indicator */}
-                                                                    {isMe && <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />}
-
-                                                                    {msg.replyTo && (
-                                                                        <div className="mb-4 pb-3 border-b border-white/5 flex items-center gap-3 opacity-60 text-[9px] font-black text-primary/80 tech-font uppercase tracking-widest italic">
-                                                                            <Reply className="w-3 h-3" />
-                                                                            <span className="truncate">REF: {msg.replyTo.sender?.name}</span>
-                                                                        </div>
-                                                                    )}
-
-                                                                    <div className="selection:bg-primary/30 relative z-10 font-medium tracking-tight">
-                                                                        {msg.content}
-                                                                    </div>
-
-                                                                    {msg.media && msg.media.length > 0 && (
-                                                                        <div className="mt-4 p-1 rounded-xl overflow-hidden glass-aether shadow-inner border border-white/5">
-                                                                            <MessageMedia media={msg.media as any} />
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Encryption Badge */}
-                                                                    {isMe && (
-                                                                        <div className="absolute -left-8 bottom-4 opacity-0 group-hover/bubble:opacity-100 transition-all flex flex-col gap-1 items-center">
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(0,243,255,1)]" />
-                                                                            <span className="text-[7px] font-black text-primary uppercase tracking-[0.3em] rotate-180" style={{ writingMode: 'vertical-rl' }}>AETHER</span>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Reactions Panel */}
-                                                                    {msg.reactions && msg.reactions.length > 0 && (
-                                                                        <div className={cn("flex flex-wrap gap-2 mt-4", isMe ? "justify-end" : "justify-start")}>
-                                                                            {msg.reactions.map((r) => (
-                                                                                <motion.button
-                                                                                    key={r.emoji}
-                                                                                    whileHover={{ scale: 1.1, y: -2 }}
-                                                                                    onClick={() => handleReaction(msg._id, r.emoji, r.users.includes(profile?._id || ''))}
-                                                                                    className={cn(
-                                                                                        "px-3 py-1.5 rounded-xl border transition-all flex items-center gap-2 font-black tech-font",
-                                                                                        r.users.includes(profile?._id || '')
-                                                                                            ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_15px_rgba(0,243,255,0.2)]"
-                                                                                            : "bg-white/[0.03] border-white/5 text-slate-500 hover:text-white"
-                                                                                    )}
-                                                                                >
-                                                                                    <span className="text-sm">{r.emoji}</span>
-                                                                                    <span className="text-[10px] opacity-60 font-bold">{r.users.length}</span>
-                                                                                </motion.button>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    );
-                                                })
-                                            )}
-                                            <div ref={messagesEndRef} />
-                                        </div>
-                                    </ScrollArea>
-
-                                    {/* Message Input Area */}
-                                    <div className="px-3 sm:px-6 lg:px-8 pb-4 lg:pb-10 shrink-0 relative z-10">
-                                        <div className="glass-luxe border border-cyan-500/10 rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-5 shadow-[0_20px_80px_rgba(0,0,0,0.8)] relative group focus-within:border-cyan-500/40 transition-all duration-700 overflow-hidden">
-                                            {/* Decorative Corner Accents */}
-                                            <div className="absolute top-0 left-0 w-8 h-[1px] bg-cyan-500/30" />
-                                            <div className="absolute top-0 left-0 w-[1px] h-8 bg-cyan-500/30" />
-                                            <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-cyan-500/30" />
-                                            <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-cyan-500/30" />
-
-                                            {replyingTo && (
-                                                <div className="absolute bottom-full left-4 right-4 mb-6 px-6 py-4 glass-luxe border border-cyan-500/20 rounded-2xl flex items-center justify-between animate-in slide-in-from-bottom-6 z-20 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                                                            <Reply className="w-5 h-5 text-cyan-400" />
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest tech-font">REFERENCE_NODE: {replyingTo.sender?.name}</span>
-                                                            <span className="text-[13px] text-slate-300 font-medium truncate max-w-[500px] mt-0.5 italic">{replyingTo.content}</span>
-                                                        </div>
-                                                    </div>
-                                                    <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/10 text-slate-500 hover:text-rose-500" onClick={() => setReplyingTo(null)}><X className="w-5 h-5" /></Button>
-                                                </div>
-                                            )}
-
-                                            {typingUsers.length > 0 && (
-                                                <div className="absolute -top-12 left-10 flex items-center gap-4 px-5 py-2 glass-aether rounded-full border border-primary/20 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
-                                                    <div className="flex gap-2">
-                                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s] shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
-                                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s] shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
-                                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
-                                                    </div>
-                                                    <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em] tech-font">NODE_SYNCING...</span>
-                                                </div>
-                                            )}
-
-                                            {pendingFiles.length > 0 && <div className="mb-4"><MediaPreview files={pendingFiles} onRemove={removeFile} onClear={() => setPendingFiles([])} /></div>}
-
-                                            {/* Hidden file input for media upload */}
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                accept="image/*,video/*"
-                                                multiple
-                                                onChange={handleFileSelect}
-                                                className="hidden"
-                                            />
-
-                                            <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 px-1 sm:px-2">
-                                                <motion.button
-                                                    whileHover={{ scale: 1.1, rotate: 90 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="w-11 h-11 lg:w-14 lg:h-14 rounded-2xl glass-aether text-slate-400 hover:text-primary border border-white/5 hover:border-primary/40 transition-all flex items-center justify-center shrink-0 shadow-xl group/plus"
-                                                >
-                                                    <Plus className="w-7 h-7 transition-transform group-hover:scale-110" />
-                                                </motion.button>
-
-                                                <div className="flex-1 min-h-[50px] lg:min-h-[64px] flex flex-col justify-center relative px-2">
-                                                    <Input
-                                                        value={messageInput}
-                                                        onChange={(e) => { setMessageInput(e.target.value); handleTyping(); }}
-                                                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                                                        placeholder="Initialize transmission..."
-                                                        className="bg-transparent border-0 focus-visible:ring-0 px-0 h-auto text-white text-sm lg:text-[16px] font-medium placeholder:text-slate-700 tech-font tracking-wide selection:bg-primary/30"
-                                                    />
-                                                    {/* Technical Loading Line Accent */}
-                                                    <div className="absolute -bottom-2 lg:-bottom-3 left-0 right-0 h-px bg-white/5 overflow-hidden">
-                                                        <motion.div
-                                                            animate={{ left: ['-100%', '100%'] }}
-                                                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                                            className="absolute inset-0 w-1/4 bg-gradient-to-r from-transparent via-primary/30 to-transparent"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="hidden sm:flex items-center gap-4 lg:gap-6 border-l border-white/5 pl-4 lg:pl-8 h-10">
-                                                    {isRecordingVoice ? (
-                                                        <motion.div
-                                                            initial={{ scale: 0.9, opacity: 0 }}
-                                                            animate={{ scale: 1, opacity: 1 }}
-                                                            className="flex items-center gap-4 px-6 py-2 glass-aether border border-rose-500/30 rounded-2xl shadow-[0_0_30px_rgba(244,63,94,0.1)]"
-                                                        >
-                                                            <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_12px_rgba(244,63,94,1)]" />
-                                                            <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest tech-font">STREAM_REC</span>
-                                                            <button onClick={() => setIsRecordingVoice(false)} className="text-rose-500/40 hover:text-rose-500 transition-colors"><X className="w-5 h-5" /></button>
-                                                        </motion.div>
-                                                    ) : (
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.1, color: "#F43F5E" }}
-                                                            onClick={() => setIsRecordingVoice(true)}
-                                                            className="w-10 h-10 flex items-center justify-center text-slate-500 transition-all hover:text-rose-400 opacity-60 hover:opacity-100"
-                                                        >
-                                                            <Mic className="w-5 h-5" />
-                                                        </motion.button>
-                                                    )}
-
-                                                    <motion.button
-                                                        whileHover={{ scale: 1.1, color: "#00F3FF" }}
-                                                        className="w-10 h-10 flex items-center justify-center text-slate-500 transition-all opacity-60 hover:opacity-100"
-                                                    >
-                                                        <Smile className="w-5 h-5" />
-                                                    </motion.button>
-                                                </div>
-
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05, x: 2 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={handleSendMessage}
-                                                    disabled={((!messageInput.trim() && pendingFiles.length === 0) || sendChannelMessage.isPending || sendDmMessage.isPending || isUploading)}
-                                                    className={cn(
-                                                        "w-11 h-11 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-2xl flex-shrink-0 relative overflow-hidden group/send border",
-                                                        (messageInput.trim() || pendingFiles.length > 0)
-                                                            ? "bg-primary/20 text-primary border-primary/30 shadow-[0_0_40px_rgba(0,243,255,0.15)] hover:bg-primary/30"
-                                                            : "bg-white/[0.03] border-white/5 text-slate-700 cursor-not-allowed shadow-none"
-                                                    )}
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover/send:opacity-100 transition-opacity" />
-                                                    <Send className="w-6 h-6 lg:w-7 lg:h-7 relative z-10 transition-transform group-hover/send:translate-x-1 group-hover/send:-translate-y-1" />
-                                                </motion.button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 text-center select-none animate-in fade-in zoom-in duration-1000 relative overflow-hidden bg-[#030303]">
-                                    <div className="absolute inset-0 aether-grid opacity-[0.03] rotate-12 scale-150 pointer-events-none" />
-
-                                    <div className="relative mb-8 lg:mb-16">
-                                        <div className="absolute inset-0 bg-primary/5 blur-[100px] lg:blur-[200px] rounded-full scale-150 animate-pulse pointer-events-none" />
-
-                                        {/* Aether Core Hologram */}
-                                        <motion.div
-                                            initial={{ scale: 0.9, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{ duration: 2, ease: "easeOut" }}
-                                            className="w-28 h-28 lg:w-56 lg:h-56 rounded-[2.5rem] lg:rounded-[4rem] glass-aether border border-white/5 flex items-center justify-center relative shadow-[0_60px_120px_rgba(0,0,0,0.8)] group"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/5 pointer-events-none" />
-                                            <div className="relative z-10">
-                                                <div className="w-14 h-14 lg:w-28 lg:h-28 rounded-full glass-aether-light border border-primary/20 flex items-center justify-center relative shadow-[0_0_40px_rgba(0,243,255,0.1)]">
-                                                    <div className="absolute inset-0 bg-primary/10 animate-ping rounded-full pointer-events-none" />
-                                                    <Sparkles className="w-7 h-7 lg:w-14 lg:h-14 text-primary opacity-40 group-hover:opacity-80 transition-opacity" />
-                                                </div>
-                                            </div>
-
-                                            {/* Technical Accents */}
-                                            <div className="absolute inset-4 border border-white/[0.03] rounded-[2rem] lg:rounded-[3rem] pointer-events-none" />
-                                            <div className="absolute top-6 left-6 w-8 lg:w-12 h-px bg-primary/30" />
-                                            <div className="absolute bottom-6 right-6 w-8 lg:w-12 h-px bg-primary/30" />
-                                        </motion.div>
-
-                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 min-w-max pointer-events-none">
-                                            <motion.div
-                                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                                transition={{ duration: 4, repeat: Infinity }}
-                                                className="px-5 py-2 rounded-xl glass-aether border border-white/10 shadow-2xl backdrop-blur-3xl"
-                                            >
-                                                <span className="text-[9px] lg:text-[11px] font-black text-primary uppercase tracking-[0.4em] tech-font">SYSTEM_IDLE // AWAITING_UPSTREAM</span>
-                                            </motion.div>
-                                        </div>
-                                    </div>
-
-                                    <div className="max-w-[400px] space-y-4 relative z-10 pointer-events-none">
-                                        <h2 className="text-xl lg:text-3xl font-black text-white italic uppercase tracking-tighter aether-font opacity-90">Neural Bridge Ready</h2>
-                                        <p className="text-[10px] lg:text-xs text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed opacity-50 px-6">Initialize connection with any available node to establish secure peer-to-peer transmission</p>
-                                    </div>
-
-                                    {/* System Status Indicators */}
-                                    <div className="mt-8 lg:mt-16 sm:flex items-center gap-6 px-8 py-3 rounded-2xl glass-aether border border-white/5 opacity-40 hidden">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest tech-font">ENCRYPTION: ACTIVE</span>
-                                        </div>
-                                        <div className="w-px h-3 bg-white/10" />
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest tech-font">LINK: SECURE</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Members Sidebar */}
-                        {view === 'server' && showMembers && selectedServer?.memberProfiles && (
-                            <div className="w-[320px] glass-aether border-l border-white/5 p-10 flex flex-col shrink-0 relative overflow-hidden shadow-2xl bg-[#0a0a0e]/40 backdrop-blur-3xl">
-                                <div className="absolute top-0 right-0 w-32 h-64 bg-primary/5 blur-[120px] pointer-events-none" />
-                                <div className="absolute bottom-0 left-0 w-32 h-64 bg-secondary/5 blur-[120px] pointer-events-none" />
-
-                                <h3 className="text-[11px] font-black text-white italic uppercase tracking-[0.4em] mb-12 flex items-center justify-between aether-font opacity-80">
-                                    <span>User Manifest</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,243,255,1)]" />
-                                        <span className="bg-primary/10 text-primary px-3 py-1 rounded-md border border-primary/30 text-[9px] font-black tech-font">
-                                            {selectedServer.memberProfiles.length.toString().padStart(2, '0')}
-                                        </span>
-                                    </div>
-                                </h3>
-
-                                <ScrollArea className="flex-1 -mx-4 px-4">
-                                    <div className="space-y-8 pb-10">
-                                        {selectedServer.memberProfiles.slice(0, 50).map((m: any, idx: number) => (
-                                            <motion.div
-                                                key={m._id}
-                                                initial={{ opacity: 0, x: 10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: idx * 0.02 }}
-                                                className="flex items-center gap-5 group cursor-pointer relative"
-                                            >
-                                                <div className="relative">
-                                                    <div className="p-0.5 rounded-xl border border-white/5 glass-aether group-hover:border-primary/40 transition-all duration-500 z-10 relative shadow-lg">
-                                                        <Avatar className="w-12 h-12 rounded-lg">
-                                                            <AvatarImage src={m.avatar} className="object-cover" />
-                                                            <AvatarFallback className="glass-aether text-white/50 text-[10px] font-black uppercase">
-                                                                {m.name?.charAt(0)}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                    </div>
-                                                    {/* Status Pulse */}
-                                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#030303] p-0.5 z-20">
-                                                        <div className="w-full h-full rounded-full bg-primary shadow-[0_0_12px_rgba(0,243,255,1)] group-hover:scale-110 transition-transform" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col min-w-0 z-10">
-                                                    <span className="text-[13px] font-black text-slate-200 group-hover:text-primary transition-colors truncate uppercase italic tracking-tight aether-font">
-                                                        {m.name}
-                                                    </span>
-                                                    <div className="flex items-center gap-2 mt-1 opacity-50">
-                                                        <span className="text-[8px] text-slate-500 font-black uppercase tracking-[0.2em] tech-font truncate">NODE_ID:{m._id?.slice(-4)}</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Hover Technical Detail */}
-                                                <div className="absolute right-0 opacity-0 group-hover:opacity-40 transition-opacity translate-x-4 group-hover:translate-x-0 transition-all">
-                                                    <div className="w-6 h-px bg-primary/40" />
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </ScrollArea>
-
-                                <div className="mt-8 p-6 border border-white/5 glass-aether rounded-3xl relative overflow-hidden group/load">
-                                    <div className="absolute inset-0 bg-primary/[0.02] pointer-events-none" />
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <Activity className="w-4 h-4 text-primary group-hover/load:animate-pulse" />
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] tech-font">Network Load</span>
-                                        </div>
-                                        <span className="text-[10px] font-black text-primary tech-font">24%</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative shadow-inner">
-                                        <motion.div
-                                            animate={{ width: ['20%', '28%', '24%'], opacity: [0.6, 1, 0.6] }}
-                                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                            className="h-full bg-gradient-to-r from-primary to-primary/40 shadow-[0_0_15px_rgba(0,243,255,0.4)] relative"
-                                        >
-                                            {/* Scanning Line in Progress Bar */}
-                                            <motion.div
-                                                animate={{ left: ['-100%', '100%'] }}
-                                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                                                className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                                            />
-                                        </motion.div>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-4">
-                                        <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] italic tech-font">SECURE_CHANNEL_READY</span>
-                                        <div className="flex gap-1.5">
-                                            {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 rounded-full bg-primary/20" />)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <AnimatePresence>
-                    {showCreateServer && (
+                      <div className="relative z-10">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/95 backdrop-blur-3xl flex items-center justify-center z-[100] p-4"
-                            onClick={() => setShowCreateServer(false)}
+                          animate={{ y: [0, -15, 0] }}
+                          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                          className="flex items-center justify-center"
                         >
-                            <motion.div
-                                initial={{ scale: 0.9, y: 40, opacity: 0 }}
-                                animate={{ scale: 1, y: 0, opacity: 1 }}
-                                exit={{ scale: 0.9, y: 40, opacity: 0 }}
-                                onClick={(e) => e.stopPropagation()}
-                                className="glass-luxe border border-cyan-500/20 rounded-[3rem] p-10 lg:p-14 w-full max-w-xl shadow-[0_0_100px_rgba(0,245,255,0.1)] relative overflow-hidden"
-                            >
-                                {/* Decorative HUD Accents */}
-                                <div className="absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-cyan-500/40 to-transparent" />
-                                <div className="absolute top-0 left-0 w-px h-32 bg-gradient-to-b from-cyan-500/40 to-transparent" />
-                                <div className="absolute bottom-0 right-0 w-32 h-px bg-gradient-to-l from-violet-500/40 to-transparent" />
-                                <div className="absolute bottom-0 right-0 w-px h-32 bg-gradient-to-t from-violet-500/40 to-transparent" />
-
-                                <div className="relative z-10">
-                                    <div className="flex items-center gap-6 mb-10">
-                                        <div className="w-16 h-16 rounded-2xl glass-luxe border border-cyan-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(0,245,255,0.2)]">
-                                            <Plus className="w-8 h-8 text-cyan-400" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter glitch-hover">Initialize Node</h2>
-                                            <div className="flex items-center gap-3 mt-1">
-                                                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] tech-font">Protocol: Pocket_Dimension_Alpha</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-10">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between px-2">
-                                                <label className="text-[10px] text-cyan-400/60 font-black uppercase tracking-[0.4em] tech-font">Node Identifier</label>
-                                                <span className="text-[9px] text-slate-700 font-black tech-font">SECURE_AUTH_REQUIRED</span>
-                                            </div>
-                                            <div className="relative group">
-                                                <Input
-                                                    value={newServerName}
-                                                    onChange={(e) => setNewServerName(e.target.value)}
-                                                    placeholder="ENTER_NODE_NAME..."
-                                                    className="h-20 bg-black/40 border border-white/5 rounded-2xl px-8 text-xl font-black text-white focus:border-cyan-500/50 focus:ring-0 transition-all outline-none placeholder:text-slate-800 tech-font uppercase tracking-wider"
-                                                />
-                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity">
-                                                    <Cpu className="w-6 h-6 text-cyan-400" />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-6 pt-4">
-                                            <button
-                                                className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white hover:bg-white/5 border border-white/5 transition-all text-[11px] tech-font"
-                                                onClick={() => setShowCreateServer(false)}
-                                            >
-                                                Abort_Task
-                                            </button>
-                                            <button
-                                                className={cn(
-                                                    "flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] transition-all text-[11px] tech-font flex items-center justify-center gap-3 border shadow-2xl",
-                                                    newServerName.trim()
-                                                        ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_30px_rgba(0,245,255,0.2)] hover:bg-cyan-500/20"
-                                                        : "bg-white/5 border-white/10 text-slate-700 cursor-not-allowed shadow-none"
-                                                )}
-                                                onClick={handleCreateServer}
-                                                disabled={createServer.isPending || !newServerName.trim()}
-                                            >
-                                                {createServer.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                                    <>
-                                                        Establish_Node
-                                                        <ArrowRight className="w-4 h-4" />
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                          <Sparkles className="w-12 h-12 lg:w-24 lg:h-24 text-primary/40 group-hover:text-primary transition-all duration-1000 chat-hologram" />
                         </motion.div>
-                    )}
-                </AnimatePresence>
+                      </div>
+                    </motion.div>
 
-                <AnimatePresence>
-                    {showJoinServer && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[100] flex items-center justify-center p-4 lg:p-8"
-                        >
-                            <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
-                            <motion.div
-                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                className="w-full max-w-[500px] glass-aether border border-white/10 rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] relative overflow-hidden group"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 pointer-events-none" />
-                                <div className="p-8 lg:p-12 space-y-10 relative z-10">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl glass-aether border border-primary/30 flex items-center justify-center relative overflow-hidden">
-                                                <div className="absolute inset-0 bg-primary/10 animate-pulse pointer-events-none" />
-                                                <Compass className="w-6 h-6 text-primary" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter aether-font">Initialize Node</h3>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest tech-font mt-1">HANDSHAKE_PROTOCOL_V2.1</p>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => setShowJoinServer(false)} className="w-10 h-10 rounded-xl glass-aether border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors">
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
+                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 min-w-max pointer-events-none">
+                      <motion.div
+                        animate={{ opacity: [0.4, 0.8, 0.4] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className="px-6 py-2.5 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-md"
+                      >
+                        <span className="text-[9px] lg:text-[11px] font-black text-primary uppercase tracking-[0.5em] tech-font">
+                          SYSTEM_IDLE // DATA_VOID
+                        </span>
+                      </motion.div>
+                    </div>
+                  </div>
 
-                                    <div className="space-y-8">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between px-2">
-                                                <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.4em] tech-font">Access Token</label>
-                                                <span className="text-[9px] text-slate-700 font-black tech-font">SECURE_SYNC_ACTIVE</span>
-                                            </div>
-                                            <div className="relative group/input">
-                                                <Input
-                                                    value={inviteCode}
-                                                    onChange={(e) => setInviteCode(e.target.value)}
-                                                    placeholder="EX: PROTOCOL_ALPHA_77"
-                                                    className="h-20 bg-black/40 border border-white/5 rounded-2xl px-8 text-xl font-black text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-800 tech-font uppercase tracking-wider text-center"
-                                                />
-                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within/input:opacity-100 transition-opacity">
-                                                    <Lock className="w-6 h-6 text-primary" />
-                                                </div>
-                                            </div>
-                                        </div>
+                  <div className="max-w-[500px] space-y-6 relative z-10 pointer-events-none">
+                    <h2 className="text-3xl lg:text-5xl font-black italic uppercase tracking-tighter chat-gradient-text">
+                      Neural Bridge Ready
+                    </h2>
+                    <p className="text-[11px] lg:text-sm text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed opacity-60">
+                      Initialize connection with any available node to establish
+                      secure peer-to-peer transmission
+                    </p>
+                  </div>
 
-                                        <div className="flex gap-6 pt-4">
-                                            <button
-                                                className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white hover:bg-white/5 border border-white/5 transition-all text-[11px] tech-font"
-                                                onClick={() => setShowJoinServer(false)}
-                                            >
-                                                TERMINATE
-                                            </button>
-                                            <button
-                                                className={cn(
-                                                    "flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] transition-all text-[11px] tech-font flex items-center justify-center gap-3 border shadow-2xl relative overflow-hidden group/btn",
-                                                    inviteCode.trim()
-                                                        ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_30px_rgba(0,243,255,0.2)] hover:bg-primary/20"
-                                                        : "bg-white/5 border-white/10 text-slate-700 cursor-not-allowed shadow-none"
-                                                )}
-                                                onClick={handleJoinServer}
-                                                disabled={joinServer.isPending || !inviteCode.trim()}
-                                            >
-                                                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                                                {joinServer.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                                    <span className="relative z-10">Establish_Link</span>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <JoinRoomModal
-                    isOpen={showJoinRoomModal}
-                    onClose={() => {
-                        setShowJoinRoomModal(false);
-                        setPendingRoomId(null);
-                    }}
-                    initialRoomId={pendingRoomId || ''}
-                />
-
-                <CreateRoomModal
-                    isOpen={showCreateRoomModal}
-                    onClose={() => setShowCreateRoomModal(false)}
-                    onRoomCreated={(roomId) => {
-                        console.log('Room created:', roomId);
-                    }}
-                />
-                <MediaUploader
-                    isOpen={showMediaPicker}
-                    onClose={() => setShowMediaPicker(false)}
-                    onFilesSelected={handleFilesSelected}
-                    onVoiceRecord={() => setIsRecordingVoice(true)}
-                    onCreateVoiceRoom={() => { setShowCreateRoomModal(true); setShowMediaPicker(false); }}
-                />
-
-                {/* Mobile Sidebar Overlay */}
-                <AnimatePresence>
-                    {showMobileSidebar && (
-                        <>
-                            {/* Backdrop */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setShowMobileSidebar(false)}
-                                className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-                            />
-                            {/* Sidebar */}
-                            <motion.div
-                                initial={{ x: '-100%' }}
-                                animate={{ x: 0 }}
-                                exit={{ x: '-100%' }}
-                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                                className="lg:hidden fixed left-0 top-0 bottom-0 w-[85vw] max-w-[340px] glass-aether z-50 border-r border-white/5 flex flex-col shadow-[40px_0_80px_rgba(0,0,0,0.9)] bg-[#030303]/90 backdrop-blur-3xl"
-                            >
-                                {/* Header */}
-                                <div className="p-6 border-b border-white/5 flex items-center justify-between relative overflow-hidden shrink-0">
-                                    <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
-                                    <h2 className="text-[11px] font-black text-white italic tracking-tight uppercase flex items-center gap-3 aether-font">
-                                        <div className="w-8 h-8 rounded-xl glass-aether border border-primary/20 flex items-center justify-center relative shadow-[0_0_20px_rgba(0,243,255,0.1)]">
-                                            <div className="absolute inset-0 bg-primary/5 animate-pulse" />
-                                            <Terminal className="w-4 h-4 text-primary relative z-10" />
-                                        </div>
-                                        Aether_Node
-                                    </h2>
-                                    <button onClick={() => setShowMobileSidebar(false)} className="w-10 h-10 rounded-xl glass-aether border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors shadow-lg">
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-
-                                {/* Mobile View Tabs */}
-                                <div className="flex gap-2 px-4 py-4 border-b border-white/5 shrink-0 bg-white/[0.01]">
-                                    <button
-                                        onClick={() => setView('dms')}
-                                        className={cn(
-                                            "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
-                                            view === 'dms'
-                                                ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                                : "text-slate-500 hover:bg-white/5"
-                                        )}
-                                    >
-                                        Uplink
-                                    </button>
-                                    <button
-                                        onClick={() => setView('server')}
-                                        className={cn(
-                                            "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
-                                            view === 'server'
-                                                ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                                : "text-slate-500 hover:bg-white/5"
-                                        )}
-                                    >
-                                        Manifest
-                                    </button>
-                                    <button
-                                        onClick={() => setView('discover')}
-                                        className={cn(
-                                            "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
-                                            view === 'discover'
-                                                ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                                : "text-slate-500 hover:bg-white/5"
-                                        )}
-                                    >
-                                        Network
-                                    </button>
-                                </div>
-
-                                {/* Content based on view */}
-                                <ScrollArea className="flex-1 px-3 py-4">
-                                    {view === 'dms' ? (
-                                        <div className="space-y-2">
-                                            <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Direct Messages</p>
-                                            {convsLoading ? (
-                                                <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 glass-aether rounded-2xl animate-pulse border border-white/5" />)}</div>
-                                            ) : conversations.length === 0 ? (
-                                                <div className="text-center py-12 px-8 glass-aether rounded-3xl border border-dashed border-white/5">
-                                                    <MessageCircle className="w-10 h-10 text-slate-700 mx-auto mb-4 opacity-40" />
-                                                    <p className="text-[10px] font-black italic uppercase tracking-widest text-slate-500">Transmission Void</p>
-                                                </div>
-                                            ) : (
-                                                conversations.map((conv: Conversation) => {
-                                                    const other = conv.participants[0];
-                                                    const name = conv.type === 'group' ? conv.groupName : other?.name;
-                                                    const isActive = selectedConversationId === conv._id;
-                                                    return (
-                                                        <button
-                                                            key={conv._id}
-                                                            onClick={() => {
-                                                                setSelectedConversationId(conv._id);
-                                                                setView('dms');
-                                                                setShowMobileSidebar(false);
-                                                            }}
-                                                            className={cn(
-                                                                "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all border group",
-                                                                isActive
-                                                                    ? "bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                                                    : "border-transparent hover:bg-white/[0.03]"
-                                                            )}
-                                                        >
-                                                            <div className="relative">
-                                                                <Avatar className="w-11 h-11 rounded-xl border border-white/10 group-hover:border-primary/40 transition-all">
-                                                                    <AvatarImage src={other?.avatar} className="object-cover" />
-                                                                    <AvatarFallback className="glass-aether text-[10px] font-black">{name?.charAt(0)}</AvatarFallback>
-                                                                </Avatar>
-                                                                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#030303] p-0.5">
-                                                                    <div className="w-full h-full rounded-full bg-primary" />
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex-1 text-left min-w-0">
-                                                                <p className={cn("text-xs font-black uppercase italic tracking-tight aether-font truncate", isActive ? "text-primary" : "text-white")}>{name}</p>
-                                                                {conv.lastMessage && (
-                                                                    <p className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">{conv.lastMessage.content}</p>
-                                                                )}
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    ) : view === 'server' ? (
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between px-2 mb-3">
-                                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] tech-font">Your Manifest</p>
-                                                <button
-                                                    onClick={() => { setShowCreateServer(true); setShowMobileSidebar(false); }}
-                                                    className="w-8 h-8 rounded-xl glass-aether text-primary flex items-center justify-center hover:bg-primary/10 transition-colors border border-primary/20 shadow-[0_0_15px_rgba(0,243,255,0.1)]"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            {serversLoading ? (
-                                                <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 glass-aether rounded-2xl animate-pulse border border-white/5" />)}</div>
-                                            ) : servers.length === 0 ? (
-                                                <div className="text-center py-12 px-8 glass-aether rounded-3xl border border-dashed border-white/5">
-                                                    <Terminal className="w-10 h-10 text-slate-700 mx-auto mb-4 opacity-40" />
-                                                    <p className="text-[10px] font-black italic uppercase tracking-widest text-slate-500 mb-4">Node Offline</p>
-                                                    <button
-                                                        onClick={() => { setShowCreateServer(true); setShowMobileSidebar(false); }}
-                                                        className="px-6 py-3 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20"
-                                                    >
-                                                        Initialize
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                servers.map((server: Server) => {
-                                                    const isActive = selectedServerId === server._id;
-                                                    return (
-                                                        <button
-                                                            key={server._id}
-                                                            onClick={() => {
-                                                                setSelectedServerId(server._id);
-                                                                if (server.channels?.[0]) setSelectedChannelId(server.channels[0]._id);
-                                                                setView('server');
-                                                                setShowMobileSidebar(false);
-                                                            }}
-                                                            className={cn(
-                                                                "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all border group",
-                                                                isActive
-                                                                    ? "bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
-                                                                    : "border-transparent hover:bg-white/[0.03]"
-                                                            )}
-                                                        >
-                                                            <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm aether-font group-hover:bg-primary/20 transition-all">
-                                                                {server.name.charAt(0)}
-                                                            </div>
-                                                            <div className="flex-1 text-left min-w-0">
-                                                                <p className={cn("text-xs font-black uppercase italic tracking-tight aether-font truncate", isActive ? "text-primary" : "text-white")}>{server.name}</p>
-                                                                <p className="text-[10px] text-slate-500 tech-font uppercase tracking-widest mt-0.5">{server.memberCount || 0} NODES</p>
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })
-                                            )}
-
-                                            {/* Channels for selected server */}
-                                            {selectedServer && channels.length > 0 && (
-                                                <div className="mt-4 pt-4 border-t border-white/5">
-                                                    <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Channels</p>
-                                                    {channels.map((ch: Channel) => (
-                                                        <button
-                                                            key={ch._id}
-                                                            onClick={() => {
-                                                                setSelectedChannelId(ch._id);
-                                                                if (ch.type === 'voice') joinRoom(ch._id);
-                                                                setShowMobileSidebar(false);
-                                                            }}
-                                                            className={cn(
-                                                                "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-left",
-                                                                selectedChannelId === ch._id
-                                                                    ? "bg-cyan-500/10 text-cyan-400"
-                                                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                                            )}
-                                                        >
-                                                            {ch.type === 'voice' ? <Radio className="w-3.5 h-3.5" /> : <MessageCircle className="w-3.5 h-3.5" />}
-                                                            <span className="text-[11px] font-bold truncate">{ch.name}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] tech-font">Network Discovery</p>
-                                            <button
-                                                onClick={() => { setShowJoinServer(true); setShowMobileSidebar(false); }}
-                                                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 text-slate-500 hover:text-primary hover:border-primary/40 transition-all group/join"
-                                            >
-                                                <div className="w-9 h-9 rounded-xl glass-aether flex items-center justify-center border border-white/5 group-hover/join:border-primary/30 transition-all">
-                                                    <Plus className="w-5 h-5 text-primary" />
-                                                </div>
-                                                <span className="text-[11px] font-black uppercase tracking-widest tech-font">Join_Uplink</span>
-                                            </button>
-
-                                            <div className="space-y-3">
-                                                {discoverServers.map((s: Server) => (
-                                                    <button
-                                                        key={s._id}
-                                                        onClick={() => { joinServer.mutate({ serverId: s._id }); setShowMobileSidebar(false); }}
-                                                        className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl glass-aether border border-white/5 hover:bg-white/[0.05] transition-all group"
-                                                    >
-                                                        <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm aether-font group-hover:bg-primary/20 transition-all">
-                                                            {s.name.charAt(0)}
-                                                        </div>
-                                                        <div className="flex-1 text-left min-w-0">
-                                                            <p className="text-xs font-black uppercase italic tracking-tight aether-font text-white truncate">{s.name}</p>
-                                                            <p className="text-[10px] text-slate-500 tech-font uppercase tracking-widest mt-0.5">{s.memberCount || 0} NODES</p>
-                                                        </div>
-                                                        <ArrowRight className="w-4 h-4 text-slate-700 group-hover:text-primary transition-colors" />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </ScrollArea>
-
-                                {/* User Footer */}
-                                <div className="p-3 glass-luxe-light border-t border-white/5 shrink-0">
-                                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                                        <Avatar className="w-9 h-9 rounded-lg border border-cyan-500/20">
-                                            <AvatarImage src={profile?.avatar} />
-                                            <AvatarFallback className="text-xs font-bold">{profile?.name?.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] font-bold text-white truncate">{profile?.name}</p>
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                                                <span className="text-[8px] font-bold text-cyan-400/60 uppercase tracking-wider">Online</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
+                  {/* System Status Indicators */}
+                  <div className="mt-8 lg:mt-16 sm:flex items-center gap-6 px-8 py-3 rounded-2xl glass-aether border border-white/5 opacity-40 hidden">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest tech-font">
+                        ENCRYPTION: ACTIVE
+                      </span>
+                    </div>
+                    <div className="w-px h-3 bg-white/10" />
+                    <div className="flex items-center gap-3">
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest tech-font">
+                        LINK: SECURE
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Members Sidebar */}
+            {view === "server" &&
+              showMembers &&
+              selectedServer?.memberProfiles && (
+                <div className="w-[320px] glass-aether border-l border-white/5 p-10 flex flex-col shrink-0 relative overflow-hidden shadow-2xl bg-[#0a0a0e]/40 backdrop-blur-3xl">
+                  <div className="absolute top-0 right-0 w-32 h-64 bg-primary/5 blur-[120px] pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-32 h-64 bg-secondary/5 blur-[120px] pointer-events-none" />
+
+                  <h3 className="text-[11px] font-black text-white italic uppercase tracking-[0.4em] mb-12 flex items-center justify-between aether-font opacity-80">
+                    <span>User Manifest</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,243,255,1)]" />
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-md border border-primary/30 text-[9px] font-black tech-font">
+                        {selectedServer.memberProfiles.length
+                          .toString()
+                          .padStart(2, "0")}
+                      </span>
+                    </div>
+                  </h3>
+
+                  <ScrollArea className="flex-1 -mx-4 px-4">
+                    <div className="space-y-8 pb-10">
+                      {selectedServer.memberProfiles
+                        .slice(0, 50)
+                        .map((m: any, idx: number) => (
+                          <motion.div
+                            key={m._id}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.02 }}
+                            className="flex items-center gap-5 group cursor-pointer relative"
+                          >
+                            <div className="relative">
+                              <div className="p-0.5 rounded-xl border border-white/5 glass-aether group-hover:border-primary/40 transition-all duration-500 z-10 relative shadow-lg">
+                                <Avatar className="w-12 h-12 rounded-lg">
+                                  <AvatarImage
+                                    src={m.avatar}
+                                    className="object-cover"
+                                  />
+                                  <AvatarFallback className="glass-aether text-white/50 text-[10px] font-black uppercase">
+                                    {m.name?.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </div>
+                              {/* Status Pulse */}
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#030712] p-0.5 z-20">
+                                <div className="w-full h-full rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary))] group-hover:scale-110 transition-transform" />
+                              </div>
+                            </div>
+                            <div className="flex flex-col min-w-0 z-10">
+                              <span className="text-[13px] font-black text-slate-200 group-hover:text-primary transition-colors truncate uppercase italic tracking-tight aether-font">
+                                {m.name}
+                              </span>
+                              <div className="flex items-center gap-2 mt-1 opacity-50">
+                                <span className="text-[8px] text-slate-500 font-black uppercase tracking-[0.2em] tech-font truncate">
+                                  NODE_ID:{m._id?.slice(-4)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Hover Technical Detail */}
+                            <div className="absolute right-0 opacity-0 group-hover:opacity-40 transition-opacity translate-x-4 group-hover:translate-x-0 transition-all">
+                              <div className="w-6 h-px bg-primary/40" />
+                            </div>
+                          </motion.div>
+                        ))}
+                    </div>
+                  </ScrollArea>
+
+                  <div className="mt-8 p-6 border border-white/5 glass-aether rounded-3xl relative overflow-hidden group/load">
+                    <div className="absolute inset-0 bg-primary/[0.02] pointer-events-none" />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <Activity className="w-4 h-4 text-primary group-hover/load:animate-pulse" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] tech-font">
+                          Network Load
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black text-primary tech-font">
+                        24%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative shadow-inner">
+                      <motion.div
+                        animate={{
+                          width: ["20%", "28%", "24%"],
+                          opacity: [0.6, 1, 0.6],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="h-full bg-gradient-to-r from-primary to-primary/40 shadow-[0_0_15px_rgba(129,140,248,0.4)] relative"
+                      >
+                        {/* Scanning Line in Progress Bar */}
+                        <motion.div
+                          animate={{ left: ["-100%", "100%"] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                          className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                        />
+                      </motion.div>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] italic tech-font">
+                        SECURE_CHANNEL_READY
+                      </span>
+                      <div className="flex gap-1.5">
+                        {[1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="w-1 h-1 rounded-full bg-primary/20"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
         </div>
-    );
+
+        <AnimatePresence>
+          {showCreateServer && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/95 backdrop-blur-3xl flex items-center justify-center z-[100] p-4"
+              onClick={() => setShowCreateServer(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 40, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 40, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="glass-luxe border border-primary/20 rounded-[3rem] p-10 lg:p-14 w-full max-w-xl shadow-[0_0_100px_rgba(129,140,248,0.1)] relative overflow-hidden"
+              >
+                {/* Decorative HUD Accents */}
+                <div className="absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-primary/40 to-transparent" />
+                <div className="absolute top-0 left-0 w-px h-32 bg-gradient-to-b from-primary/40 to-transparent" />
+                <div className="absolute bottom-0 right-0 w-32 h-px bg-gradient-to-l from-violet-500/40 to-transparent" />
+                <div className="absolute bottom-0 right-0 w-px h-32 bg-gradient-to-t from-violet-500/40 to-transparent" />
+
+                <div className="relative z-10">
+                  <div className="flex items-center gap-6 mb-10">
+                    <div className="w-16 h-16 rounded-2xl glass-luxe border border-primary/30 flex items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.2)]">
+                      <Plus className="w-8 h-8 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter glitch-hover">
+                        Initialize Node
+                      </h2>
+                      <div className="flex items-center gap-3 mt-1">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] tech-font">
+                          Protocol: Pocket_Dimension_Alpha
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-10">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between px-2">
+                        <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.4em] tech-font">
+                          Node Identifier
+                        </label>
+                        <span className="text-[9px] text-slate-700 font-black tech-font">
+                          SECURE_AUTH_REQUIRED
+                        </span>
+                      </div>
+                      <div className="relative group">
+                        <Input
+                          value={newServerName}
+                          onChange={(e) => setNewServerName(e.target.value)}
+                          placeholder="ENTER_NODE_NAME..."
+                          className="h-20 bg-black/40 border border-white/5 rounded-2xl px-8 text-xl font-black text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-800 tech-font uppercase tracking-wider"
+                        />
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity">
+                          <Cpu className="w-6 h-6 text-primary" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-6 pt-4">
+                      <button
+                        className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white hover:bg-white/5 border border-white/5 transition-all text-[11px] tech-font"
+                        onClick={() => setShowCreateServer(false)}
+                      >
+                        Abort_Task
+                      </button>
+                      <button
+                        className={cn(
+                          "flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] transition-all text-[11px] tech-font flex items-center justify-center gap-3 border shadow-2xl",
+                          newServerName.trim()
+                            ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_30px_rgba(129,140,248,0.2)] hover:bg-primary/20"
+                            : "bg-white/5 border-white/10 text-slate-700 cursor-not-allowed shadow-none",
+                        )}
+                        onClick={handleCreateServer}
+                        disabled={
+                          createServer.isPending || !newServerName.trim()
+                        }
+                      >
+                        {createServer.isPending ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <>
+                            Establish_Node
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showJoinServer && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[100] flex items-center justify-center p-4 lg:p-8"
+            >
+              <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                className="w-full max-w-[500px] glass-aether border border-white/10 rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 pointer-events-none" />
+                <div className="p-8 lg:p-12 space-y-10 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl glass-aether border border-primary/30 flex items-center justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 bg-primary/10 animate-pulse pointer-events-none" />
+                        <Compass className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter aether-font">
+                          Initialize Node
+                        </h3>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest tech-font mt-1">
+                          HANDSHAKE_PROTOCOL_V2.1
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowJoinServer(false)}
+                      className="w-10 h-10 rounded-xl glass-aether border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-8">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between px-2">
+                        <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.4em] tech-font">
+                          Access Token
+                        </label>
+                        <span className="text-[9px] text-slate-700 font-black tech-font">
+                          SECURE_SYNC_ACTIVE
+                        </span>
+                      </div>
+                      <div className="relative group/input">
+                        <Input
+                          value={inviteCode}
+                          onChange={(e) => setInviteCode(e.target.value)}
+                          placeholder="EX: PROTOCOL_ALPHA_77"
+                          className="h-20 bg-black/40 border border-white/5 rounded-2xl px-8 text-xl font-black text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-800 tech-font uppercase tracking-wider text-center"
+                        />
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within/input:opacity-100 transition-opacity">
+                          <Lock className="w-6 h-6 text-primary" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-6 pt-4">
+                      <button
+                        className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white hover:bg-white/5 border border-white/5 transition-all text-[11px] tech-font"
+                        onClick={() => setShowJoinServer(false)}
+                      >
+                        TERMINATE
+                      </button>
+                      <button
+                        className={cn(
+                          "flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] transition-all text-[11px] tech-font flex items-center justify-center gap-3 border shadow-2xl relative overflow-hidden group/btn",
+                          inviteCode.trim()
+                            ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_30px_rgba(0,243,255,0.2)] hover:bg-primary/20"
+                            : "bg-white/5 border-white/10 text-slate-700 cursor-not-allowed shadow-none",
+                        )}
+                        onClick={handleJoinServer}
+                        disabled={joinServer.isPending || !inviteCode.trim()}
+                      >
+                        <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                        {joinServer.isPending ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <span className="relative z-10">Establish_Link</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <JoinRoomModal
+          isOpen={showJoinRoomModal}
+          onClose={() => {
+            setShowJoinRoomModal(false);
+            setPendingRoomId(null);
+          }}
+          initialRoomId={pendingRoomId || ""}
+        />
+
+        <CreateRoomModal
+          isOpen={showCreateRoomModal}
+          onClose={() => setShowCreateRoomModal(false)}
+          onRoomCreated={(roomId) => {
+            console.log("Room created:", roomId);
+          }}
+        />
+        <MediaUploader
+          isOpen={showMediaPicker}
+          onClose={() => setShowMediaPicker(false)}
+          onFilesSelected={handleFilesSelected}
+          onVoiceRecord={() => setIsRecordingVoice(true)}
+          onCreateVoiceRoom={() => {
+            setShowCreateRoomModal(true);
+            setShowMediaPicker(false);
+          }}
+        />
+
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {showMobileSidebar && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowMobileSidebar(false)}
+                className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              />
+              {/* Sidebar */}
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="lg:hidden fixed left-0 top-0 bottom-0 w-[85vw] max-w-[340px] glass-aether z-50 border-r border-white/5 flex flex-col shadow-[40px_0_80px_rgba(0,0,0,0.9)] bg-[#030303]/90 backdrop-blur-3xl"
+              >
+                {/* Header */}
+                <div className="p-6 border-b border-white/5 flex items-center justify-between relative overflow-hidden shrink-0">
+                  <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
+                  <h2 className="text-[11px] font-black text-white italic tracking-tight uppercase flex items-center gap-3 aether-font">
+                    <div className="w-8 h-8 rounded-xl glass-aether border border-primary/20 flex items-center justify-center relative shadow-[0_0_20px_rgba(0,243,255,0.1)]">
+                      <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+                      <Terminal className="w-4 h-4 text-primary relative z-10" />
+                    </div>
+                    Aether_Node
+                  </h2>
+                  <button
+                    onClick={() => setShowMobileSidebar(false)}
+                    className="w-10 h-10 rounded-xl glass-aether border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors shadow-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Mobile View Tabs */}
+                <div className="flex gap-2 px-4 py-4 border-b border-white/5 shrink-0 bg-white/[0.01]">
+                  <button
+                    onClick={() => setView("dms")}
+                    className={cn(
+                      "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
+                      view === "dms"
+                        ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                        : "text-slate-500 hover:bg-white/5",
+                    )}
+                  >
+                    Uplink
+                  </button>
+                  <button
+                    onClick={() => setView("server")}
+                    className={cn(
+                      "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
+                      view === "server"
+                        ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                        : "text-slate-500 hover:bg-white/5",
+                    )}
+                  >
+                    Manifest
+                  </button>
+                  <button
+                    onClick={() => setView("discover")}
+                    className={cn(
+                      "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
+                      view === "discover"
+                        ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                        : "text-slate-500 hover:bg-white/5",
+                    )}
+                  >
+                    Network
+                  </button>
+                </div>
+
+                {/* Content based on view */}
+                <ScrollArea className="flex-1 px-3 py-4">
+                  {view === "dms" ? (
+                    <div className="space-y-2">
+                      <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                        Direct Messages
+                      </p>
+                      {convsLoading ? (
+                        <div className="space-y-3">
+                          {[1, 2, 3].map((i) => (
+                            <div
+                              key={i}
+                              className="h-16 glass-aether rounded-2xl animate-pulse border border-white/5"
+                            />
+                          ))}
+                        </div>
+                      ) : conversations.length === 0 ? (
+                        <div className="text-center py-12 px-8 glass-aether rounded-3xl border border-dashed border-white/5">
+                          <MessageCircle className="w-10 h-10 text-slate-700 mx-auto mb-4 opacity-40" />
+                          <p className="text-[10px] font-black italic uppercase tracking-widest text-slate-500">
+                            Transmission Void
+                          </p>
+                        </div>
+                      ) : (
+                        conversations.map((conv: Conversation) => {
+                          const other = conv.participants[0];
+                          const name =
+                            conv.type === "group"
+                              ? conv.groupName
+                              : other?.name;
+                          const isActive = selectedConversationId === conv._id;
+                          return (
+                            <button
+                              key={conv._id}
+                              onClick={() => {
+                                setSelectedConversationId(conv._id);
+                                setView("dms");
+                                setShowMobileSidebar(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all border group",
+                                isActive
+                                  ? "bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                                  : "border-transparent hover:bg-white/[0.03]",
+                              )}
+                            >
+                              <div className="relative">
+                                <Avatar className="w-11 h-11 rounded-xl border border-white/10 group-hover:border-primary/40 transition-all">
+                                  <AvatarImage
+                                    src={other?.avatar}
+                                    className="object-cover"
+                                  />
+                                  <AvatarFallback className="glass-aether text-[10px] font-black">
+                                    {name?.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#030303] p-0.5">
+                                  <div className="w-full h-full rounded-full bg-primary" />
+                                </div>
+                              </div>
+                              <div className="flex-1 text-left min-w-0">
+                                <p
+                                  className={cn(
+                                    "text-xs font-black uppercase italic tracking-tight aether-font truncate",
+                                    isActive ? "text-primary" : "text-white",
+                                  )}
+                                >
+                                  {name}
+                                </p>
+                                {conv.lastMessage && (
+                                  <p className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">
+                                    {conv.lastMessage.content}
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  ) : view === "server" ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-2 mb-3">
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] tech-font">
+                          Your Manifest
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowCreateServer(true);
+                            setShowMobileSidebar(false);
+                          }}
+                          className="w-8 h-8 rounded-xl glass-aether text-primary flex items-center justify-center hover:bg-primary/10 transition-colors border border-primary/20 shadow-[0_0_15px_rgba(0,243,255,0.1)]"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {serversLoading ? (
+                        <div className="space-y-3">
+                          {[1, 2, 3].map((i) => (
+                            <div
+                              key={i}
+                              className="h-16 glass-aether rounded-2xl animate-pulse border border-white/5"
+                            />
+                          ))}
+                        </div>
+                      ) : servers.length === 0 ? (
+                        <div className="text-center py-12 px-8 glass-aether rounded-3xl border border-dashed border-white/5">
+                          <Terminal className="w-10 h-10 text-slate-700 mx-auto mb-4 opacity-40" />
+                          <p className="text-[10px] font-black italic uppercase tracking-widest text-slate-500 mb-4">
+                            Node Offline
+                          </p>
+                          <button
+                            onClick={() => {
+                              setShowCreateServer(true);
+                              setShowMobileSidebar(false);
+                            }}
+                            className="px-6 py-3 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20"
+                          >
+                            Initialize
+                          </button>
+                        </div>
+                      ) : (
+                        servers.map((server: Server) => {
+                          const isActive = selectedServerId === server._id;
+                          return (
+                            <button
+                              key={server._id}
+                              onClick={() => {
+                                setSelectedServerId(server._id);
+                                if (server.channels?.[0])
+                                  setSelectedChannelId(server.channels[0]._id);
+                                setView("server");
+                                setShowMobileSidebar(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all border group",
+                                isActive
+                                  ? "bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                                  : "border-transparent hover:bg-white/[0.03]",
+                              )}
+                            >
+                              <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm aether-font group-hover:bg-primary/20 transition-all">
+                                {server.name.charAt(0)}
+                              </div>
+                              <div className="flex-1 text-left min-w-0">
+                                <p
+                                  className={cn(
+                                    "text-xs font-black uppercase italic tracking-tight aether-font truncate",
+                                    isActive ? "text-primary" : "text-white",
+                                  )}
+                                >
+                                  {server.name}
+                                </p>
+                                <p className="text-[10px] text-slate-500 tech-font uppercase tracking-widest mt-0.5">
+                                  {server.memberCount || 0} NODES
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+
+                      {/* Channels for selected server */}
+                      {selectedServer && channels.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-white/5">
+                          <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                            Channels
+                          </p>
+                          {channels.map((ch: Channel) => (
+                            <button
+                              key={ch._id}
+                              onClick={() => {
+                                setSelectedChannelId(ch._id);
+                                if (ch.type === "voice") joinRoom(ch._id);
+                                setShowMobileSidebar(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-left",
+                                selectedChannelId === ch._id
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-slate-500 hover:bg-white/5 transition-colors"
+                                ,
+                              )}
+                            >
+                              {ch.type === "voice" ? (
+                                <Radio className="w-3.5 h-3.5" />
+                              ) : (
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              )}
+                              <span className="text-[11px] font-bold truncate">
+                                {ch.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] tech-font">
+                        Network Discovery
+                      </p>
+                      <button
+                        onClick={() => {
+                          setShowJoinServer(true);
+                          setShowMobileSidebar(false);
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 text-slate-500 hover:text-primary hover:border-primary/40 transition-all group/join"
+                      >
+                        <div className="w-9 h-9 rounded-xl glass-aether flex items-center justify-center border border-white/5 group-hover/join:border-primary/30 transition-all">
+                          <Plus className="w-5 h-5 text-primary" />
+                        </div>
+                        <span className="text-[11px] font-black uppercase tracking-widest tech-font">
+                          Join_Uplink
+                        </span>
+                      </button>
+
+                      <div className="space-y-3">
+                        {discoverServers.map((s: Server) => (
+                          <button
+                            key={s._id}
+                            onClick={() => {
+                              joinServer.mutate({ serverId: s._id });
+                              setShowMobileSidebar(false);
+                            }}
+                            className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl glass-aether border border-white/5 hover:bg-white/[0.05] transition-all group"
+                          >
+                            <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm aether-font group-hover:bg-primary/20 transition-all">
+                              {s.name.charAt(0)}
+                            </div>
+                            <div className="flex-1 text-left min-w-0">
+                              <p className="text-xs font-black uppercase italic tracking-tight aether-font text-white truncate">
+                                {s.name}
+                              </p>
+                              <p className="text-[10px] text-slate-500 tech-font uppercase tracking-widest mt-0.5">
+                                {s.memberCount || 0} NODES
+                              </p>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-slate-700 group-hover:text-primary transition-colors" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </ScrollArea>
+
+                {/* User Footer */}
+                <div className="p-3 glass-luxe-light border-t border-white/5 shrink-0">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                    <Avatar className="w-9 h-9 rounded-lg border border-primary/20">
+                      <AvatarImage src={profile?.avatar} />
+                      <AvatarFallback className="text-xs font-bold">
+                        {profile?.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold text-white truncate">
+                        {profile?.name}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[8px] font-bold text-primary/60 uppercase tracking-wider">
+                          Online
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 }

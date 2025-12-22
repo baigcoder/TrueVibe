@@ -58,6 +58,12 @@ export const config = {
         serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
         jwtSecret: process.env.SUPABASE_JWT_SECRET || '',
     },
+
+    llm: {
+        geminiApiKey: process.env.GEMINI_API_KEY || '',
+        gptApiKey: process.env.GPT5_API_KEY || '',
+        groqApiKey: process.env.GROQ_API_KEY || '',
+    },
 } as const;
 
 export type Config = typeof config;

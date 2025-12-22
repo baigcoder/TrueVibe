@@ -1,5 +1,5 @@
 import {
-    Hand, Users, Star, ArrowUp
+    Hand, Users, Star, ArrowUp, ArrowUpRight, Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -36,9 +36,9 @@ export function LiveStage() {
         <div className="flex flex-col h-full overflow-hidden">
             {/* Stage Area (Speakers) */}
             <div className="flex-none p-4 pb-0">
-                <div className="flex items-center justify-between mb-3 text-cyan-400">
+                <div className="flex items-center justify-between mb-3 text-primary">
                     <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 fill-cyan-400 shadow-glow-primary" />
+                        <Star className="w-4 h-4 fill-primary shadow-glow-primary" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] italic">THE_STAGE</span>
                     </div>
                     <span className="text-[9px] font-bold opacity-50 tech-font">{speakerParticipants.length + (isSpeaker ? 1 : 0)} BROADCASTING</span>
@@ -102,7 +102,7 @@ export function LiveStage() {
                         <motion.div
                             className={cn(
                                 "flex flex-col items-center p-2 rounded-xl transition-all relative overflow-hidden group",
-                                isHandRaised ? "bg-cyan-500/10 border border-cyan-400/40" : "bg-white/5 border border-white/5"
+                                isHandRaised ? "bg-primary/10 border border-primary/40" : "bg-white/5 border border-white/5"
                             )}
                         >
                             {profile?.avatar ? (
@@ -118,7 +118,7 @@ export function LiveStage() {
                                 <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute top-1 right-1 w-4 h-4 rounded-md bg-cyan-500 flex items-center justify-center shadow-glow-primary"
+                                    className="absolute top-1 right-1 w-4 h-4 rounded-md bg-primary flex items-center justify-center shadow-glow-primary"
                                 >
                                     <Hand className="w-2.5 h-2.5 text-black" />
                                 </motion.div>
@@ -134,7 +134,7 @@ export function LiveStage() {
                                 key={participant.id}
                                 className={cn(
                                     "flex flex-col items-center p-2 rounded-xl transition-all relative overflow-hidden group",
-                                    hasHandRaised ? "bg-cyan-500/10 border border-cyan-400/40" : "bg-white/5 border border-white/5"
+                                    hasHandRaised ? "bg-primary/10 border border-primary/40" : "bg-white/5 border border-white/5"
                                 )}
                             >
                                 {participant.avatar ? (
@@ -150,7 +150,7 @@ export function LiveStage() {
                                     <motion.div
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        className="absolute top-1 right-1 w-4 h-4 rounded-md bg-cyan-500 flex items-center justify-center"
+                                        className="absolute top-1 right-1 w-4 h-4 rounded-md bg-primary flex items-center justify-center shadow-glow-primary"
                                     >
                                         <Hand className="w-2.5 h-2.5 text-black" />
                                     </motion.div>
@@ -160,7 +160,7 @@ export function LiveStage() {
                                 {isAdmin && hasHandRaised && (
                                     <button
                                         onClick={() => promoteToSpeaker(participant.id)}
-                                        className="absolute inset-0 bg-cyan-500/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute inset-0 bg-primary/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         <ArrowUp className="w-4 h-4 text-black mb-1" />
                                         <span className="text-[8px] font-black text-black">PROMOTE</span>
@@ -180,8 +180,8 @@ export function LiveStage() {
                         className={cn(
                             "w-full py-3 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 group relative overflow-hidden",
                             isHandRaised
-                                ? "bg-cyan-500 text-black shadow-glow-primary"
-                                : "glass-luxe border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                                ? "bg-primary text-white shadow-glow-primary"
+                                : "glass-luxe border border-primary/30 text-primary hover:bg-primary/10"
                         )}
                     >
                         <Hand className={cn("w-5 h-5", isHandRaised ? "animate-bounce" : "group-hover:rotate-12 transition-transform")} />
@@ -204,12 +204,12 @@ export function LiveStage() {
                                 raisedHands.map(hand => (
                                     <div key={hand.userId} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-glow-primary" />
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-glow-primary" />
                                             <span className="text-[10px] font-black uppercase text-white truncate max-w-[120px]">{hand.name}</span>
                                         </div>
                                         <button
                                             onClick={() => promoteToSpeaker(hand.userId)}
-                                            className="px-2 py-1 bg-cyan-500 text-black text-[9px] font-black rounded-lg hover:bg-cyan-400 transition-colors"
+                                            className="px-2 py-1 bg-primary text-white text-[9px] font-black rounded-lg hover:bg-primary/90 transition-colors"
                                         >
                                             BRING_STAGE
                                         </button>

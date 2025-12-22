@@ -20,10 +20,10 @@ const TRENDING_TOPICS = [
 ];
 
 const TRENDING_CATEGORIES = [
-    { name: "Technology", icon: Zap, color: "from-blue-500 to-cyan-500" },
+    { name: "Technology", icon: Zap, color: "from-blue-500 to-primary" },
     { name: "Art & Design", icon: Sparkles, color: "from-purple-500 to-pink-500" },
     { name: "Lifestyle", icon: Star, color: "from-amber-500 to-orange-500" },
-    { name: "News", icon: TrendingUp, color: "from-emerald-500 to-teal-500" },
+    { name: "News", icon: TrendingUp, color: "from-indigo-500 to-violet-500" },
 ];
 
 export function TrendingTab() {
@@ -138,9 +138,9 @@ export function TrendingTab() {
                                     <p className="text-xs text-white/40">{topic.posts.toLocaleString()} posts</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 rounded-lg">
-                                <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-                                <span className="text-xs font-bold text-emerald-400">{topic.trend}</span>
+                            <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 rounded-lg">
+                                <ArrowUpRight className="w-3 h-3 text-primary" />
+                                <span className="text-xs font-bold text-primary">{topic.trend}</span>
                             </div>
                         </motion.div>
                     ))}

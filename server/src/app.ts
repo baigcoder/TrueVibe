@@ -25,6 +25,7 @@ import notificationRoutes from './modules/notifications/notification.routes.js';
 import pushTokenRoutes from './modules/notifications/pushToken.routes.js';
 import searchRoutes from './modules/search/search.routes.js';
 import voiceRoomRoutes from './modules/chat/voiceRoom.routes.js';
+import spotifyRoutes from './modules/spotify/spotify.routes.js';
 
 export const createApp = (): Application => {
     const app = express();
@@ -107,6 +108,7 @@ export const createApp = (): Application => {
     app.use('/api/v1/push-tokens', pushTokenRoutes);
     app.use('/api/v1/search', searchRoutes);
     app.use('/api/v1/voice-rooms', voiceRoomRoutes);
+    app.use('/api/v1/spotify', spotifyRoutes);
 
     // Error handling
     app.use(notFoundHandler);

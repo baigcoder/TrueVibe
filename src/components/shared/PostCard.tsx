@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { TrustBadge } from "./TrustBadge";
+import { AIReportModal } from "./AIReportModal";
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Bookmark,
     ShieldCheck, Sparkles, Trash2, Edit2, AlertCircle, BarChart3
@@ -12,6 +13,7 @@ import {
     useLikePost, useUnlikePost, useDeletePost,
     useUpdatePost, useRecordView
 } from "@/api/hooks";
+import { useAIReport } from "@/hooks/useAIReport";
 import { PostAnalytics } from "./PostAnalytics";
 import { TipButton } from "./TipButton";
 import {
@@ -75,6 +77,7 @@ export function PostCard({ post }: PostCardProps) {
     const [editContent, setEditContent] = useState(post.content);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
 
     const likePost = useLikePost();
     const unlikePost = useUnlikePost();
@@ -132,6 +135,7 @@ export function PostCard({ post }: PostCardProps) {
             recordView.mutate(postId);
         }
     }, [postId]);
+
 
     const handleEditSave = async () => {
         if (!postId || !editContent.trim() || updatePost.isPending) return;
@@ -192,6 +196,24 @@ export function PostCard({ post }: PostCardProps) {
     const postImage = post.image || (post.media?.find(m => m.type === 'image')?.url);
     // Get video from media array or direct property
     const postVideo = post.video || (post.media?.find(m => m.type === 'video')?.url);
+
+    // AI Report hook - only for post owners with completed analysis
+    const canGenerateReport = isOwner && normalizedTrust !== 'pending';
+    const { report, isLoading: isLoadingReport, isGenerating, error: reportError, generateReport } = useAIReport(
+        postId,
+        canGenerateReport
+    );
+
+    const handleGenerateReport = async () => {
+        setShowReportModal(true);
+        if (!report) {
+            try {
+                await generateReport();
+            } catch (error) {
+                console.error('Failed to generate report:', error);
+            }
+        }
+    };
 
     return (
         <motion.div
@@ -298,6 +320,9 @@ export function PostCard({ post }: PostCardProps) {
                                     mediaType: post.aiAnalysis.mediaType || (postVideo ? 'video' : 'image'),
                                     classification: post.aiAnalysis.classification
                                 } : undefined}
+                                isOwner={isOwner}
+                                onGenerateReport={handleGenerateReport}
+                                isGeneratingReport={isGenerating}
                             />
                         </div>
                     )}
@@ -486,6 +511,17 @@ export function PostCard({ post }: PostCardProps) {
                 postId={postId}
                 isOpen={showAnalytics}
                 onClose={() => setShowAnalytics(false)}
+            />
+
+            {/* AI Report Modal */}
+            <AIReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                report={report || null}
+                isLoading={isLoadingReport}
+                isGenerating={isGenerating}
+                onGenerate={generateReport}
+                error={reportError}
             />
         </motion.div>
     );

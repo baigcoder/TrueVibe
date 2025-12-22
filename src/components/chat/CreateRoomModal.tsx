@@ -79,14 +79,14 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                         <div className="w-full max-w-lg">
                             <div className="glass-luxe border border-white/10 rounded-3xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] relative overflow-hidden group">
                                 {/* Decorative Aura */}
-                                <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 blur-[100px] rounded-full -mr-40 -mt-40 pointer-events-none" />
+                                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] rounded-full -mr-40 -mt-40 pointer-events-none" />
                                 <div className="absolute bottom-0 left-0 w-80 h-80 bg-violet-500/10 blur-[100px] rounded-full -ml-40 -mb-40 pointer-events-none" />
 
                                 {/* Header */}
                                 <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between relative z-10 font-sans">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-xl glass-luxe-light flex items-center justify-center border border-white/10">
-                                            <Sparkles className="w-5 h-5 text-cyan-400" />
+                                            <Sparkles className="w-5 h-5 text-primary" />
                                         </div>
                                         <div>
                                             <h2 className="text-lg font-bold text-white">
@@ -115,15 +115,15 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                     <label className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
                                                         Room ID
                                                     </label>
-                                                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[8px] text-cyan-400 font-bold">SECURE</span>
+                                                    <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[8px] text-primary font-bold">SECURE</span>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <code className="flex-1 px-4 py-3 bg-black/40 rounded-lg border border-white/5 text-cyan-400 font-mono text-sm">
+                                                    <code className="flex-1 px-4 py-3 bg-black/40 rounded-lg border border-white/5 text-primary font-mono text-sm">
                                                         {createdRoomId}
                                                     </code>
                                                     <button
                                                         onClick={handleCopyId}
-                                                        className="w-10 h-10 rounded-lg bg-cyan-500 text-white hover:bg-cyan-400 transition-all flex items-center justify-center"
+                                                        className="w-10 h-10 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all flex items-center justify-center"
                                                     >
                                                         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                                     </button>
@@ -135,13 +135,13 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                 onClick={handleCopyLink}
                                                 className="w-full flex items-center justify-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all font-medium text-sm"
                                             >
-                                                <Link2 className="w-4 h-4 text-cyan-400" />
+                                                <Link2 className="w-4 h-4 text-primary" />
                                                 Copy Invite Link
                                             </button>
 
                                             {/* Info */}
                                             <div className="flex items-center gap-3 p-3 glass-luxe-light rounded-lg border border-white/5">
-                                                <ShieldCheck className="w-4 h-4 text-cyan-400/60 flex-shrink-0" />
+                                                <ShieldCheck className="w-4 h-4 text-primary/60 flex-shrink-0" />
                                                 <p className="text-[10px] text-slate-400 leading-relaxed">
                                                     {requireApproval ? 'Approval required for participants.' : 'Direct entry enabled.'}
                                                 </p>
@@ -165,7 +165,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                         onChange={(e) => setRoomName(e.target.value)}
                                                         placeholder="Enter room name..."
                                                         maxLength={50}
-                                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/40 text-sm"
+                                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/40 text-sm"
                                                     />
                                                 </div>
                                             </div>
@@ -181,7 +181,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                         className={cn(
                                                             "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all",
                                                             roomType === 'voice'
-                                                                ? "glass-luxe border-cyan-500/40 text-cyan-400"
+                                                                ? "glass-luxe border-primary/40 text-primary"
                                                                 : "bg-white/5 border-white/5 text-slate-500 hover:bg-white/10"
                                                         )}
                                                     >
@@ -212,20 +212,20 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                     onClick={() => setRequireApproval(!requireApproval)}
                                                     className={cn(
                                                         "w-full flex items-center justify-between p-3 rounded-xl border transition-all",
-                                                        requireApproval ? "glass-luxe border-cyan-500/20" : "glass-luxe border-violet-500/20"
+                                                        requireApproval ? "glass-luxe border-primary/20" : "glass-luxe border-violet-500/20"
                                                     )}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className={cn(
                                                             "w-8 h-8 rounded-lg flex items-center justify-center border",
-                                                            requireApproval ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-400" : "bg-violet-500/10 border-violet-500/30 text-violet-400"
+                                                            requireApproval ? "bg-primary/10 border-primary/30 text-primary" : "bg-violet-500/10 border-violet-500/30 text-violet-400"
                                                         )}>
                                                             {requireApproval ? <Shield className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
                                                         </div>
                                                         <div className="text-left">
                                                             <span className={cn(
                                                                 "font-medium text-xs block",
-                                                                requireApproval ? "text-cyan-400" : "text-violet-400"
+                                                                requireApproval ? "text-primary" : "text-violet-400"
                                                             )}>
                                                                 {requireApproval ? 'Require Approval' : 'Open Access'}
                                                             </span>
@@ -236,14 +236,14 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                     </div>
                                                     <div className={cn(
                                                         "w-10 h-5 rounded-full p-0.5 transition-all",
-                                                        requireApproval ? "bg-cyan-500/30" : "bg-violet-500/30"
+                                                        requireApproval ? "bg-primary/30" : "bg-violet-500/30"
                                                     )}>
                                                         <motion.div
                                                             animate={{ x: requireApproval ? 20 : 0 }}
                                                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                                             className={cn(
                                                                 "w-4 h-4 rounded-full",
-                                                                requireApproval ? "bg-cyan-400" : "bg-violet-400"
+                                                                requireApproval ? "bg-primary" : "bg-violet-400"
                                                             )}
                                                         />
                                                     </div>
@@ -273,7 +273,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                             <button
                                                 onClick={handleCreate}
                                                 disabled={!roomName.trim() || isConnecting}
-                                                className="h-10 px-6 rounded-lg text-xs font-medium text-white bg-cyan-500 hover:bg-cyan-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                                                className="h-10 px-6 rounded-lg text-xs font-medium text-white bg-primary hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                                             >
                                                 {isConnecting ? (
                                                     <>

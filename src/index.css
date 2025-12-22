@@ -212,16 +212,15 @@
     mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
   }
 
-  /* Mesh Background - The "Ganz Vibe" */
+  /* Mesh Background - The "Ganz Vibe" (Refined) */
   .mesh-bg {
-    background-color: hsl(var(--background));
+    background-color: #030712;
     background-image:
-      radial-gradient(at 0% 0%, hsla(231, 93%, 73%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(171, 66%, 50%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(350, 94%, 71%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, hsla(231, 93%, 73%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(171, 66%, 50%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(350, 94%, 71%, 0.1) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(231, 93%, 73%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(171, 66%, 50%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(231, 93%, 73%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(171, 66%, 50%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(231, 93%, 73%, 0.05) 0px, transparent 50%);
     background-attachment: fixed;
   }
 
@@ -278,18 +277,7 @@
     @apply absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-primary/50 rounded-br-sm;
   }
 
-  /* Enhanced Mesh Background - More Vibrant */
-  .mesh-bg {
-    background-color: #030712;
-    background-image:
-      radial-gradient(at 0% 0%, hsla(231, 93%, 73%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(171, 66%, 50%, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(350, 94%, 71%, 0.12) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(260, 100%, 70%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 50%, hsla(231, 93%, 73%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsla(171, 66%, 50%, 0.1) 0px, transparent 50%);
-    background-attachment: fixed;
-  }
+  /* Removed duplicate and inconsistent mesh-bg definition */
 
   /* --- MAJOR UI ENHANCEMENT UTILITIES --- */
 
@@ -493,6 +481,58 @@
   100% {
     transform: translateX(100%);
   }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes neuralPulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes glowLine {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+@keyframes gradient-xy {
+
+  0%,
+  100% {
+    background-size: 400% 400%;
+    background-position: left center;
+  }
+
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 15s ease infinite;
 }
 
 /* Scrollbar styling */

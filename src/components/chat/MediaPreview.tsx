@@ -62,12 +62,12 @@ export function MediaPreview({
             initial={{ opacity: 0, y: 10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: 10, height: 0 }}
-            className="px-6 py-4 border-b border-cyan-500/10 glass-luxe-light relative overflow-hidden"
+            className="px-6 py-4 border-b border-primary/10 glass-luxe-light relative overflow-hidden"
         >
-            <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-black text-cyan-400/60 uppercase tracking-[0.3em] tech-font">
+                <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em] tech-font">
                     {files.length} NODE_ATTACHMENT{files.length > 1 ? 'S' : ''}
                 </span>
                 {!isUploading && (
@@ -128,11 +128,11 @@ export function MediaPreview({
                                     </div>
                                 ) : (
                                     <div className={cn(
-                                        "w-20 h-20 rounded-2xl border flex flex-col items-center justify-center gap-2 glass-luxe transition-all group-hover:border-cyan-500/30",
+                                        "w-20 h-20 rounded-2xl border flex flex-col items-center justify-center gap-2 glass-luxe transition-all group-hover:border-primary/30",
                                         colorClass
                                     )}>
                                         {isUploading ? (
-                                            <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
                                         ) : (
                                             <Icon className="w-6 h-6 opacity-80" />
                                         )}
@@ -175,11 +175,11 @@ export function MediaPreview({
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${uploadProgress}%` }}
-                                className="h-full bg-cyan-500 shadow-[0_0_15px_rgba(0,245,255,0.8)] rounded-full relative z-10"
+                                className="h-full bg-primary shadow-[0_0_15px_rgba(129,140,248,0.8)] rounded-full relative z-10"
                             />
                             <div className="absolute inset-0 cyber-grid opacity-20" />
                         </div>
-                        <span className="text-[10px] font-black text-cyan-400 tech-font">
+                        <span className="text-[10px] font-black text-primary tech-font">
                             {uploadProgress}%_SYNC
                         </span>
                     </div>

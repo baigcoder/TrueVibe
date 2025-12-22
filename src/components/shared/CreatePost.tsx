@@ -426,9 +426,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                             onChange={(e) => setContent(e.target.value)}
                             onFocus={() => setIsExpanded(true)}
                             className={cn(
-                                "bg-transparent border-none resize-none text-white placeholder:text-slate-600 px-4 py-3 shadow-none ring-0",
+                                "bg-transparent border-none resize-none text-white placeholder:text-slate-500/60 px-4 py-3 shadow-none ring-0",
                                 "focus-visible:ring-0 focus:ring-0 text-[16px] font-medium leading-[1.6] placeholder:font-medium placeholder:text-[14px] transition-all duration-500",
-                                isExpanded ? "min-h-[100px]" : "min-h-[3.5rem] flex items-center"
+                                isExpanded ? "min-h-[120px]" : "min-h-[3.5rem] flex items-center"
                             )}
                         />
 
@@ -610,36 +610,36 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     <input ref={imageInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
                     <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
 
-                    <button onClick={() => imageInputRef.current?.click()} disabled={selectedFiles.length >= 4 || hasVideo} className={cn("w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5", selectedFiles.length >= 4 || hasVideo ? "opacity-20" : "opacity-60 hover:opacity-100")} title="Add photos">
-                        <Image className="w-5 h-5 text-indigo-400" />
+                    <button onClick={() => imageInputRef.current?.click()} disabled={selectedFiles.length >= 4 || hasVideo} className={cn("w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(129,140,248,0.2)] group/icon", selectedFiles.length >= 4 || hasVideo ? "opacity-20" : "opacity-60 hover:opacity-100 hover:scale-110 active:scale-95")} title="Add photos">
+                        <Image className="w-5 h-5 text-indigo-400 group-hover/icon:text-indigo-300 transition-colors" />
                     </button>
 
-                    <button onClick={() => videoInputRef.current?.click()} disabled={selectedFiles.length > 0} className={cn("w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5", selectedFiles.length > 0 ? "opacity-20" : "opacity-60 hover:opacity-100")} title="Add video">
-                        <Video className="w-5 h-5 text-rose-400" />
+                    <button onClick={() => videoInputRef.current?.click()} disabled={selectedFiles.length > 0} className={cn("w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-rose-500/10 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] group/icon", selectedFiles.length > 0 ? "opacity-20" : "opacity-60 hover:opacity-100 hover:scale-110 active:scale-95")} title="Add video">
+                        <Video className="w-5 h-5 text-rose-400 group-hover/icon:text-rose-300 transition-colors" />
                     </button>
 
-                    <button onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowHashtagInput(false); setShowLocationInput(false); }} className="w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5 opacity-60 hover:opacity-100" title="Add emoji">
-                        <Smile className={cn("w-5 h-5 text-amber-400", showEmojiPicker && "text-amber-300")} />
+                    <button onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowHashtagInput(false); setShowLocationInput(false); }} className="w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-amber-500/10 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] group/icon opacity-60 hover:opacity-100 hover:scale-110 active:scale-95" title="Add emoji">
+                        <Smile className={cn("w-5 h-5 text-amber-400 transition-colors", showEmojiPicker && "text-amber-300")} />
                     </button>
 
-                    <button onClick={() => { setShowHashtagInput(!showHashtagInput); setShowEmojiPicker(false); setShowLocationInput(false); setShowPollCreator(false); }} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5 opacity-60 hover:opacity-100" title="Add hashtag">
-                        <Hash className={cn("w-5 h-5 text-emerald-400", showHashtagInput && "text-emerald-300")} />
+                    <button onClick={() => { setShowHashtagInput(!showHashtagInput); setShowEmojiPicker(false); setShowLocationInput(false); setShowPollCreator(false); }} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-emerald-500/10 hover:shadow-[0_0_15_rgba(16,185,129,0.2)] group/icon opacity-60 hover:opacity-100 hover:scale-110 active:scale-95" title="Add hashtag">
+                        <Hash className={cn("w-5 h-5 text-emerald-400 transition-colors", showHashtagInput && "text-emerald-300")} />
                     </button>
 
-                    <button onClick={() => { setShowLocationInput(!showLocationInput); setShowEmojiPicker(false); setShowHashtagInput(false); setShowPollCreator(false); }} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5 opacity-60 hover:opacity-100" title="Add location">
-                        <MapPin className={cn("w-5 h-5 text-sky-400", showLocationInput && "text-sky-300")} />
+                    <button onClick={() => { setShowLocationInput(!showLocationInput); setShowEmojiPicker(false); setShowHashtagInput(false); setShowPollCreator(false); }} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-sky-500/10 hover:shadow-[0_0_15px_rgba(14,165,233,0.2)] group/icon opacity-60 hover:opacity-100 hover:scale-110 active:scale-95" title="Add location">
+                        <MapPin className={cn("w-5 h-5 text-sky-400 transition-colors", showLocationInput && "text-sky-300")} />
                     </button>
 
-                    <button onClick={() => { setShowPollCreator(!showPollCreator); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowScheduler(false); }} disabled={selectedFiles.length > 0} className={cn("w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5", selectedFiles.length > 0 ? "opacity-20" : "opacity-60 hover:opacity-100")} title="Add poll">
-                        <BarChart3 className={cn("w-5 h-5 text-violet-400", showPollCreator && "text-violet-300")} />
+                    <button onClick={() => { setShowPollCreator(!showPollCreator); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowScheduler(false); }} disabled={selectedFiles.length > 0} className={cn("w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-violet-500/10 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)] group/icon", selectedFiles.length > 0 ? "opacity-20" : "opacity-60 hover:opacity-100 hover:scale-110 active:scale-95")} title="Add poll">
+                        <BarChart3 className={cn("w-5 h-5 text-violet-400 transition-colors", showPollCreator && "text-violet-300")} />
                     </button>
 
-                    <button onClick={() => { setShowScheduler(!showScheduler); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowPollCreator(false); }} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5 opacity-60 hover:opacity-100" title="Schedule post">
-                        <Calendar className={cn("w-5 h-5 text-rose-400", showScheduler && "text-rose-300")} />
+                    <button onClick={() => { setShowScheduler(!showScheduler); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowPollCreator(false); }} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-rose-500/10 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] group/icon opacity-60 hover:opacity-100 hover:scale-110 active:scale-95" title="Schedule post">
+                        <Calendar className={cn("w-5 h-5 text-rose-400 transition-colors", showScheduler && "text-rose-300")} />
                     </button>
 
-                    <button onClick={() => setShowDraftsManager(true)} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-300 hover:bg-white/5 opacity-60 hover:opacity-100" title="View drafts">
-                        <History className="w-5 h-5 text-slate-400" />
+                    <button onClick={() => setShowDraftsManager(true)} className="w-10 h-10 hidden sm:flex items-center justify-center rounded-2xl transition-all duration-500 hover:bg-white/10 group/icon opacity-60 hover:opacity-100 hover:scale-110 active:scale-95" title="View drafts">
+                        <History className="w-5 h-5 text-slate-400 group-hover/icon:text-white transition-colors" />
                     </button>
                 </div>
 
@@ -663,7 +663,10 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         )}
                     </AnimatePresence>
 
-                    <Button onClick={handleSubmit} disabled={(!content.trim() && selectedFiles.length === 0) || isOverLimit || createPost.isPending || isUploading} className={cn("relative group/btn h-10 sm:h-12 px-4 sm:px-8 rounded-full overflow-hidden transition-all duration-500", "bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 border-none shadow-xl shadow-indigo-500/20", "hover:scale-[1.05] active:scale-[0.95] disabled:opacity-30 disabled:scale-100")}>
+                    <Button onClick={handleSubmit} disabled={(!content.trim() && selectedFiles.length === 0) || isOverLimit || createPost.isPending || isUploading} className={cn("relative group/btn h-10 sm:h-12 px-4 sm:px-8 rounded-full overflow-hidden transition-all duration-500", "bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 border-none shadow-xl shadow-indigo-500/20", "hover:scale-[1.05] active:scale-[0.95] disabled:opacity-30 disabled:scale-100", content.trim().length > 0 && "shadow-[0_0_20px_rgba(129,140,248,0.4)]")}>
+                        {content.trim().length > 0 && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-glowLine" />
+                        )}
                         {(createPost.isPending || isUploading) ? (
                             <div className="flex items-center gap-2">
                                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" />
@@ -671,7 +674,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 sm:gap-3">
-                                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+                                <Sparkles className={cn("w-4 h-4 text-white", content.trim().length > 0 && "animate-pulse")} />
                                 <span className="font-heading font-black italic tracking-tighter uppercase text-[10px] sm:text-[11px] text-white">
                                     {scheduledFor ? "Schedule" : "POST"}
                                 </span>
