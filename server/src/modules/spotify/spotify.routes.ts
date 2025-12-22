@@ -249,6 +249,162 @@ router.get('/now-playing', authenticate, async (req: Request, res: Response) => 
 });
 
 /**
+ * PUT /play - Resume playback (requires Spotify Premium)
+ */
+router.put('/play', authenticate, async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const profile = await Profile.findOne({ userId });
+
+        if (!profile?.spotifyConnected || !profile.spotifyAccessToken) {
+            return res.status(400).json({ error: 'Spotify not connected' });
+        }
+
+        // Check if token needs refresh
+        if (profile.spotifyTokenExpiry && new Date() >= profile.spotifyTokenExpiry) {
+            const refreshed = await refreshSpotifyToken(profile);
+            if (!refreshed) {
+                return res.status(401).json({ error: 'Token refresh failed' });
+            }
+        }
+
+        const response = await fetch('https://api.spotify.com/v1/me/player/play', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${profile.spotifyAccessToken}`,
+            },
+        });
+
+        if (response.status === 204 || response.ok) {
+            return res.json({ success: true });
+        }
+
+        const errorData = await response.json() as { error?: { message?: string } };
+        res.status(response.status).json({ error: errorData.error?.message || 'Playback failed' });
+    } catch (error) {
+        console.error('Spotify play error:', error);
+        res.status(500).json({ error: 'Failed to resume playback' });
+    }
+});
+
+/**
+ * PUT /pause - Pause playback (requires Spotify Premium)
+ */
+router.put('/pause', authenticate, async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const profile = await Profile.findOne({ userId });
+
+        if (!profile?.spotifyConnected || !profile.spotifyAccessToken) {
+            return res.status(400).json({ error: 'Spotify not connected' });
+        }
+
+        // Check if token needs refresh
+        if (profile.spotifyTokenExpiry && new Date() >= profile.spotifyTokenExpiry) {
+            const refreshed = await refreshSpotifyToken(profile);
+            if (!refreshed) {
+                return res.status(401).json({ error: 'Token refresh failed' });
+            }
+        }
+
+        const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${profile.spotifyAccessToken}`,
+            },
+        });
+
+        if (response.status === 204 || response.ok) {
+            return res.json({ success: true });
+        }
+
+        const errorData = await response.json() as { error?: { message?: string } };
+        res.status(response.status).json({ error: errorData.error?.message || 'Pause failed' });
+    } catch (error) {
+        console.error('Spotify pause error:', error);
+        res.status(500).json({ error: 'Failed to pause playback' });
+    }
+});
+
+/**
+ * POST /next - Skip to next track (requires Spotify Premium)
+ */
+router.post('/next', authenticate, async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const profile = await Profile.findOne({ userId });
+
+        if (!profile?.spotifyConnected || !profile.spotifyAccessToken) {
+            return res.status(400).json({ error: 'Spotify not connected' });
+        }
+
+        // Check if token needs refresh
+        if (profile.spotifyTokenExpiry && new Date() >= profile.spotifyTokenExpiry) {
+            const refreshed = await refreshSpotifyToken(profile);
+            if (!refreshed) {
+                return res.status(401).json({ error: 'Token refresh failed' });
+            }
+        }
+
+        const response = await fetch('https://api.spotify.com/v1/me/player/next', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${profile.spotifyAccessToken}`,
+            },
+        });
+
+        if (response.status === 204 || response.ok) {
+            return res.json({ success: true });
+        }
+
+        const errorData = await response.json() as { error?: { message?: string } };
+        res.status(response.status).json({ error: errorData.error?.message || 'Skip failed' });
+    } catch (error) {
+        console.error('Spotify next error:', error);
+        res.status(500).json({ error: 'Failed to skip to next track' });
+    }
+});
+
+/**
+ * POST /previous - Go to previous track (requires Spotify Premium)
+ */
+router.post('/previous', authenticate, async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const profile = await Profile.findOne({ userId });
+
+        if (!profile?.spotifyConnected || !profile.spotifyAccessToken) {
+            return res.status(400).json({ error: 'Spotify not connected' });
+        }
+
+        // Check if token needs refresh
+        if (profile.spotifyTokenExpiry && new Date() >= profile.spotifyTokenExpiry) {
+            const refreshed = await refreshSpotifyToken(profile);
+            if (!refreshed) {
+                return res.status(401).json({ error: 'Token refresh failed' });
+            }
+        }
+
+        const response = await fetch('https://api.spotify.com/v1/me/player/previous', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${profile.spotifyAccessToken}`,
+            },
+        });
+
+        if (response.status === 204 || response.ok) {
+            return res.json({ success: true });
+        }
+
+        const errorData = await response.json() as { error?: { message?: string } };
+        res.status(response.status).json({ error: errorData.error?.message || 'Previous failed' });
+    } catch (error) {
+        console.error('Spotify previous error:', error);
+        res.status(500).json({ error: 'Failed to go to previous track' });
+    }
+});
+
+/**
  * POST /disconnect - Disconnect Spotify account
  */
 router.post('/disconnect', authenticate, async (req: Request, res: Response) => {

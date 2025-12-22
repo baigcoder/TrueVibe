@@ -15,7 +15,7 @@ export const useSpotify = () => {
         queryKey: ['spotify-now-playing'],
         queryFn: spotifyApi.getNowPlaying,
         enabled: status?.connected === true,
-        refetchInterval: 10000, // Poll every 10s
+        refetchInterval: 5000, // Poll every 5s for more responsive updates
     });
 
     const connectMutation = useMutation({
@@ -41,6 +41,47 @@ export const useSpotify = () => {
         }
     });
 
+    // Playback control mutations
+    const playMutation = useMutation({
+        mutationFn: spotifyApi.play,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['spotify-now-playing'] });
+        },
+        onError: () => {
+            toast.error('Playback requires Spotify Premium');
+        }
+    });
+
+    const pauseMutation = useMutation({
+        mutationFn: spotifyApi.pause,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['spotify-now-playing'] });
+        },
+        onError: () => {
+            toast.error('Playback requires Spotify Premium');
+        }
+    });
+
+    const nextMutation = useMutation({
+        mutationFn: spotifyApi.next,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['spotify-now-playing'] });
+        },
+        onError: () => {
+            toast.error('Playback requires Spotify Premium');
+        }
+    });
+
+    const previousMutation = useMutation({
+        mutationFn: spotifyApi.previous,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['spotify-now-playing'] });
+        },
+        onError: () => {
+            toast.error('Playback requires Spotify Premium');
+        }
+    });
+
     return {
         status,
         nowPlaying,
@@ -49,5 +90,12 @@ export const useSpotify = () => {
         isConnecting: connectMutation.isPending,
         disconnect: disconnectMutation.mutate,
         isDisconnecting: disconnectMutation.isPending,
+        // Playback controls
+        play: playMutation.mutate,
+        pause: pauseMutation.mutate,
+        next: nextMutation.mutate,
+        previous: previousMutation.mutate,
+        isPlaying: nowPlaying?.playing ?? false,
     };
 };
+

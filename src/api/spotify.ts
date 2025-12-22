@@ -42,5 +42,26 @@ export const spotifyApi = {
     disconnect: async () => {
         const data = await api.post<{ success: boolean }>('/spotify/disconnect');
         return data;
-    }
+    },
+
+    // Playback controls (requires Spotify Premium)
+    play: async () => {
+        const data = await api.put<{ success: boolean }>('/spotify/play');
+        return data;
+    },
+
+    pause: async () => {
+        const data = await api.put<{ success: boolean }>('/spotify/pause');
+        return data;
+    },
+
+    next: async () => {
+        const data = await api.post<{ success: boolean }>('/spotify/next');
+        return data;
+    },
+
+    previous: async () => {
+        const data = await api.post<{ success: boolean }>('/spotify/previous');
+        return data;
+    },
 };
