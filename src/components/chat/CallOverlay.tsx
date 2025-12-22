@@ -70,85 +70,62 @@ export function CallOverlay() {
                 {/* Ringing State */}
                 {isRinging && !isInCall && (
                     <motion.div
-                        initial={{ scale: 0.8, y: 40, opacity: 0 }}
+                        initial={{ scale: 0.9, y: 20, opacity: 0 }}
                         animate={{ scale: 1, y: 0, opacity: 1 }}
-                        exit={{ scale: 0.8, y: 40, opacity: 0 }}
-                        className="relative z-10 glass-panel p-10 md:p-14 rounded-[3.5rem] border border-white/10 text-center max-w-md w-full shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden"
+                        exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                        className="relative z-10 glass-premium p-10 md:p-14 rounded-[3rem] border border-white/10 text-center max-w-md w-full shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] overflow-hidden"
                     >
-                        {/* Animated Glow behind Avatar */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
-
                         <div className="relative mb-10 flex justify-center">
-                            {/* Sonar Pulse Layers */}
-                            {[1, 2, 3].map((i) => (
+                            {/* Organic Pulse Layers */}
+                            {[1, 2].map((i) => (
                                 <motion.div
                                     key={i}
-                                    initial={{ scale: 1, opacity: 0.5 }}
-                                    animate={{ scale: 2.2, opacity: 0 }}
-                                    transition={{ repeat: Infinity, duration: 2.5, delay: i * 0.6, ease: "easeOut" }}
-                                    className="absolute inset-0 bg-primary/30 rounded-[2.5rem] blur-xl"
+                                    initial={{ scale: 1, opacity: 0.4 }}
+                                    animate={{ scale: 2, opacity: 0 }}
+                                    transition={{ repeat: Infinity, duration: 3, delay: i * 1, ease: "easeOut" }}
+                                    className="absolute inset-0 bg-primary/20 rounded-full blur-2xl"
                                 />
                             ))}
 
                             <motion.div
-                                animate={{ y: [0, -8, 0] }}
-                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                className="relative z-10 p-1 bg-gradient-to-br from-primary/50 to-secondary/50 rounded-[2.8rem] shadow-2xl"
+                                animate={{ y: [0, -6, 0] }}
+                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                                className="relative z-10 p-1 bg-gradient-to-br from-primary/30 to-accent/30 rounded-[2.5rem] shadow-2xl"
                             >
-                                <Avatar className="w-28 h-28 border-4 border-[#030712] rounded-[2.5rem] shadow-inner">
+                                <Avatar className="w-28 h-28 border-2 border-white/10 rounded-[2.2rem]">
                                     <AvatarImage src={remoteParticipant?.avatar} className="object-cover" />
-                                    <AvatarFallback className="text-3xl font-black bg-slate-900 text-primary">
+                                    <AvatarFallback className="text-3xl font-bold bg-slate-900 text-primary premium-font">
                                         {remoteParticipant?.name?.charAt(0) || '?'}
                                     </AvatarFallback>
                                 </Avatar>
-                                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-2xl border-4 border-[#030712] flex items-center justify-center shadow-lg">
-                                    <motion.div
-                                        animate={{ scale: [1, 1.2, 1] }}
-                                        transition={{ repeat: Infinity, duration: 2 }}
-                                        className="w-2 h-2 bg-white rounded-full"
-                                    />
-                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-lg shadow-emerald-500/20" />
                             </motion.div>
                         </div>
 
-                        <div className="space-y-1 mb-12">
-                            <motion.h2
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="text-3xl font-black text-white italic uppercase tracking-tighter"
-                            >
-                                {callType === 'video' ? 'Video Invitation' : 'Voice Invitation'}
-                            </motion.h2>
-                            <motion.p
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]"
-                            >
-                                {remoteParticipant?.name || 'Unknown User'} is calling you
-                            </motion.p>
+                        <div className="space-y-2 mb-12">
+                            <h2 className="text-3xl font-bold text-white tracking-tight premium-font">
+                                {callType === 'video' ? 'Video Call' : 'Voice Call'}
+                            </h2>
+                            <p className="text-slate-400 font-medium text-sm tracking-wide">
+                                {remoteParticipant?.name || 'Incoming Call'} is calling you
+                            </p>
                         </div>
 
-                        <div className="flex gap-5">
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
-                                <Button
-                                    onClick={rejectCall}
-                                    className="w-full h-16 rounded-2xl bg-rose-500/10 hover:bg-rose-500 border border-rose-500/30 text-rose-500 hover:text-white font-black uppercase italic tracking-widest transition-all duration-300 shadow-lg shadow-rose-500/10"
-                                >
-                                    <PhoneOff className="w-5 h-5 mr-3" />
-                                    Reject
-                                </Button>
-                            </motion.div>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
-                                <Button
-                                    onClick={acceptCall}
-                                    className="w-full h-16 rounded-2xl bg-emerald-500 hover:bg-emerald-600 font-black uppercase italic tracking-widest text-white shadow-xl shadow-emerald-500/30 border border-emerald-400/30"
-                                >
-                                    {callType === 'video' ? <Video className="w-5 h-5 mr-3" /> : <Phone className="w-5 h-5 mr-3" />}
-                                    Accept
-                                </Button>
-                            </motion.div>
+                        <div className="flex gap-4">
+                            <Button
+                                onClick={rejectCall}
+                                className="flex-1 h-14 rounded-2xl bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-500 hover:text-white font-bold transition-all shadow-lg shadow-rose-500/5 premium-font"
+                            >
+                                <PhoneOff className="w-5 h-5 mr-2" />
+                                Reject
+                            </Button>
+                            <Button
+                                onClick={acceptCall}
+                                className="flex-1 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 font-bold text-white shadow-xl shadow-emerald-500/20 premium-font"
+                            >
+                                {callType === 'video' ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
+                                Accept
+                            </Button>
                         </div>
                     </motion.div>
                 )}
@@ -158,24 +135,23 @@ export function CallOverlay() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="relative w-full h-full max-w-6xl aspect-video bg-black/60 rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_48px_100px_-24px_rgba(0,0,0,0.8)] flex flex-col group"
+                        className="relative w-full h-full max-w-6xl aspect-video bg-black/60 rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_48px_100px_-24px_rgba(0,0,0,0.8)] group"
                     >
-                        {/* Status bar */}
                         <div className="absolute top-8 left-8 right-8 flex items-center justify-between z-20 pointer-events-none">
-                            <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
-                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                <span className="text-[10px] font-black text-white italic tracking-widest uppercase">
-                                    LIVE SESSION • {callType === 'video' ? 'ENCRYPTED_VISUAL' : 'ENCRYPTED_AUDIO'}
+                            <div className="flex items-center gap-3 bg-black/50 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.5)]" />
+                                <span className="text-[11px] font-bold text-white tracking-wider uppercase premium-font">
+                                    Live Session • Secure Connection
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 bg-primary/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-primary/20 text-primary text-[10px] font-black italic uppercase">
-                                <Sparkles className="w-3 h-3" />
-                                Premium Link Active
+                            <div className="hidden sm:flex items-center gap-2 bg-primary/10 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest premium-font shadow-xl">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Premium Link
                             </div>
                         </div>
 
                         {/* Video Streams */}
-                        <div className="flex-1 relative bg-slate-900/40">
+                        <div className="absolute inset-0 z-0 bg-slate-900/40">
                             {/* Remote Video (Main) */}
                             {callType === 'video' ? (
                                 <video
@@ -186,41 +162,49 @@ export function CallOverlay() {
                                 />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                                    {/* Blurred Dynamic Background for Audio Call */}
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-30 blur-[100px] scale-150">
-                                        <Avatar className="w-full h-full">
-                                            <AvatarImage src={remoteParticipant?.avatar} />
-                                        </Avatar>
+                                    {/* Premium Dynamic Aura for Audio Call */}
+                                    <div className="absolute inset-0 opacity-20 blur-[120px] scale-150 pointer-events-none">
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-primary to-accent opacity-30" />
                                     </div>
 
-                                    <div className="relative z-10 text-center">
-                                        <div className="relative mb-8">
+                                    <div className="relative z-10 text-center mt-[-2rem]">
+                                        <div className="relative mb-10 flex justify-center">
                                             <motion.div
                                                 animate={{
-                                                    scale: [1, 1.15, 1],
-                                                    opacity: [0.2, 0.4, 0.2]
+                                                    scale: [1, 1.2, 1],
+                                                    opacity: [0.1, 0.3, 0.1]
                                                 }}
-                                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                                className="absolute inset-[-20px] bg-primary/20 blur-2xl rounded-full"
+                                                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+                                                className="absolute inset-[-40px] bg-primary/20 blur-3xl rounded-full"
                                             />
-                                            <Avatar className="w-40 h-40 border-8 border-white/5 rounded-[3rem] shadow-2xl relative">
+                                            <Avatar className="w-44 h-44 border-4 border-white/10 rounded-[4rem] shadow-3xl relative transition-transform hover:scale-105 duration-700">
                                                 <AvatarImage src={remoteParticipant?.avatar} className="object-cover" />
-                                                <AvatarFallback className="text-5xl font-black bg-primary text-white">
+                                                <AvatarFallback className="text-6xl font-black bg-slate-900 text-primary premium-font">
                                                     {remoteParticipant?.name?.charAt(0)}
                                                 </AvatarFallback>
                                             </Avatar>
                                         </div>
-                                        <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-4">{remoteParticipant?.name}</h3>
-                                        <div className="flex gap-1.5 justify-center items-center">
-                                            {[1, 2, 3, 4, 5].map(i => (
+                                        <h3 className="text-4xl font-bold text-white tracking-tight mb-6 premium-font">
+                                            {remoteParticipant?.name}
+                                        </h3>
+                                        <div className="flex gap-2 justify-center items-center h-12">
+                                            {[1, 2, 3, 4, 5, 6, 7].map(i => (
                                                 <motion.div
                                                     key={i}
-                                                    animate={{ height: [8, 24, 8] }}
-                                                    transition={{ repeat: Infinity, duration: 1, delay: i * 0.15 }}
-                                                    className="w-1 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                                    animate={{ height: [12, 40, 12] }}
+                                                    transition={{
+                                                        repeat: Infinity,
+                                                        duration: 1.2,
+                                                        delay: i * 0.1,
+                                                        ease: "easeInOut"
+                                                    }}
+                                                    className="w-1.5 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.4)]"
                                                 />
                                             ))}
                                         </div>
+                                        <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px] mt-8 premium-font">
+                                            Voice Broadcast Active
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -230,7 +214,7 @@ export function CallOverlay() {
                                 <motion.div
                                     drag
                                     dragConstraints={{ left: 20, right: 20, top: 20, bottom: 20 }}
-                                    className="absolute bottom-8 right-8 w-56 aspect-video bg-black/40 backdrop-blur-xl rounded-[2rem] border border-white/20 overflow-hidden shadow-2xl cursor-move active:scale-95 transition-all hover:border-primary/50 group/pip"
+                                    className="absolute bottom-8 right-8 w-48 sm:w-64 aspect-video bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl cursor-move active:scale-95 transition-all hover:border-primary/50 group/pip"
                                 >
                                     <video
                                         ref={localVideoRef}
@@ -240,88 +224,85 @@ export function CallOverlay() {
                                         className={cn("w-full h-full object-cover", isVideoOff && "hidden")}
                                     />
                                     {isVideoOff && (
-                                        <div className="w-full h-full flex items-center justify-center bg-slate-900/60">
-                                            <Avatar className="w-12 h-12">
-                                                <AvatarFallback className="bg-primary/20 text-primary font-bold">You</AvatarFallback>
+                                        <div className="w-full h-full flex items-center justify-center bg-slate-900/40">
+                                            <Avatar className="w-12 h-12 border border-white/10">
+                                                <AvatarFallback className="bg-primary/20 text-primary font-bold premium-font">You</AvatarFallback>
                                             </Avatar>
                                         </div>
                                     )}
-                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg border border-white/5 opacity-0 group-hover/pip:opacity-100 transition-opacity">
+                                    <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-lg px-2 py-1 rounded-lg border border-white/5 opacity-0 group-hover/pip:opacity-100 transition-opacity">
                                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                                        <span className="text-[8px] font-bold text-white uppercase tracking-tighter">ME</span>
+                                        <span className="text-[9px] font-bold text-white uppercase tracking-wider premium-font">Me</span>
                                     </div>
                                 </motion.div>
                             )}
                         </div>
 
                         {/* Controls Panel */}
-                        <div className="relative h-28 flex items-center justify-center gap-8 bg-gradient-to-t from-black/80 to-black/20 backdrop-blur-xl border-t border-white/5 px-10">
-                            {/* Hover overlay hint */}
-                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 backdrop-blur-md rounded-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none translate-y-2 group-hover:translate-y-0">
-                                <span className="text-[10px] font-black text-white/50 italic tracking-[0.2em] uppercase">Session Control Node</span>
-                            </div>
-
-                            <div className="flex items-center gap-4 bg-white/5 p-2 rounded-3xl border border-white/5">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center gap-6 sm:gap-10 bg-black/40 backdrop-blur-3xl px-10 py-5 rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all hover:bg-black/50 hover:border-white/20">
+                            <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5 backdrop-blur-2xl">
+                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         onClick={toggleMute}
                                         className={cn(
-                                            "w-14 h-14 rounded-2xl border transition-all duration-300",
+                                            "w-12 h-12 rounded-xl transition-all duration-300",
                                             isMuted
-                                                ? "bg-rose-500/20 border-rose-500/30 text-rose-500"
-                                                : "bg-white/5 border-white/10 text-slate-300 hover:text-white"
+                                                ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20"
+                                                : "glass-premium text-slate-300 hover:text-white"
                                         )}
                                     >
-                                        {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                                        {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                                     </Button>
                                 </motion.div>
 
                                 {callType === 'video' && (
-                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={toggleVideo}
                                             className={cn(
-                                                "w-14 h-14 rounded-2xl border transition-all duration-300",
+                                                "w-12 h-12 rounded-xl transition-all duration-300",
                                                 isVideoOff
-                                                    ? "bg-rose-500/20 border-rose-500/30 text-rose-500"
-                                                    : "bg-white/5 border-white/10 text-slate-300 hover:text-white"
+                                                    ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20"
+                                                    : "glass-premium text-slate-300 hover:text-white"
                                             )}
                                         >
-                                            {isVideoOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+                                            {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
                                         </Button>
                                     </motion.div>
                                 )}
                             </div>
 
                             <motion.div
-                                whileHover={{ scale: 1.05, rotate: 10 }}
+                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.9 }}
                             >
                                 <Button
                                     onClick={endCall}
-                                    className="w-24 h-16 rounded-[1.5rem] bg-rose-500 hover:bg-rose-600 text-white shadow-[0_12px_24px_-8px_rgba(244,63,94,0.4)] border-2 border-white/20"
+                                    className="w-20 h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white shadow-xl shadow-rose-500/30 transition-all flex items-center justify-center"
                                 >
-                                    <PhoneOff className="w-8 h-8" />
+                                    <PhoneOff className="w-7 h-7" />
                                 </Button>
                             </motion.div>
 
-                            <div className="flex gap-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.1, rotate: 5 }}
-                                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                            <div className="hidden sm:flex items-center gap-4">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-12 h-12 rounded-xl glass-premium text-slate-400 hover:text-white transition-all"
                                 >
                                     <Settings className="w-5 h-5" />
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.1, rotate: -5 }}
-                                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-12 h-12 rounded-xl glass-premium text-slate-400 hover:text-white transition-all"
                                 >
                                     <Share2 className="w-5 h-5" />
-                                </motion.button>
+                                </Button>
                             </div>
                         </div>
                     </motion.div>

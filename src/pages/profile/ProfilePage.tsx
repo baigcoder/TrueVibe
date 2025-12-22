@@ -112,10 +112,11 @@ export default function ProfilePage() {
     const followMutation = useFollowUser();
     const unfollowMutation = useUnfollowUser();
 
-    // Fix: Extract profile from data.profile (backend returns { data: { profile, isFollowing, hasPendingRequest } })
-    const profileResponse = profileData as { data?: { profile?: ProfileData; isFollowing?: boolean; hasPendingRequest?: boolean; isOwner?: boolean } } | undefined;
+    // Fix: Extract profile from data.profile (backend returns { data: { profile, isFollowing, isFollowedBy, canMessage, hasPendingRequest } })
+    const profileResponse = profileData as { data?: { profile?: ProfileData; isFollowing?: boolean; isFollowedBy?: boolean; canMessage?: boolean; hasPendingRequest?: boolean; isOwner?: boolean } } | undefined;
     const apiProfile: ProfileData | null = profileResponse?.data?.profile || null;
     const apiIsFollowing = profileResponse?.data?.isFollowing ?? false;
+    const canMessage = profileResponse?.data?.canMessage ?? false;
     const hasPendingRequest = profileResponse?.data?.hasPendingRequest ?? false;
 
 
@@ -286,14 +287,20 @@ export default function ProfilePage() {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => navigate({ to: '/app/chat', search: { userId: profile?.userId || profile?._id } })}
+                                        onClick={() => {
+                                            if (canMessage) {
+                                                navigate({ to: '/app/chat', search: { userId: profile?.userId || profile?._id } });
+                                            } else {
+                                                toast.error('You must be mutual followers to message');
+                                            }
+                                        }}
                                         className={cn(
-                                            "backdrop-blur-xl border rounded-2xl w-11 h-11 shadow-2xl transition-all hover:scale-110",
-                                            isFollowing
-                                                ? "bg-white/10 border-white/20 hover:bg-white/20 text-white"
-                                                : "bg-primary/20 border-primary/30 text-primary hover:bg-primary/30"
+                                            "backdrop-blur-xl border rounded-2xl w-11 h-11 shadow-2xl transition-all",
+                                            canMessage
+                                                ? "bg-white/10 border-white/20 hover:bg-white/20 text-white hover:scale-110"
+                                                : "bg-white/5 border-white/10 text-slate-500 cursor-not-allowed opacity-60"
                                         )}
-                                        title={isFollowing ? "Send message" : "Follow to message"}
+                                        title={canMessage ? "Send message" : "Mutual follow required to message"}
                                     >
                                         <MessageCircle className="w-5 h-5" />
                                     </Button>

@@ -121,141 +121,74 @@ const AetherStyles = () => (
   <style
     dangerouslySetInnerHTML={{
       __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Inter:wght@100..900&display=swap');
 
         :root {
-            --aether-glass: rgba(10, 10, 14, 0.7);
-            --aether-border: rgba(255, 255, 255, 0.08);
-            --aether-primary: var(--primary);
-            --aether-secondary: #7000ff;
+            --premium-bg: #030712;
+            --premium-glass: rgba(13, 17, 28, 0.7);
+            --premium-border: rgba(255, 255, 255, 0.04);
+            --premium-primary: hsl(231 93% 73%);
+            --premium-accent: hsl(171 66% 50%);
+            --premium-glow: rgba(129, 140, 248, 0.3);
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
 
-        .aether-font {
-            font-family: 'Outfit', sans-serif;
+        .premium-font {
+            font-family: var(--font-display);
         }
 
-        .tech-font {
-            font-family: 'JetBrains Mono', monospace;
+        .glass-premium {
+            background: var(--premium-glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--premium-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         }
 
-        .aether-grid {
-            background-image: 
-                radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
-            background-size: 32px 32px;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .glass-aether {
-            background: var(--aether-glass);
-            backdrop-filter: blur(24px) saturate(160%);
-            border: 1px solid var(--aether-border);
-        }
-
-        .glass-aether-light {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .neon-text-primary {
-            text-shadow: 0 0 12px rgba(129, 140, 248, 0.4);
-        }
-
-        .neon-border-primary {
-            box-shadow: 0 0 20px rgba(129, 140, 248, 0.15), inset 0 0 10px rgba(129, 140, 248, 0.1);
-        }
-
-        .aether-gradient-text {
-            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+        .premium-gradient-text {
+            background: linear-gradient(135deg, #fff 0%, var(--premium-primary) 50%, var(--premium-accent) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shine 6s linear infinite;
         }
 
-        /* Removed animate-aura since it was too intrusive */
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
 
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
+        .orb-glow {
+            background: radial-gradient(circle at center, var(--premium-primary) 0%, transparent 70%);
+            filter: blur(60px);
+            opacity: 0.1;
+            animation: pulse-orb 8s ease-in-out infinite;
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
+         @keyframes pulse-orb {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.2); opacity: 0.2; }
         }
-        ::-webkit-scrollbar-thumb {
+
+        .premium-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .premium-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .premium-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            transition: all 0.3s;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(129, 140, 248, 0.3);
+        .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--premium-primary);
         }
-
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-                .chat-gradient-text {
-                    background: linear-gradient(to right, #fff, var(--primary), #a78bfa, var(--primary), #fff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-size: 300% auto;
-                    animation: textShine 5s linear infinite;
-                }
-
-                @keyframes textShine {
-                    to { background-position: 300% center; }
-                }
-
-                .glass-premium {
-                    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-                    backdrop-filter: blur(16px);
-                    border: 1px solid rgba(255,255,255,0.08);
-                    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-                }
-
-                .chat-hologram {
-                  filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.3));
-                  animation: hologramPulse 6s ease-in-out infinite;
-                }
-
-                @keyframes hologramPulse {
-                  0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.1)); }
-                  50% { opacity: 0.6; filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.4)); }
-                }
-
-        .cyber-pulse {
-            animation: cyberPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes cyberPulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-        }
-
-        .scan-line {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .scan-line::after {
-            content: "";
-            position: absolute;
-            top: -100%;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.08), transparent);
-            animation: scanMove 4s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scanMove {
-            0% { top: -100%; }
-            100% { top: 100%; }
-        }
+    
     `,
     }}
   />
@@ -653,9 +586,9 @@ export default function ChatPage() {
     <div className="relative h-[calc(100vh-80px)] lg:h-screen w-full flex bg-transparent overflow-hidden aether-font lg:p-3 lg:gap-3">
       <AetherStyles />
 
-      <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/5 bg-[#030712]/80 backdrop-blur-xl shadow-2xl">
+      <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/[0.03] bg-[#030305]/60 backdrop-blur-3xl shadow-2xl">
         {/* PRIMARY SIDEBAR - Server / DM selection */}
-        <div className="hidden lg:flex w-24 bg-transparent backdrop-blur-3xl flex-col items-center py-8 gap-6 relative z-20 border-r border-white/5 px-3">
+        <div className="hidden lg:flex w-24 bg-transparent flex-col items-center py-8 gap-6 relative z-20 border-r border-white/[0.03] px-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -664,10 +597,10 @@ export default function ChatPage() {
               setSelectedServerId(null);
             }}
             className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center transition-all relative group overflow-hidden border",
+              "w-14 h-14 rounded-[1.25rem] flex items-center justify-center transition-all relative group overflow-hidden border",
               view === "dms"
-                ? "bg-primary/10 text-primary border-primary/40 shadow-[0_0_25px_rgba(0,243,255,0.2)]"
-                : "bg-white/5 text-slate-500 hover:bg-white/10 hover:text-primary border-white/5 hover:border-primary/20",
+                ? "bg-primary/10 text-primary border-primary/30 shadow-[0_0_20px_rgba(129,140,248,0.15)]"
+                : "bg-white/[0.03] text-slate-500 hover:bg-white/[0.05] hover:text-primary border-transparent hover:border-white/10",
             )}
           >
             <MessageCircle className="w-6 h-6 z-10 transition-transform group-hover:scale-110" />
@@ -859,23 +792,23 @@ export default function ChatPage() {
         </div>
 
         {/* SECONDARY SIDEBAR - Conversations / Channels list */}
-        <div className="hidden lg:flex w-[300px] bg-transparent backdrop-blur-xl flex-col border-r border-white/5 z-10 relative">
+        <div className="hidden lg:flex w-[320px] xl:w-[360px] bg-transparent flex-col border-r border-white-border z-10 relative">
           {view === "dms" ? (
-            <div className="flex flex-col h-full">
-              <div className="p-6 border-b border-white/5">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary))]" />
-                  <h3 className="text-xl font-black text-white italic tracking-tighter uppercase aether-font">
-                    Direct Intel
+            <div className="flex flex-col h-full bg-transparent">
+              <div className="p-8 lg:p-10 border-b border-white/[0.03]">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_var(--premium-glow)]" />
+                  <h3 className="text-xl font-bold text-white tracking-tight premium-font">
+                    Messages
                   </h3>
                 </div>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                     <Search className="w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
                   </div>
                   <Input
-                    placeholder="Sync with user..."
-                    className="pl-10 h-11 bg-white/[0.03] border-white/5 text-sm rounded-xl focus:border-primary/40 focus:ring-0 placeholder:text-slate-600 transition-all tech-font"
+                    placeholder="Search conversations..."
+                    className="pl-12 h-12 bg-white/[0.02] border border-white/[0.05] text-sm rounded-2xl focus:border-primary/30 focus:ring-0 placeholder:text-slate-600 transition-all premium-font"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -896,8 +829,8 @@ export default function ChatPage() {
                       </div>
                     ) : (searchUsersData as any)?.data?.users?.length > 0 ? (
                       <div className="space-y-2 py-2">
-                        <p className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em] px-3 mb-3">
-                          Found Entities
+                        <p className="text-xs text-slate-400 font-medium px-3 mb-3">
+                          Search Results
                         </p>
                         {(searchUsersData as any).data.users.map(
                           (user: any) => {
@@ -931,7 +864,7 @@ export default function ChatPage() {
                                     );
                                   } else {
                                     toast.loading(
-                                      "Initializing secure link...",
+                                      "Opening conversation...",
                                       { id: "create-conv" },
                                     );
                                     createConversation.mutate(
@@ -946,7 +879,7 @@ export default function ChatPage() {
                                             );
                                             setSearchQuery("");
                                             toast.success(
-                                              `Bridge established with ${user.name}`,
+                                              `Chat with ${user.name} started`,
                                               { id: "create-conv" },
                                             );
                                           } else {
@@ -999,8 +932,8 @@ export default function ChatPage() {
                       </div>
                     ) : (
                       <div className="text-center py-10">
-                        <p className="text-[11px] text-slate-600 font-bold uppercase tracking-widest">
-                          No matching entities
+                        <p className="text-xs text-slate-500 font-medium">
+                          No users found
                         </p>
                       </div>
                     )
@@ -1014,26 +947,32 @@ export default function ChatPage() {
                       ))}
                     </div>
                   ) : conversations.length === 0 ? (
-                    <div className="text-center py-20 px-6 group relative">
-                      <div className="relative w-24 h-24 mx-auto mb-8">
-                        {/* Holographic Projection Base */}
-                        <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full chat-hologram opacity-40" />
-                        <div className="relative w-24 h-24 flex items-center justify-center border border-white/5 rounded-full group-hover:border-primary/20 transition-all duration-700">
-                          <MessageCircle className="w-10 h-10 text-primary/40 group-hover:text-primary transition-all duration-700 chat-hologram" />
+                    <div className="text-center py-20 px-6">
+                      <div className="relative w-16 h-16 mx-auto mb-6">
+                        <div className="w-16 h-16 flex items-center justify-center border border-white/10 rounded-full">
+                          <MessageCircle className="w-8 h-8 text-slate-500" />
                         </div>
-                        {/* Scanning beam effect */}
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent blur-sm animate-pulse" />
                       </div>
-                      <p className="text-sm font-black chat-gradient-text uppercase tracking-[0.2em] mb-3">
-                        No Active Bridges
+                      <p className="text-sm font-medium text-slate-300 mb-2">
+                        No conversations yet
                       </p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed opacity-60">
-                        Node Standby // Awaiting Link
+                      <p className="text-xs text-slate-500">
+                        Search for users to start chatting
                       </p>
                     </div>
                   ) : (
                     conversations.map((conv: Conversation) => {
-                      const other = conv.participants[0];
+                      // Filter out the current user from participants to get the "other" user
+                      const other = conv.type === "group"
+                        ? conv.participants[0]
+                        : conv.participants.find(
+                          (p) => p.userId !== profile?._id && p._id !== profile?._id
+                        ) || conv.participants[0];
+
+                      // Skip self-conversations (where we're chatting with ourselves)
+                      if (conv.type === "direct" && !other) return null;
+                      if (conv.type === "direct" && (other?.userId === profile?._id || other?._id === profile?._id)) return null;
+
                       const name =
                         conv.type === "group" ? conv.groupName : other?.name;
                       const isActive = selectedConversationId === conv._id;
@@ -1079,28 +1018,29 @@ export default function ChatPage() {
                             <div className="flex items-center justify-between mb-0.5">
                               <p
                                 className={cn(
-                                  "text-[13px] font-bold tracking-tight transition-colors",
+                                  "text-sm font-medium tracking-tight transition-colors",
                                   isActive
-                                    ? "text-primary neon-text-primary"
-                                    : "text-slate-200",
+                                    ? "text-primary"
+                                    : "text-white",
                                 )}
                               >
                                 {name}
                               </p>
-                              <span className="text-[8px] text-slate-600 font-bold uppercase tracking-widest tech-font opacity-40">
-                                CHL_{conversations.indexOf(conv)}
-                              </span>
+                              {conv.lastMessage && (
+                                <span className="text-[10px] text-slate-500">
+                                  {new Date(conv.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
                             </div>
                             {conv.lastMessage && (
-                              <p className="text-[11px] text-slate-500 truncate font-medium tech-font opacity-60">
-                                <span className="text-primary/40">::</span>{" "}
+                              <p className="text-xs text-slate-500 truncate">
                                 {conv.lastMessage.content}
                               </p>
                             )}
                           </div>
                         </motion.button>
                       );
-                    })
+                    }).filter(Boolean)
                   )}
                 </div>
               </ScrollArea>
@@ -1290,95 +1230,75 @@ export default function ChatPage() {
 
         {/* Main Chat Interface */}
         {/* MAIN CHAT INTERFACE */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#030712]/60 backdrop-blur-3xl relative z-10 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative z-10 overflow-hidden">
           {/* Header */}
-          <div className="h-16 lg:h-20 px-4 sm:px-6 lg:px-10 flex items-center justify-between border-b border-white/5 bg-[#030712]/60 backdrop-blur-xl relative overflow-hidden group shrink-0">
-            {/* Header Depth Layer */}
-            <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(circle_at_50%_0%,var(--aether-primary),transparent)] group-hover:opacity-20 transition-opacity" />
+          <div className="h-20 lg:h-24 px-6 sm:px-10 lg:px-12 flex items-center justify-between border-b border-white/[0.03] bg-[#030305]/40 backdrop-blur-3xl relative overflow-hidden group shrink-0">
+            {/* Header Depth Layer - Organic Gradient */}
+            <div className="absolute inset-0 z-0 opacity-[0.03] bg-[radial-gradient(circle_at_50%_0%,var(--premium-primary),transparent)] group-hover:opacity-[0.08] transition-opacity" />
 
             <div className="flex items-center gap-6 lg:gap-10 z-10">
               {/* Mobile menu toggle */}
               <button
                 onClick={() => setShowMobileSidebar(true)}
-                className="lg:hidden w-11 h-11 rounded-xl glass-aether flex items-center justify-center shadow-lg shrink-0 border border-white/10"
+                className="lg:hidden w-11 h-11 rounded-xl glass-premium flex items-center justify-center shadow-lg shrink-0"
               >
                 <MessageCircle className="w-5 h-5 text-primary" />
               </button>
 
               {view === "server" && selectedChannel ? (
                 <div className="flex items-center gap-4 lg:gap-8 min-w-0">
-                  <div className="hidden sm:flex w-10 lg:w-14 h-10 lg:h-14 rounded-xl lg:rounded-2xl glass-aether items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.1)] relative shrink-0">
-                    <Cpu className="w-6 h-6 text-primary relative z-10" />
+                  <div className="hidden sm:flex w-12 lg:w-16 h-12 lg:h-16 rounded-[1rem] lg:rounded-[1.25rem] bg-primary/10 border border-primary/20 items-center justify-center shadow-[0_0_30px_rgba(129,140,248,0.1)] relative shrink-0">
+                    <Cpu className="w-6 h-6 lg:w-8 lg:h-8 text-primary relative z-10" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-3 lg:gap-5">
-                      <h2 className="font-black text-white text-base lg:text-2xl uppercase tracking-tight truncate aether-font italic">
+                    <div className="flex items-center gap-4">
+                      <h2 className="font-bold text-white text-lg lg:text-3xl tracking-tight truncate premium-font">
                         {selectedChannel.name}
                       </h2>
-                      <div className="hidden md:flex px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
-                        <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] tech-font">
-                          LINK_SECURE
+                      <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest premium-font">
+                          Online
                         </span>
                       </div>
-                    </div>
-                    <div className="hidden lg:flex items-center gap-4 mt-2">
-                      <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">
-                        SIGNAL: STABLE
-                      </span>
-                      <div className="w-1 h-1 rounded-full bg-primary/20" />
-                      <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">
-                        MEMBERS: {selectedServer?.members?.length || 0}
-                      </span>
                     </div>
                   </div>
                 </div>
               ) : selectedConversation ? (
-                <div className="flex items-center gap-4 lg:gap-8 min-w-0">
-                  <div className="relative shrink-0">
-                    <div className="absolute -inset-1 bg-primary/20 blur-md rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Avatar className="w-10 h-10 lg:w-16 lg:h-16 border border-white/10 rounded-xl lg:rounded-2xl shadow-2xl relative z-10">
+                <div className="flex items-center gap-4 lg:gap-6 min-w-0">
+                  <div className="relative shrink-0 pr-2">
+                    <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Avatar className="w-12 h-12 lg:w-16 lg:h-16 border border-white/[0.08] rounded-2xl shadow-2xl relative z-10 transition-transform group-hover:scale-105">
                       <AvatarImage
                         src={selectedConversation.participants[0]?.avatar}
                         className="object-cover"
                       />
-                      <AvatarFallback className="glass-aether text-white text-lg font-black uppercase">
+                      <AvatarFallback className="glass-premium text-white text-xl font-bold uppercase">
                         {selectedConversation.participants[0]?.name?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#030303] shadow-[0_0_15px_rgba(129,140,248,1)] z-20" />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-[0_0_12px_rgba(16,185,129,0.5)] z-20" />
                   </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-4">
-                      <h2 className="font-black text-white text-lg lg:text-2xl uppercase tracking-tight aether-font italic">
-                        {selectedConversation.type === "group"
-                          ? selectedConversation.groupName
-                          : selectedConversation.participants[0]?.name}
-                      </h2>
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(129,140,248,0.8)]" />
-                        <span className="text-[9px] text-primary/60 font-black uppercase tracking-[0.3em] tech-font hidden sm:block">
-                          ENCRYPTED
-                        </span>
-                      </div>
-                    </div>
-                    <div className="hidden sm:flex items-center gap-4 mt-1.5">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] tech-font">
-                        DIRECT_RELAY_v4.2
+                  <div className="flex flex-col min-w-0">
+                    <h2 className="font-bold text-white text-lg lg:text-2xl tracking-tight truncate whitespace-nowrap premium-font">
+                      {selectedConversation.type === "group"
+                        ? selectedConversation.groupName
+                        : selectedConversation.participants[0]?.name}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest premium-font">
+                        Online
                       </span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-5 opacity-40">
-                  <Activity className="w-6 h-6 text-slate-500 animate-pulse" />
-                  <div>
-                    <p className="font-black text-slate-500 tracking-[0.3em] text-[10px] uppercase">
-                      Node Standby
-                    </p>
-                    <p className="font-bold text-slate-600 tracking-[0.1em] text-[11px] uppercase mt-1">
-                      Select a bridge to initialize transmission
-                    </p>
-                  </div>
+                <div className="flex items-center gap-4 opacity-60">
+                  <MessageCircle className="w-5 h-5 text-slate-500" />
+                  <p className="text-sm text-slate-400">
+                    Select a conversation to start messaging
+                  </p>
                 </div>
               )}
             </div>
@@ -1386,7 +1306,7 @@ export default function ChatPage() {
             <div className="flex items-center gap-2 lg:gap-8 z-10">
               {selectedConversation &&
                 selectedConversation.type === "direct" && (
-                  <div className="flex gap-2 lg:border-r lg:border-white/5 lg:pr-8 lg:mr-2">
+                  <div className="flex gap-4 lg:pr-8 lg:mr-4 border-r border-white/[0.03]">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1395,9 +1315,9 @@ export default function ChatPage() {
                           selectedConversation.participants[0]?._id;
                         if (otherId) initiateCall(otherId, "audio");
                       }}
-                      className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white/[0.03] text-slate-400 hover:text-primary hover:bg-primary/10 transition-all border border-white/5 hover:border-primary/30"
+                      className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
                     >
-                      <Phone className="w-4 h-4" />
+                      <Phone className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -1407,53 +1327,47 @@ export default function ChatPage() {
                           selectedConversation.participants[0]?._id;
                         if (otherId) initiateCall(otherId, "video");
                       }}
-                      className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white/[0.03] text-slate-400 hover:text-primary hover:bg-primary/10 transition-all border border-white/5 hover:border-primary/30"
+                      className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
                     >
-                      <Video className="w-4 h-4" />
+                      <Video className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                     </Button>
                   </div>
                 )}
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-4">
                 {view === "server" && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowMembers(!showMembers)}
                     className={cn(
-                      "w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center rounded-xl transition-all border",
+                      "w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border",
                       showMembers
                         ? "bg-primary/10 border-primary text-primary shadow-[0_0_20px_rgba(129,140,248,0.2)]"
-                        : "bg-white/[0.03] text-slate-500 border-white/5 hover:border-white/10",
+                        : "glass-premium text-slate-500",
                     )}
                   >
-                    <Users className="w-4 h-4" />
+                    <Users className="w-5 h-5 transition-transform hover:scale-110" />
                   </motion.button>
                 )}
-                <div className="hidden md:flex gap-2">
+
+                <div className="hidden md:flex items-center gap-4">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-10 h-10 lg:w-11 lg:h-11 bg-white/[0.03] text-slate-500 hover:text-primary rounded-xl border border-white/5 hover:border-primary/20"
+                    className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
                   >
-                    <Pin className="w-4 h-4" />
+                    <Pin className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                   </Button>
+
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-10 h-10 lg:w-11 lg:h-11 bg-white/[0.03] text-slate-500 hover:text-primary rounded-xl border border-white/5 hover:border-primary/20"
+                    className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
                   >
-                    <MoreVertical className="w-4 h-4" />
+                    <MoreVertical className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                   </Button>
                 </div>
-              </div>
-
-              <div className="hidden lg:block relative w-72 ml-4 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-all duration-300" />
-                <Input
-                  placeholder="SEARCH_TRANS_v4.0..."
-                  className="h-11 pl-12 bg-[#060a16]/60 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] focus:border-primary/40 focus:ring-0 transition-all placeholder:text-slate-700 tech-font shadow-inner"
-                />
               </div>
             </div>
           </div>
@@ -1586,18 +1500,17 @@ export default function ChatPage() {
                           <motion.div
                             initial={{ scale: 0.8, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            className="relative mb-12"
+                            className="relative mb-8"
                           >
-                            <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full flex items-center justify-center relative group scan-line">
-                              <div className="absolute inset-0 border border-primary/10 rounded-full group-hover:border-primary/30 transition-all duration-700" />
-                              <MessageCircle className="w-14 h-14 lg:w-20 lg:h-20 text-primary/30 group-hover:text-primary/60 transition-all duration-700 chat-hologram" />
+                            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full flex items-center justify-center relative border border-white/10 bg-white/5">
+                              <MessageCircle className="w-10 h-10 lg:w-14 lg:h-14 text-slate-500 opacity-40" />
                             </div>
                           </motion.div>
-                          <h3 className="font-black text-2xl lg:text-4xl uppercase tracking-tighter mb-4 italic chat-gradient-text">
-                            Transmission Blank
+                          <h3 className="font-semibold text-xl lg:text-3xl text-white mb-2">
+                            No messages yet
                           </h3>
-                          <p className="text-[10px] lg:text-xs text-slate-500 font-black uppercase tracking-[0.3em] opacity-40">
-                            Secure Link Established // Waiting for Data
+                          <p className="text-xs lg:text-sm text-slate-500 font-medium opacity-60">
+                            Start a conversation to begin chatting
                           </p>
                         </div>
                       ) : (
@@ -1684,25 +1597,20 @@ export default function ChatPage() {
                                     isMe ? "flex-row-reverse" : "flex-row",
                                   )}
                                 >
-                                  <span className="text-[11px] font-black text-white/90 uppercase tracking-wider tech-font">
-                                    {isMe
-                                      ? "Local_Node"
-                                      : msg.sender?.name?.replace(
-                                        /\s+/g,
-                                        "_",
-                                      ) || "Remote_User"}
+                                  <span className="text-xs font-semibold text-white/90">
+                                    {isMe ? "You" : msg.sender?.name || "User"}
                                   </span>
-                                  <span className="text-[9px] text-slate-600 font-bold tracking-widest tech-font">
-                                    [{formatTime(msg.createdAt)}]
+                                  <span className="text-[10px] text-slate-600 font-medium">
+                                    {formatTime(msg.createdAt)}
                                   </span>
                                 </div>
 
                                 <div
                                   className={cn(
-                                    "relative px-6 py-4 rounded-2xl text-[14px] leading-relaxed transition-all duration-500 group/bubble border",
+                                    "relative px-6 py-5 rounded-[1.5rem] text-[15px] leading-relaxed transition-all duration-500 group/bubble border shadow-sm",
                                     isMe
-                                      ? "bg-primary/10 text-primary border-primary/20 rounded-tr-none shadow-[0_4px_30px_rgba(129,140,248,0.1)]"
-                                      : "bg-white/[0.04] text-slate-200 border-white/5 rounded-tl-none backdrop-blur-xl",
+                                      ? "bg-primary/10 text-primary border-primary/20 rounded-tr-none"
+                                      : "glass-card text-slate-200 rounded-tl-none backdrop-blur-3xl",
                                   )}
                                 >
                                   {/* Depth Indicator */}
@@ -1798,11 +1706,7 @@ export default function ChatPage() {
                   {/* Message Input Area */}
                   <div className="px-3 sm:px-6 lg:px-8 pb-4 lg:pb-10 shrink-0 relative z-10">
                     <div className="glass-premium rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-5 relative group focus-within:border-primary/40 transition-all duration-700 overflow-hidden">
-                      {/* Decorative Corner Accents */}
-                      <div className="absolute top-0 left-0 w-8 h-[1px] bg-primary/30" />
-                      <div className="absolute top-0 left-0 w-[1px] h-8 bg-primary/30" />
-                      <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-primary/30" />
-                      <div className="absolute bottom-0 right-0 w-[1px] h-8 bg-primary/30" />
+
 
                       {replyingTo && (
                         <div className="absolute bottom-full left-4 right-4 mb-6 px-6 py-4 glass-premium border border-primary/20 rounded-2xl flex items-center justify-between animate-in slide-in-from-bottom-6 z-20 shadow-2xl">
@@ -1811,10 +1715,10 @@ export default function ChatPage() {
                               <Reply className="w-5 h-5 text-primary" />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[10px] font-black text-primary uppercase tracking-widest tech-font">
-                                REFERENCE_NODE: {replyingTo.sender?.name}
+                              <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">
+                                Replying to {replyingTo.sender?.name}
                               </span>
-                              <span className="text-[13px] text-slate-300 font-medium truncate max-w-[500px] mt-0.5 italic">
+                              <span className="text-[13px] text-slate-300 font-medium truncate max-w-[500px] mt-0.5">
                                 {replyingTo.content}
                               </span>
                             </div>
@@ -1831,14 +1735,14 @@ export default function ChatPage() {
                       )}
 
                       {typingUsers.length > 0 && (
-                        <div className="absolute -top-12 left-10 flex items-center gap-4 px-5 py-2 glass-aether rounded-full border border-primary/20 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
-                          <div className="flex gap-2">
-                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s] shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
-                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s] shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
-                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-[0_0_10px_rgba(0,243,255,0.8)]"></span>
+                        <div className="absolute -top-14 left-8 flex items-center gap-4 px-6 py-2.5 glass-premium rounded-full border border-primary/20 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+                          <div className="flex gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></span>
                           </div>
-                          <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em] tech-font">
-                            NODE_SYNCING...
+                          <span className="text-[11px] font-bold text-primary premium-font">
+                            typing...
                           </span>
                         </div>
                       )}
@@ -1863,17 +1767,17 @@ export default function ChatPage() {
                         className="hidden"
                       />
 
-                      <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 px-1 sm:px-2">
+                      <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 min-h-[48px] lg:min-h-[56px] px-3">
                         <motion.button
                           whileHover={{ scale: 1.1, rotate: 90 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => fileInputRef.current?.click()}
-                          className="w-11 h-11 lg:w-14 lg:h-14 rounded-2xl glass-aether text-slate-400 hover:text-primary border border-white/5 hover:border-primary/40 transition-all flex items-center justify-center shrink-0 shadow-xl group/plus"
+                          className="w-10 h-10 rounded-[0.85rem] glass-premium text-slate-400 hover:text-primary transition-all flex items-center justify-center shrink-0 shadow-lg"
                         >
-                          <Plus className="w-7 h-7 transition-transform group-hover:scale-110" />
+                          <Plus className="w-5 h-5" />
                         </motion.button>
 
-                        <div className="flex-1 min-h-[50px] lg:min-h-[64px] flex flex-col justify-center relative px-2">
+                        <div className="flex-1 flex flex-col justify-center relative">
                           <Input
                             value={messageInput}
                             onChange={(e) => {
@@ -1885,21 +1789,9 @@ export default function ChatPage() {
                               !e.shiftKey &&
                               handleSendMessage()
                             }
-                            placeholder="Initialize transmission..."
-                            className="bg-transparent border-0 focus-visible:ring-0 px-0 h-auto text-white text-sm lg:text-[16px] font-medium placeholder:text-slate-700 tech-font tracking-wide selection:bg-primary/30"
+                            placeholder="Type a message..."
+                            className="bg-transparent border-0 focus-visible:ring-0 px-0 h-auto text-white text-[14px] lg:text-[15px] font-medium placeholder:text-slate-600 premium-font tracking-tight"
                           />
-                          {/* Technical Loading Line Accent */}
-                          <div className="absolute -bottom-2 lg:-bottom-3 left-0 right-0 h-px bg-white/5 overflow-hidden">
-                            <motion.div
-                              animate={{ left: ["-100%", "100%"] }}
-                              transition={{
-                                duration: 4,
-                                repeat: Infinity,
-                                ease: "linear",
-                              }}
-                              className="absolute inset-0 w-1/4 bg-gradient-to-r from-transparent via-primary/30 to-transparent"
-                            />
-                          </div>
                         </div>
 
                         <div className="hidden sm:flex items-center gap-4 lg:gap-6 border-l border-white/5 pl-4 lg:pl-8 h-10">
@@ -1909,9 +1801,9 @@ export default function ChatPage() {
                               animate={{ scale: 1, opacity: 1 }}
                               className="flex items-center gap-4 px-6 py-2 glass-aether border border-rose-500/30 rounded-2xl shadow-[0_0_30px_rgba(244,63,94,0.1)]"
                             >
-                              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_12px_rgba(244,63,94,1)]" />
-                              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest tech-font">
-                                STREAM_REC
+                              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                              <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest premium-font">
+                                Recording
                               </span>
                               <button
                                 onClick={() => setIsRecordingVoice(false)}
@@ -1950,80 +1842,59 @@ export default function ChatPage() {
                             isUploading
                           }
                           className={cn(
-                            "w-11 h-11 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-2xl flex-shrink-0 relative overflow-hidden group/send border",
+                            "w-10 h-10 lg:w-12 lg:h-12 rounded-[1rem] flex items-center justify-center transition-all duration-500 shadow-2xl flex-shrink-0 relative overflow-hidden group/send border",
                             messageInput.trim() || pendingFiles.length > 0
                               ? "bg-primary/20 text-primary border-primary/30 shadow-[0_0_40px_rgba(129,140,248,0.2)] hover:bg-primary/30"
                               : "bg-white/[0.03] border-white/5 text-slate-700 cursor-not-allowed shadow-none",
                           )}
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover/send:opacity-100 transition-opacity" />
-                          <Send className="w-6 h-6 lg:w-7 lg:h-7 relative z-10 transition-transform group-hover/send:translate-x-1 group-hover/send:-translate-y-1" />
+                          <Send className="w-4 h-4 lg:w-5 lg:h-5 relative z-10 transition-transform group-hover/send:translate-x-1 group-hover/send:-translate-y-1" />
                         </motion.button>
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 text-center select-none animate-in fade-in zoom-in duration-1000 relative overflow-hidden bg-transparent">
-                  <div className="relative mb-12 lg:mb-20">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in relative bg-[#030712] overflow-hidden">
+                  {/* Subtle Background Pattern */}
+                  <div className="absolute inset-0 bg-grid-pattern opacity-5" />
 
-                    {/* Aether Core Hologram - Simplified as requested */}
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="w-32 h-32 lg:w-48 lg:h-48 flex items-center justify-center relative group"
-                    >
-                      {/* Subtler background glow */}
-                      <div className="absolute inset-4 bg-primary/5 blur-2xl rounded-full group-hover:bg-primary/10 transition-colors duration-1000" />
-
-                      <div className="relative z-10">
-                        <motion.div
-                          animate={{ y: [0, -15, 0] }}
-                          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                          className="flex items-center justify-center"
-                        >
-                          <Sparkles className="w-12 h-12 lg:w-24 lg:h-24 text-primary/40 group-hover:text-primary transition-all duration-1000 chat-hologram" />
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 min-w-max pointer-events-none">
+                  <div className="relative flex flex-col items-center max-w-sm">
+                    {/* Compact Premium Orb */}
+                    <div className="relative mb-8">
                       <motion.div
-                        animate={{ opacity: [0.4, 0.8, 0.4] }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                        className="px-6 py-2.5 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-md"
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          opacity: [0.08, 0.15, 0.08]
+                        }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute inset-[-40px] bg-primary/20 blur-[60px] rounded-full"
+                      />
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center relative z-10"
                       >
-                        <span className="text-[9px] lg:text-[11px] font-black text-primary uppercase tracking-[0.5em] tech-font">
-                          SYSTEM_IDLE // DATA_VOID
-                        </span>
+                        <motion.div
+                          animate={{ y: [0, -10, 0] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                          className="p-6 lg:p-8 rounded-[2.5rem] glass-premium border border-white/10 shadow-2xl bg-white/[0.02]"
+                        >
+                          <Sparkles className="w-10 h-10 lg:w-14 lg:h-14 text-primary drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
+                        </motion.div>
                       </motion.div>
                     </div>
-                  </div>
 
-                  <div className="max-w-[500px] space-y-6 relative z-10 pointer-events-none">
-                    <h2 className="text-3xl lg:text-5xl font-black italic uppercase tracking-tighter chat-gradient-text">
-                      Neural Bridge Ready
-                    </h2>
-                    <p className="text-[11px] lg:text-sm text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed opacity-60">
-                      Initialize connection with any available node to establish
-                      secure peer-to-peer transmission
-                    </p>
-                  </div>
-
-                  {/* System Status Indicators */}
-                  <div className="mt-8 lg:mt-16 sm:flex items-center gap-6 px-8 py-3 rounded-2xl glass-aether border border-white/5 opacity-40 hidden">
-                    <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest tech-font">
-                        ENCRYPTION: ACTIVE
-                      </span>
-                    </div>
-                    <div className="w-px h-3 bg-white/10" />
-                    <div className="flex items-center gap-3">
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest tech-font">
-                        LINK: SECURE
-                      </span>
+                    <div className="space-y-4 relative z-10">
+                      <h2 className="text-3xl lg:text-5xl font-black tracking-tight premium-gradient-text premium-font italic uppercase">
+                        TrueVibe
+                      </h2>
+                      <div className="h-px w-12 bg-primary/30 mx-auto" />
+                      <p className="text-xs lg:text-sm text-slate-500 font-bold uppercase tracking-[0.2em] premium-font px-4 leading-relaxed">
+                        Select a conversation to start <br /> messaging with your team
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -2038,14 +1909,12 @@ export default function ChatPage() {
                   <div className="absolute top-0 right-0 w-32 h-64 bg-primary/5 blur-[120px] pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-32 h-64 bg-secondary/5 blur-[120px] pointer-events-none" />
 
-                  <h3 className="text-[11px] font-black text-white italic uppercase tracking-[0.4em] mb-12 flex items-center justify-between aether-font opacity-80">
-                    <span>User Manifest</span>
+                  <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-8 flex items-center justify-between opacity-80">
+                    <span>Members</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,243,255,1)]" />
-                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-md border border-primary/30 text-[9px] font-black tech-font">
-                        {selectedServer.memberProfiles.length
-                          .toString()
-                          .padStart(2, "0")}
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-md border border-primary/30 text-[10px] font-bold">
+                        {selectedServer.memberProfiles.length}
                       </span>
                     </div>
                   </h3>
@@ -2399,16 +2268,15 @@ export default function ChatPage() {
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 flex items-center justify-between relative overflow-hidden shrink-0">
                   <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
-                  <h2 className="text-[11px] font-black text-white italic tracking-tight uppercase flex items-center gap-3 aether-font">
-                    <div className="w-8 h-8 rounded-xl glass-aether border border-primary/20 flex items-center justify-center relative shadow-[0_0_20px_rgba(0,243,255,0.1)]">
-                      <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+                  <h2 className="text-sm font-bold text-white tracking-tight flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center relative">
                       <Terminal className="w-4 h-4 text-primary relative z-10" />
                     </div>
-                    Aether_Node
+                    TrueVibe
                   </h2>
                   <button
                     onClick={() => setShowMobileSidebar(false)}
-                    className="w-10 h-10 rounded-xl glass-aether border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors shadow-lg"
+                    className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -2419,35 +2287,35 @@ export default function ChatPage() {
                   <button
                     onClick={() => setView("dms")}
                     className={cn(
-                      "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
+                      "flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                       view === "dms"
-                        ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                        ? "bg-primary/20 text-primary border border-primary/40"
                         : "text-slate-500 hover:bg-white/5",
                     )}
                   >
-                    Uplink
+                    Chats
                   </button>
                   <button
                     onClick={() => setView("server")}
                     className={cn(
-                      "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
+                      "flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                       view === "server"
-                        ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                        ? "bg-primary/20 text-primary border border-primary/40"
                         : "text-slate-500 hover:bg-white/5",
                     )}
                   >
-                    Manifest
+                    Servers
                   </button>
                   <button
                     onClick={() => setView("discover")}
                     className={cn(
-                      "flex-1 py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all tech-font",
+                      "flex-1 py-3 px-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                       view === "discover"
-                        ? "bg-primary/20 text-primary border border-primary/40 shadow-[0_0_20px_rgba(0,243,255,0.1)]"
+                        ? "bg-primary/20 text-primary border border-primary/40"
                         : "text-slate-500 hover:bg-white/5",
                     )}
                   >
-                    Network
+                    Discover
                   </button>
                 </div>
 
@@ -2455,23 +2323,23 @@ export default function ChatPage() {
                 <ScrollArea className="flex-1 px-3 py-4">
                   {view === "dms" ? (
                     <div className="space-y-2">
-                      <p className="px-2 mb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                        Direct Messages
+                      <p className="px-2 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Messages
                       </p>
                       {convsLoading ? (
                         <div className="space-y-3">
                           {[1, 2, 3].map((i) => (
                             <div
                               key={i}
-                              className="h-16 glass-aether rounded-2xl animate-pulse border border-white/5"
+                              className="h-16 rounded-2xl animate-pulse border border-white/5 bg-white/5"
                             />
                           ))}
                         </div>
                       ) : conversations.length === 0 ? (
-                        <div className="text-center py-12 px-8 glass-aether rounded-3xl border border-dashed border-white/5">
+                        <div className="text-center py-12 px-8 border border-dashed border-white/5 rounded-3xl">
                           <MessageCircle className="w-10 h-10 text-slate-700 mx-auto mb-4 opacity-40" />
-                          <p className="text-[10px] font-black italic uppercase tracking-widest text-slate-500">
-                            Transmission Void
+                          <p className="text-xs font-medium text-slate-500">
+                            No messages yet
                           </p>
                         </div>
                       ) : (
@@ -2534,8 +2402,8 @@ export default function ChatPage() {
                   ) : view === "server" ? (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between px-2 mb-3">
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] tech-font">
-                          Your Manifest
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          Your Servers
                         </p>
                         <button
                           onClick={() => {
@@ -2552,24 +2420,24 @@ export default function ChatPage() {
                           {[1, 2, 3].map((i) => (
                             <div
                               key={i}
-                              className="h-16 glass-aether rounded-2xl animate-pulse border border-white/5"
+                              className="h-16 rounded-2xl animate-pulse border border-white/5 bg-white/5"
                             />
                           ))}
                         </div>
                       ) : servers.length === 0 ? (
-                        <div className="text-center py-12 px-8 glass-aether rounded-3xl border border-dashed border-white/5">
+                        <div className="text-center py-12 px-8 border border-dashed border-white/5 rounded-3xl">
                           <Terminal className="w-10 h-10 text-slate-700 mx-auto mb-4 opacity-40" />
-                          <p className="text-[10px] font-black italic uppercase tracking-widest text-slate-500 mb-4">
-                            Node Offline
+                          <p className="text-xs font-medium text-slate-500 mb-4">
+                            No servers found
                           </p>
                           <button
                             onClick={() => {
                               setShowCreateServer(true);
                               setShowMobileSidebar(false);
                             }}
-                            className="px-6 py-3 rounded-2xl bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20"
+                            className="px-6 py-3 rounded-2xl bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20"
                           >
-                            Initialize
+                            Create Server
                           </button>
                         </div>
                       ) : (
