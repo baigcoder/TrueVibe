@@ -1,9 +1,41 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { Profile } from '../users/Profile.model.js';
 import { authenticate } from '../../shared/middleware/auth.middleware.js';
 
 const router = Router();
+
+// Type definitions for Spotify API responses
+interface SpotifyTokenResponse {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    token_type: string;
+}
+
+interface SpotifyProfile {
+    id: string;
+    display_name: string;
+    email?: string;
+}
+
+interface SpotifyTrack {
+    id: string;
+    name: string;
+    artists: Array<{ name: string }>;
+    album: {
+        name: string;
+        images: Array<{ url: string }>;
+    };
+    duration_ms: number;
+    uri: string;
+}
+
+interface SpotifyNowPlaying {
+    is_playing: boolean;
+    progress_ms: number;
+    item: SpotifyTrack | null;
+}
 
 // Spotify OAuth configuration
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
@@ -27,7 +59,7 @@ const stateStore = new Map<string, { userId: string; expiresAt: number }>();
 /**
  * GET /auth - Initiate Spotify OAuth flow
  */
-router.get('/auth', authenticate, async (req, res) => {
+router.get('/auth', authenticate, async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
         if (!userId) {
@@ -65,7 +97,7 @@ router.get('/auth', authenticate, async (req, res) => {
 /**
  * GET /callback - Handle Spotify OAuth callback
  */
-router.get('/callback', async (req, res) => {
+router.get('/callback', async (req: Request, res: Response) => {
     try {
         const { code, state, error } = req.query;
 
@@ -106,7 +138,7 @@ router.get('/callback', async (req, res) => {
             return res.redirect(`${FRONTEND_URL}/app/settings?spotify_error=token_exchange_failed`);
         }
 
-        const tokens = await tokenResponse.json();
+        const tokens = await tokenResponse.json() as SpotifyTokenResponse;
         const { access_token, refresh_token, expires_in } = tokens;
 
         // Get user profile from Spotify
@@ -116,7 +148,7 @@ router.get('/callback', async (req, res) => {
             },
         });
 
-        const spotifyProfile = await profileResponse.json();
+        const spotifyProfile = await profileResponse.json() as SpotifyProfile;
 
         // Update user profile with Spotify data
         await Profile.findOneAndUpdate(
@@ -141,7 +173,7 @@ router.get('/callback', async (req, res) => {
 /**
  * GET /me - Get Spotify connection status
  */
-router.get('/me', authenticate, async (req, res) => {
+router.get('/me', authenticate, async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
         const profile = await Profile.findOne({ userId });
@@ -164,7 +196,7 @@ router.get('/me', authenticate, async (req, res) => {
 /**
  * GET /now-playing - Get currently playing track
  */
-router.get('/now-playing', authenticate, async (req, res) => {
+router.get('/now-playing', authenticate, async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
         const profile = await Profile.findOne({ userId });
@@ -191,7 +223,7 @@ router.get('/now-playing', authenticate, async (req, res) => {
             return res.json({ playing: false });
         }
 
-        const data = await response.json();
+        const data = await response.json() as SpotifyNowPlaying;
 
         if (!data.item) {
             return res.json({ playing: false });
@@ -202,7 +234,7 @@ router.get('/now-playing', authenticate, async (req, res) => {
             track: {
                 id: data.item.id,
                 name: data.item.name,
-                artists: data.item.artists.map((a: any) => a.name).join(', '),
+                artists: data.item.artists.map((a) => a.name).join(', '),
                 album: data.item.album.name,
                 albumArt: data.item.album.images[0]?.url,
                 duration: data.item.duration_ms,
@@ -219,7 +251,7 @@ router.get('/now-playing', authenticate, async (req, res) => {
 /**
  * POST /disconnect - Disconnect Spotify account
  */
-router.post('/disconnect', authenticate, async (req, res) => {
+router.post('/disconnect', authenticate, async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
 
@@ -265,7 +297,7 @@ async function refreshSpotifyToken(profile: any): Promise<boolean> {
 
         if (!response.ok) return false;
 
-        const data = await response.json();
+        const data = await response.json() as SpotifyTokenResponse;
 
         await Profile.findByIdAndUpdate(profile._id, {
             spotifyAccessToken: data.access_token,
@@ -281,3 +313,4 @@ async function refreshSpotifyToken(profile: any): Promise<boolean> {
 }
 
 export default router;
+
