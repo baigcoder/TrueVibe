@@ -1,20 +1,33 @@
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from "@/api/hooks";
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useFollowRequests, useSuggestedUsers, useAcceptFollowRequest, useRejectFollowRequest, useFollow } from "@/api/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Heart, MessageSquare, UserPlus, Repeat, Loader2, ChevronRight, CheckCheck, AtSign } from "lucide-react";
+import { Bell, Heart, MessageSquare, UserPlus, Repeat, Loader2, ChevronRight, CheckCheck, AtSign, Users, Plus, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function NotificationList() {
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<'notifications' | 'requests' | 'suggestions'>('notifications');
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useNotifications();
+    const { data: requestsData, isLoading: isLoadingRequests } = useFollowRequests();
+    const { data: suggestionsData, isLoading: isLoadingSuggestions } = useSuggestedUsers(10);
+
     const markRead = useMarkNotificationRead();
     const markAllRead = useMarkAllNotificationsRead();
+    const acceptMutation = useAcceptFollowRequest();
+    const rejectMutation = useRejectFollowRequest();
+    const followMutation = useFollow();
 
-    const notifications = data?.pages?.flatMap(page => page.data.notifications) || [];
-    const unreadCount = notifications.filter(n => !n.isRead).length;
+    const notifications = (data as any)?.pages?.flatMap((page: any) => page.data.notifications) || [];
+    const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+
+    const requests = (requestsData as any)?.pages?.[0]?.data?.requests || [];
+    const suggestions = (suggestionsData as any)?.data?.suggestions || [];
 
     const getIconConfig = (type: string) => {
         switch (type) {
@@ -28,9 +41,9 @@ export function NotificationList() {
         }
     };
 
-    if (isLoading) {
+    if (isLoading && activeTab === 'notifications') {
         return (
-            <div className="flex items-center justify-center py-10 bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/5 h-[350px] w-full">
+            <div className="flex items-center justify-center py-10 bg-[#0f172a]/95 backdrop-blur-3xl rounded-2xl border border-white/10 h-[480px] w-full glass-panel">
                 <div className="flex flex-col items-center gap-3">
                     <div className="relative">
                         <div className="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
@@ -43,126 +56,250 @@ export function NotificationList() {
     }
 
     return (
-        <div className="flex flex-col h-[400px] w-full bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Bell className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-white">Notifications</h3>
-                        {unreadCount > 0 && (
-                            <p className="text-[10px] text-rose-400 font-medium flex items-center gap-1">
-                                <span className="w-1 h-1 rounded-full bg-rose-400 animate-pulse" />
-                                {unreadCount} new
-                            </p>
+        <div className="flex flex-col h-[480px] w-full bg-[#0f172a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl overflow-hidden glass-panel shadow-2xl">
+            {/* Tab Header */}
+            <div className="px-2 py-2 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                <div className="flex bg-white/5 p-1 rounded-xl gap-1 w-full mr-2">
+                    <button
+                        onClick={() => setActiveTab('notifications')}
+                        className={cn(
+                            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                            activeTab === 'notifications' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
                         )}
-                    </div>
+                    >
+                        <Bell className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Alerts</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('requests')}
+                        className={cn(
+                            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all relative",
+                            activeTab === 'requests' ? "bg-secondary text-white shadow-lg" : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Requests</span>
+                        {requests.length > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center text-[8px] border-2 border-[#0f172a] text-white">
+                                {requests.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('suggestions')}
+                        className={cn(
+                            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                            activeTab === 'suggestions' ? "bg-indigo-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Match</span>
+                    </button>
                 </div>
-                {unreadCount > 0 && (
+
+                {activeTab === 'notifications' && unreadCount > 0 && (
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-[10px] font-bold text-primary hover:text-white hover:bg-primary/20 rounded-lg"
+                        className="h-8 w-8 p-0 text-primary hover:text-white hover:bg-primary/20 rounded-lg shrink-0"
                         onClick={() => markAllRead.mutate()}
                         disabled={markAllRead.isPending}
                     >
-                        <CheckCheck className="w-3.5 h-3.5" />
+                        <CheckCheck className="w-4 h-4" />
                     </Button>
                 )}
             </div>
 
-            {/* Notification Stream */}
+            {/* Content Area */}
             <ScrollArea className="flex-1">
-                {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 px-4">
-                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-3">
-                            <Bell className="w-6 h-6 text-slate-600" />
-                        </div>
-                        <p className="text-xs text-slate-500 font-medium">No notifications yet</p>
-                    </div>
-                ) : (
-                    <AnimatePresence>
-                        <div className="py-2">
-                            {notifications.slice(0, 5).map((notification, index) => {
-                                // Support both senderId and sender field names
-                                const sender = notification.sender || notification.senderId;
-                                const senderName = sender?.name || "Someone";
-                                const senderAvatar = sender?.avatar;
-                                const senderInitial = senderName.charAt(0).toUpperCase();
-                                const iconConfig = getIconConfig(notification.type);
-                                const Icon = iconConfig.icon;
+                <AnimatePresence mode="wait">
+                    {activeTab === 'notifications' && (
+                        <motion.div
+                            key="notifications"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 10 }}
+                            className="py-1"
+                        >
+                            {notifications.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 px-4">
+                                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-3 text-slate-600">
+                                        <Bell className="w-6 h-6" />
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-medium">No notifications yet</p>
+                                </div>
+                            ) : (
+                                <div className="py-1">
+                                    {notifications.slice(0, 10).map((notification: any, index: number) => {
+                                        const sender = notification.sender || notification.senderId;
+                                        const senderName = sender?.name || "Someone";
+                                        const senderAvatar = sender?.avatar;
+                                        const senderInitial = senderName.charAt(0).toUpperCase();
+                                        const iconConfig = getIconConfig(notification.type);
+                                        const Icon = iconConfig.icon;
 
-                                return (
-                                    <motion.div
-                                        key={notification._id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        className={cn(
-                                            "px-3 py-2.5 flex gap-3 transition-all cursor-pointer relative hover:bg-white/[0.03]",
-                                            !notification.isRead && "bg-primary/[0.03]"
-                                        )}
-                                        onClick={() => !notification.isRead && markRead.mutate(notification._id)}
-                                    >
-                                        {/* Unread Indicator */}
-                                        {!notification.isRead && (
-                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-r" />
-                                        )}
+                                        return (
+                                            <motion.div
+                                                key={notification._id}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                className={cn(
+                                                    "px-3 py-2.5 flex gap-3 transition-all cursor-pointer relative hover:bg-white/[0.03]",
+                                                    !notification.isRead && "bg-primary/[0.03]"
+                                                )}
+                                                onClick={() => !notification.isRead && markRead.mutate(notification._id)}
+                                            >
+                                                {!notification.isRead && (
+                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-r" />
+                                                )}
+                                                <div className="relative shrink-0">
+                                                    <Avatar className="w-9 h-9 border border-white/10 rounded-lg">
+                                                        <AvatarImage src={senderAvatar} className="object-cover" />
+                                                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-white font-bold text-xs rounded-lg">
+                                                            {senderInitial}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-md flex items-center justify-center", iconConfig.bg)}>
+                                                        <Icon className={cn("w-3 h-3", iconConfig.color)} />
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs text-white leading-relaxed">
+                                                        <span className="font-bold">{senderName}</span>{" "}
+                                                        <span className="text-slate-400">{notification.body}</span>
+                                                    </p>
+                                                    <span className="text-[10px] text-slate-500 mt-0.5 block">
+                                                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                                                    </span>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
 
-                                        {/* Avatar */}
-                                        <div className="relative shrink-0">
-                                            <Avatar className="w-9 h-9 border border-white/10 rounded-lg">
-                                                <AvatarImage src={senderAvatar} className="object-cover" />
-                                                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-white font-bold text-xs rounded-lg">
-                                                    {senderInitial}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-md flex items-center justify-center", iconConfig.bg)}>
-                                                <Icon className={cn("w-3 h-3", iconConfig.color)} />
-                                            </div>
+                                    {hasNextPage && (
+                                        <div className="px-3 py-2">
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full h-8 text-[10px] text-slate-500 hover:text-white rounded-lg hover:bg-white/5 font-black uppercase tracking-widest"
+                                                onClick={() => fetchNextPage()}
+                                                disabled={isFetchingNextPage}
+                                            >
+                                                {isFetchingNextPage ? <Loader2 className="w-3 h-3 animate-spin" /> : "Load_More_Logs"}
+                                            </Button>
                                         </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-white leading-relaxed">
-                                                <span className="font-bold">{senderName}</span>{" "}
-                                                <span className="text-slate-400">{notification.body}</span>
-                                            </p>
-                                            <span className="text-[10px] text-slate-500 mt-0.5 block">
-                                                {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                                            </span>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-
-                            {hasNextPage && (
-                                <div className="px-3 py-2">
-                                    <Button
-                                        variant="ghost"
-                                        className="w-full h-8 text-xs text-slate-500 hover:text-white rounded-lg hover:bg-white/5"
-                                        onClick={() => fetchNextPage()}
-                                        disabled={isFetchingNextPage}
-                                    >
-                                        {isFetchingNextPage ? <Loader2 className="w-3 h-3 animate-spin" /> : "Load more"}
-                                    </Button>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    </AnimatePresence>
-                )}
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'requests' && (
+                        <motion.div
+                            key="requests"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 10 }}
+                            className="p-3 space-y-3"
+                        >
+                            {isLoadingRequests ? (
+                                <div className="flex justify-center py-10">
+                                    <Loader2 className="w-5 h-5 animate-spin text-secondary" />
+                                </div>
+                            ) : requests.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3">
+                                        <UserPlus className="w-6 h-6 text-slate-600" />
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest italic">_Zero.Requests</p>
+                                </div>
+                            ) : (
+                                requests.map((request: any) => (
+                                    <div key={request._id} className="bg-white/5 border border-white/5 rounded-2xl p-3 flex items-center gap-3">
+                                        <Avatar className="w-10 h-10 border border-white/10 rounded-xl shrink-0">
+                                            <AvatarImage src={request.requester?.avatar} />
+                                            <AvatarFallback className="bg-secondary/20 text-secondary font-black text-xs">{request.requester?.name?.[0]}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-black text-white uppercase truncate">{request.requester?.name}</p>
+                                            <p className="text-[8px] text-slate-500 font-bold tracking-widest truncate">@{request.requester?.handle}</p>
+                                        </div>
+                                        <div className="flex gap-1.5">
+                                            <button
+                                                onClick={() => acceptMutation.mutate(request._id, {
+                                                    onSuccess: () => toast.success("Request accepted!")
+                                                })}
+                                                className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => rejectMutation.mutate(request._id)}
+                                                className="w-8 h-8 rounded-lg bg-white/5 text-slate-400 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'suggestions' && (
+                        <motion.div
+                            key="suggestions"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 10 }}
+                            className="p-3 space-y-3"
+                        >
+                            {isLoadingSuggestions ? (
+                                <div className="flex justify-center py-10">
+                                    <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
+                                </div>
+                            ) : (
+                                suggestions.map((user: any) => (
+                                    <div
+                                        key={user._id}
+                                        className="bg-white/5 border border-white/5 rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-all group"
+                                        onClick={() => navigate({ to: `/app/profile/${user.userId || user._id}` as any })}
+                                    >
+                                        <Avatar className="w-10 h-10 border border-white/10 rounded-xl shrink-0">
+                                            <AvatarImage src={user.avatar} />
+                                            <AvatarFallback className="bg-indigo-500/20 text-indigo-400 font-black text-xs">{user.name?.[0]}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-black text-white uppercase truncate group-hover:text-indigo-400 transition-colors">{user.name}</p>
+                                            <p className="text-[8px] text-slate-500 font-bold tracking-widest truncate">@{user.handle}</p>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                followMutation.mutate(user.userId || user._id, {
+                                                    onSuccess: () => toast.success("Follow request sent!")
+                                                });
+                                            }}
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-500 text-white text-[8px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+                                        >
+                                            SYNC
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </ScrollArea>
 
             {/* Footer */}
             <div className="px-4 py-3 border-t border-white/5 bg-white/[0.02]">
                 <Link
                     to={"/app/notifications" as any}
-                    className="flex items-center justify-center gap-2 text-xs font-medium text-primary hover:text-white transition-colors group"
+                    className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:text-white transition-all group"
                 >
-                    View all notifications
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    System_Logs.View_All
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>
         </div>

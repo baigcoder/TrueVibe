@@ -7,6 +7,7 @@ import { Story } from './Story.model.js';
 import { Profile } from '../users/Profile.model.js';
 import { Follow } from '../users/Follow.model.js';
 import { getFriendIds } from '../users/followHelpers.js';
+import { addAIAnalysisJob } from '../../jobs/queues.js';
 
 const router = Router();
 
@@ -121,7 +122,20 @@ router.post('/', requireAuth, upload.single('media'), async (req, res, next) => 
             thumbnailUrl: isVideo ? uploadResult.secure_url.replace(/\.[^/.]+$/, '.jpg') : undefined,
             caption,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+            trustLevel: 'pending',
         });
+
+        // Queue AI analysis for the story
+        try {
+            await addAIAnalysisJob({
+                mediaId: story._id.toString(),
+                postId: story._id.toString(),
+                contentType: 'story',
+                mediaUrl: uploadResult.secure_url,
+            });
+        } catch (jobError) {
+            console.warn('Failed to queue AI analysis for story:', jobError);
+        }
 
         res.status(201).json({
             success: true,

@@ -331,17 +331,38 @@ export function TrustBadge({
 
                         {/* Panel Container */}
                         <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(8px)" }}
-                            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(8px)" }}
-                            transition={{ type: "spring", damping: 25, stiffness: 400 }}
-                            className="fixed sm:absolute left-2 right-2 bottom-32 sm:bottom-auto sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1 z-[9999] sm:w-[220px] origin-bottom sm:origin-top-left sm:px-0 pb-safe sm:pb-0 max-h-[60vh] sm:max-h-none overflow-y-auto"
+                            initial="hidden"
+                            animate="visible"
+                            exit="hidden"
+                            variants={{
+                                hidden: { opacity: 0, y: 15, scale: 0.95, filter: "blur(8px)" },
+                                visible: {
+                                    opacity: 1, y: 0, scale: 1, filter: "blur(0px)",
+                                    transition: {
+                                        type: "spring", damping: 30, stiffness: 400,
+                                        staggerChildren: 0.04, delayChildren: 0.05
+                                    }
+                                }
+                            }}
+                            className="fixed sm:absolute left-2 right-2 bottom-24 sm:top-full sm:bottom-auto sm:inset-x-auto sm:left-0 sm:mt-1 z-[9999] sm:w-[220px] origin-bottom sm:origin-top-left sm:px-0 pb-safe sm:pb-0 sm:max-h-none flex flex-col"
                         >
                             {/* Main Panel */}
-                            <div className="bg-[#030712] border border-white/10 rounded-2xl sm:rounded-xl shadow-[0_0_50px_-12px_rgba(0,0,0,1)] overflow-hidden">
+                            <motion.div
+                                variants={{
+                                    hidden: { opacity: 0 },
+                                    visible: { opacity: 1 }
+                                }}
+                                className="bg-[#030712]/95 border border-white/10 rounded-2xl sm:rounded-xl shadow-[0_0_50px_-12px_rgba(0,0,0,1)] overflow-hidden flex flex-col"
+                            >
 
                                 {/* Header - Slimmer */}
-                                <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-white/5 bg-white/[0.03]">
+                                <motion.div
+                                    variants={{
+                                        hidden: { opacity: 0, y: -5 },
+                                        visible: { opacity: 1, y: 0 }
+                                    }}
+                                    className="flex items-center justify-between px-2.5 py-1.5 border-b border-white/5 bg-white/[0.03]"
+                                >
                                     <div className="flex items-center gap-1.5">
                                         <motion.div
                                             animate={{ rotate: [0, 10, -10, 0] }}
@@ -349,10 +370,10 @@ export function TrustBadge({
                                         >
                                             <Brain className="w-3 h-3 text-sky-400" />
                                         </motion.div>
-                                        <span className="text-[8px] font-black uppercase tracking-wider text-white/80">AI Audit</span>
+                                        <span className="text-[8px] font-black uppercase tracking-wider text-white/80">AI Audit System</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <span className="text-[7px] font-mono text-slate-500 bg-white/5 px-1 rounded">V7</span>
+                                        <span className="text-[7px] font-mono text-slate-500 bg-white/5 px-1 rounded">V8.2</span>
                                         <button
                                             onClick={() => setShowDetails(false)}
                                             className="w-4 h-4 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors group"
@@ -360,21 +381,25 @@ export function TrustBadge({
                                             <X className="w-2.5 h-2.5 text-white/40 group-hover:text-white" />
                                         </button>
                                     </div>
-                                </div>
+                                </motion.div>
 
-                                {/* Content - Denser */}
-                                <div className="max-h-[40vh] sm:max-h-[50vh] overflow-y-auto p-2 space-y-2 scrollbar-hide">
+                                {/* Content - COMPACT HUD VERSION */}
+                                <div className="p-2 space-y-2">
 
                                     {/* Gauges - Smaller & Tighter */}
-                                    <div className="grid grid-cols-2 gap-1.5">
+                                    <motion.div
+                                        variants={{
+                                            hidden: { opacity: 0, scale: 0.9 },
+                                            visible: { opacity: 1, scale: 1 }
+                                        }}
+                                        className="grid grid-cols-2 gap-1.5"
+                                    >
                                         {[
                                             { label: "AUTH", icon: Activity, val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
                                             { label: "FAKE", icon: Target, val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
                                         ].map((gauge, i) => (
-                                            <motion.div
+                                            <div
                                                 key={i}
-                                                initial={{ opacity: 0, scale: 0.95 }}
-                                                animate={{ opacity: 1, scale: 1 }}
                                                 className={cn(
                                                     "border rounded-lg p-1.5 text-center relative overflow-hidden transition-colors",
                                                     gauge.bg === "emerald" ? "bg-emerald-500/[0.07] border-emerald-500/20" : "bg-red-500/[0.07] border-red-500/20"
@@ -386,7 +411,7 @@ export function TrustBadge({
                                                 )}>
                                                     <gauge.icon className="w-2 h-2" /> {gauge.label}
                                                 </div>
-                                                <div className="relative w-9 h-9 mx-auto">
+                                                <div className="relative w-8 h-8 mx-auto">
                                                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                                                         <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="4.5" className="text-white/[0.05]" />
                                                         <motion.circle
@@ -394,21 +419,29 @@ export function TrustBadge({
                                                             strokeDasharray={`${isPendingState ? 0 : gauge.p * 0.94} 94`}
                                                             initial={{ strokeDasharray: "0 94" }}
                                                             animate={{ strokeDasharray: `${isPendingState ? 0 : gauge.p * 0.94} 94` }}
-                                                            transition={{ duration: 1.5, ease: "circOut", delay: 0.2 }}
+                                                            transition={{ duration: 1.5, ease: "circOut", delay: 0.3 }}
                                                         />
                                                     </svg>
-                                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white tabular-nums">
+                                                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-black text-white tabular-nums">
                                                         {gauge.val}
                                                     </span>
                                                 </div>
-                                            </motion.div>
+                                            </div>
                                         ))}
-                                    </div>
+                                    </motion.div>
 
-                                    {/* Metrics - Only Real Data */}
-                                    <div className="space-y-1 px-0.5">
+                                    {/* Metrics - GRID BASED FOR MOBILE NO-SCROLL */}
+                                    <motion.div
+                                        variants={{
+                                            hidden: { opacity: 0 },
+                                            visible: {
+                                                opacity: 1,
+                                                transition: { staggerChildren: 0.03 }
+                                            }
+                                        }}
+                                        className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-0.5"
+                                    >
                                         {[
-                                            // Only include metrics that have meaningful non-zero values
                                             analysisDetails?.facesDetected !== undefined && analysisDetails.facesDetected > 0
                                                 ? { label: "Faces", val: analysisDetails.facesDetected.toString(), color: "text-purple-400" }
                                                 : null,
@@ -433,33 +466,35 @@ export function TrustBadge({
                                         ].filter((m): m is { label: string; val: string; color: string } => m !== null).map((metric, i) => (
                                             <motion.div
                                                 key={i}
-                                                initial={{ opacity: 0, x: -3 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: 0.1 + (i * 0.04) }}
-                                                className="flex justify-between items-center text-[9px] py-0.5 border-b border-white/[0.03] last:border-0"
+                                                variants={{
+                                                    hidden: { opacity: 0, x: -5 },
+                                                    visible: { opacity: 1, x: 0 }
+                                                }}
+                                                className="flex justify-between items-center text-[8px] py-0.5 border-b border-white/[0.03]"
                                             >
-                                                <span className="text-slate-500 font-bold uppercase tracking-tighter">{metric.label}</span>
-                                                <span className={cn("font-black tabular-nums text-[10px]", metric.color)}>
+                                                <span className="text-slate-500 font-bold uppercase tracking-tighter truncate mr-1">{metric.label}</span>
+                                                <span className={cn("font-black tabular-nums text-[9px]", metric.color)}>
                                                     {metric.val}
                                                 </span>
                                             </motion.div>
                                         ))}
-                                    </div>
+                                    </motion.div>
 
                                     {/* Verdict - Based on Actual Trust Level */}
                                     <motion.div
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5 }}
+                                        variants={{
+                                            hidden: { opacity: 0, y: 5 },
+                                            visible: { opacity: 1, y: 0 }
+                                        }}
                                         className={cn(
-                                            "py-1.5 px-2 rounded-lg text-center border relative overflow-hidden",
+                                            "py-1 px-2 rounded-lg text-center border relative overflow-hidden",
                                             derivedLevel === 'authentic' ? "bg-emerald-500/10 border-emerald-500/20" :
                                                 derivedLevel === 'suspicious' ? "bg-amber-500/10 border-amber-500/20" :
                                                     "bg-red-500/10 border-red-500/20"
                                         )}
                                     >
                                         <span className={cn(
-                                            "text-[9px] font-black uppercase tracking-widest relative z-10",
+                                            "text-[8px] font-black uppercase tracking-widest relative z-10",
                                             derivedLevel === 'authentic' ? "text-emerald-400" :
                                                 derivedLevel === 'suspicious' ? "text-amber-400" :
                                                     "text-red-400"
@@ -473,16 +508,22 @@ export function TrustBadge({
 
                                 {/* Button - Ultra Slim */}
                                 {onGenerateReport && (
-                                    <div className="p-2 border-t border-white/5 bg-slate-900/95 backdrop-blur-xl">
+                                    <motion.div
+                                        variants={{
+                                            hidden: { opacity: 0, y: 10 },
+                                            visible: { opacity: 1, y: 0 }
+                                        }}
+                                        className="p-2 border-t border-white/5 bg-slate-900/95"
+                                    >
                                         <motion.button
-                                            whileHover={{ scale: 1.02 }}
+                                            whileHover={{ scale: 1.02, backgroundColor: "rgba(99, 102, 241, 0.2)" }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onGenerateReport();
                                             }}
                                             disabled={isGeneratingReport || isPendingState}
-                                            className="w-full py-2 px-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-indigo-500/20"
+                                            className="w-full py-1.5 px-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-indigo-500/20"
                                         >
                                             {isGeneratingReport ? (
                                                 <RefreshCw className="w-3 h-3 animate-spin text-white" />
@@ -493,9 +534,9 @@ export function TrustBadge({
                                                 {isGeneratingReport ? "Working..." : "View Report"}
                                             </span>
                                         </motion.button>
-                                    </div>
+                                    </motion.div>
                                 )}
-                            </div>
+                            </motion.div>
                         </motion.div>
                     </>
                 )}

@@ -18,66 +18,58 @@ export const SpotifyConnect = () => {
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] p-5 relative overflow-hidden group shadow-2xl"
+            className="w-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl p-6 relative group shadow-2xl transition-all duration-700 hover:border-white/20"
         >
             {/* Background Glow */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-[#1DB954]/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-[#1DB954]/15 transition-all duration-700" />
 
-            <div className="flex flex-col items-center text-center gap-3 relative z-10">
-                <div className="relative">
-                    <div className="w-14 h-14 bg-[#1DB954] rounded-[1.2rem] flex items-center justify-center shadow-[0_0_25px_rgba(29,185,84,0.3)] group-hover:shadow-[0_0_35px_rgba(29,185,84,0.45)] transition-all duration-500">
-                        <SpotifyIcon className="w-8 h-8 text-black" />
+            <div className="flex items-center gap-4 relative z-10">
+                <div className="relative shrink-0">
+                    <div className="w-10 h-10 bg-[#1DB954] rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(29,185,84,0.3)] group-hover:shadow-[0_0_25px_rgba(29,185,84,0.45)] transition-all duration-500">
+                        <SpotifyIcon className="w-6 h-6 text-black" />
                     </div>
                 </div>
 
-                <div className="space-y-0.5">
-                    <h3 className="text-xl font-black text-white tracking-tight uppercase italic aether-font">
+                <div className="flex-1 min-w-0 text-left">
+                    <h3 className="text-xs font-black text-white tracking-widest uppercase italic aether-font">
                         {status?.connected ? 'Synced' : 'Spotify'}
                     </h3>
-                    <p className="text-[10px] text-slate-400 font-medium tech-font tracking-wide">
+                    <p className="text-[9px] text-slate-500 font-bold tech-font tracking-wide uppercase">
                         {status?.connected
                             ? `As ${status.displayName}`
-                            : 'Sync your music vibe'}
+                            : 'Music Sync'}
                     </p>
                 </div>
 
-                <div className="w-full">
+                <div className="shrink-0">
                     {status?.connected ? (
-                        <div className="flex flex-col gap-2">
-                            <Button
-                                variant="ghost"
-                                onClick={() => disconnect()}
-                                disabled={isDisconnecting}
-                                className="w-full h-9 rounded-xl border border-white/5 bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 transition-all duration-300 tech-font uppercase tracking-widest text-[8px] font-black"
-                            >
-                                {isDisconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Disconnect'}
-                            </Button>
-                        </div>
+                        <Button
+                            variant="ghost"
+                            onClick={() => disconnect()}
+                            disabled={isDisconnecting}
+                            className="h-8 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 transition-all duration-300 tech-font uppercase tracking-widest text-[8px] font-black"
+                        >
+                            {isDisconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Off'}
+                        </Button>
                     ) : (
                         <Button
                             onClick={() => connect()}
                             disabled={isConnecting}
-                            className="w-full h-12 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] text-white border border-white/10 hover:border-[#1DB954]/40 transition-all duration-500 group/btn shadow-xl shadow-black/40 overflow-hidden relative"
+                            className="h-9 px-4 rounded-xl bg-white/[0.05] hover:bg-[#1DB954] text-white hover:text-black border border-white/10 hover:border-[#1DB954] transition-all duration-500 group/btn shadow-lg"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-tr from-[#1DB954]/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                             <div className="flex items-center justify-center gap-2 relative z-10">
                                 {isConnecting ? (
-                                    <Loader2 className="w-4 h-4 animate-spin text-[#1DB954]" />
+                                    <Loader2 className="w-3 h-3 animate-spin" />
                                 ) : (
-                                    <>
-                                        <SpotifyIcon className="w-4 h-4 text-[#1DB954]" />
-                                        <span className="text-[9px] font-black uppercase tracking-wide aether-font italic">Connect Spotify</span>
-                                    </>
+                                    <span className="text-[9px] font-black uppercase tracking-wider italic">Sync</span>
                                 )}
                             </div>
                         </Button>
                     )}
                 </div>
-
-                <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.15em] tech-font">
-                    Listen while you vibe
-                </p>
             </div>
+
+
         </motion.div>
     );
 };

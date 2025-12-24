@@ -11,6 +11,7 @@ interface PDFReportResponse {
 
 interface GeneratePDFParams {
     postId: string;
+    contentType?: 'feed' | 'short' | 'story';  // Content type for filename
     analysisResults: {
         fake_score: number;
         real_score: number;
@@ -49,7 +50,7 @@ interface GeneratePDFParams {
  */
 export function useDownloadPDFReport() {
     const mutation = useMutation({
-        mutationFn: async ({ postId, analysisResults, reportContent }: GeneratePDFParams) => {
+        mutationFn: async ({ postId, contentType, analysisResults, reportContent }: GeneratePDFParams) => {
             // Call the backend endpoint that proxies to Python AI service
             // The api client already unwraps the axios response
             const response = await api.post<{ success: boolean; data: PDFReportResponse }>(
@@ -62,7 +63,8 @@ export function useDownloadPDFReport() {
 
             // Handle both wrapped { success, data } and unwrapped response formats
             const data = response.data || response as unknown as PDFReportResponse;
-            return data;
+            // Attach contentType to response for filename generation
+            return { ...data, contentType };
         },
         onSuccess: (data) => {
             // Check both nested and flat response structures
@@ -84,7 +86,10 @@ export function useDownloadPDFReport() {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = pdfData.filename || 'truevibe_report.pdf';
+                // Generate filename with content type and date
+                const typeLabel = (data as any).contentType || 'feed';
+                const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(' ', '');
+                link.download = `truevibe-${typeLabel}-report-${dateStr}.pdf`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);

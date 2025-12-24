@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
+import { Play, Pause, SkipForward, Music } from 'lucide-react';
 import { useSpotify } from '@/hooks/useSpotify';
 import { useState, useEffect, useRef } from 'react';
 
@@ -47,7 +47,7 @@ const extractDominantColor = (imageUrl: string): Promise<string> => {
 };
 
 export const SpotifyPlayer = () => {
-    const { nowPlaying, isLoading, play, pause, next, previous, isPlaying } = useSpotify();
+    const { nowPlaying, isLoading, play, pause, next, isPlaying } = useSpotify();
     const [dominantColor, setDominantColor] = useState('#1DB954');
     const lastAlbumArt = useRef<string>('');
 
@@ -79,10 +79,7 @@ export const SpotifyPlayer = () => {
         next();
     };
 
-    const handlePrevious = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        previous();
-    };
+
 
     // Not playing - show idle state
     if (!hasTrack) {
@@ -90,25 +87,25 @@ export const SpotifyPlayer = () => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] p-5 relative overflow-hidden shadow-2xl"
+                className="w-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl p-4 relative group shadow-2xl transition-all duration-700 hover:border-white/20"
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-[#1DB954]/10 flex items-center justify-center">
-                        <Music className="w-5 h-5 text-[#1DB954]" />
+                    <div className="w-9 h-9 rounded-xl bg-[#1DB954]/10 flex items-center justify-center">
+                        <Music className="w-4 h-4 text-[#1DB954]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black text-white uppercase tracking-tight aether-font italic">
-                            Spotify Connected
+                        <p className="text-[10px] font-black text-white uppercase tracking-widest aether-font italic">
+                            Spotify Sync
                         </p>
-                        <p className="text-[8px] text-[#1DB954] font-bold uppercase tracking-widest tech-font">
-                            Play something to see it here
+                        <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest tech-font">
+                            Idle mode
                         </p>
                     </div>
-                    <div className="flex gap-0.5 items-end h-4">
+                    <div className="flex gap-0.5 items-end h-3">
                         {[0.3, 0.5, 0.4].map((h, i) => (
                             <div
                                 key={i}
-                                className="w-[2px] bg-[#1DB954]/40 rounded-full"
+                                className="w-[1.5px] bg-[#1DB954]/40 rounded-full"
                                 style={{ height: `${h * 100}%` }}
                             />
                         ))}
@@ -123,7 +120,7 @@ export const SpotifyPlayer = () => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="w-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 relative overflow-hidden group shadow-2xl"
+            className="w-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl p-5 relative group shadow-2xl transition-all duration-700 hover:border-white/20"
             style={{
                 background: `linear-gradient(135deg, ${dominantColor}15 0%, transparent 100%)`,
             }}
@@ -147,7 +144,7 @@ export const SpotifyPlayer = () => {
                     <motion.div
                         animate={isPlaying ? { rotate: 360 } : {}}
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="w-16 h-16 rounded-full overflow-hidden border-2 shadow-lg"
+                        className="w-12 h-12 rounded-full overflow-hidden border-2 shadow-lg"
                         style={{ borderColor: `${dominantColor}60` }}
                     >
                         <img
@@ -160,21 +157,17 @@ export const SpotifyPlayer = () => {
                         className="absolute inset-0 rounded-full border pointer-events-none"
                         style={{ borderColor: `${dominantColor}20` }}
                     />
-                    <div
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[#030712] rounded-full border"
-                        style={{ borderColor: `${dominantColor}60` }}
-                    />
                 </div>
 
                 <div className="flex-1 min-w-0">
                     <div className="flex flex-col">
                         <motion.h4
-                            className="text-[14px] font-black text-white uppercase tracking-tight truncate aether-font italic"
+                            className="text-[11px] font-black text-white uppercase tracking-tight truncate aether-font italic"
                         >
                             {track.name}
                         </motion.h4>
                         <p
-                            className="text-[11px] font-bold uppercase tracking-widest truncate tech-font"
+                            className="text-[9px] font-bold uppercase tracking-widest truncate tech-font opacity-80"
                             style={{ color: dominantColor }}
                         >
                             {track.artists}
@@ -198,34 +191,27 @@ export const SpotifyPlayer = () => {
                 </div>
 
                 {/* Playback Controls */}
-                <div className="shrink-0 flex items-center gap-1">
-                    <button
-                        onClick={handlePrevious}
-                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
-                    >
-                        <SkipBack className="w-3 h-3 text-white/70" />
-                    </button>
-
+                <div className="shrink-0 flex items-center gap-1.5">
                     <button
                         onClick={handlePlayPause}
-                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg"
+                        className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-lg"
                         style={{
                             backgroundColor: dominantColor,
-                            boxShadow: `0 0 20px ${dominantColor}50`
+                            boxShadow: `0 0 15px ${dominantColor}50`
                         }}
                     >
                         {isPlaying ? (
-                            <Pause className="w-4 h-4 text-black" />
+                            <Pause className="w-3.5 h-3.5 text-black" />
                         ) : (
-                            <Play className="w-4 h-4 text-black ml-0.5" />
+                            <Play className="w-3.5 h-3.5 text-black ml-0.5" />
                         )}
                     </button>
 
                     <button
                         onClick={handleNext}
-                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all active:scale-90"
+                        className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all active:scale-95"
                     >
-                        <SkipForward className="w-3 h-3 text-white/70" />
+                        <SkipForward className="w-3.5 h-3.5 text-white/70" />
                     </button>
                 </div>
             </div>

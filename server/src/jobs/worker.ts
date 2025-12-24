@@ -3,6 +3,7 @@ import { getRedisClient } from '../config/redis.js';
 import { Media } from '../modules/posts/Media.model.js';
 import { Post } from '../modules/posts/Post.model.js';
 import { Short } from '../modules/shorts/Short.model.js';
+import { Story } from '../modules/stories/Story.model.js';
 import { AIAnalysis, AIClassification } from '../modules/posts/AIAnalysis.model.js';
 import { Notification } from '../modules/notifications/Notification.model.js';
 import { Profile } from '../modules/users/Profile.model.js';
@@ -228,49 +229,54 @@ function getTrustLevel(classification: AIClassification): string {
     }
 }
 
-// AI Analysis Worker
+// AI Analysis Worker - supports posts, shorts, and stories
 const aiAnalysisWorker = new Worker(
     'ai-analysis',
-    async (job: Job<{ mediaId: string; postId: string }>) => {
-        const { mediaId, postId } = job.data;
-        debugLog(`Processing AI analysis for media: ${mediaId}`);
+    async (job: Job<{ mediaId: string; postId: string; contentType?: 'post' | 'short' | 'story'; mediaUrl?: string }>) => {
+        const { mediaId, postId, contentType = 'post', mediaUrl } = job.data;
+        debugLog(`Processing AI analysis for ${contentType}: ${mediaId}`);
 
         try {
-            // Get media
-            const media = await Media.findById(mediaId);
-            if (!media) {
-                throw new Error('Media not found');
-            }
-
-            const isVideo = media.type === 'video' || media.url.includes('/video/');
-
-            // Use originalUrl for AI analysis (uncompressed, highest quality)
-            // Since getOriginalUrl now correctly handles video resource_type,
-            // originalUrl should have correct /video/upload/ or /image/upload/ path
             let analysisUrl: string;
+            let isVideo = false;
+            let ownerId: string | undefined;
 
-            if (media.originalUrl && media.originalUrl.length > 50) {
-                // Prefer originalUrl if it looks valid (not truncated)
-                analysisUrl = media.originalUrl;
-            } else if (isVideo) {
-                // Fallback for videos: use url but clean transformations
-                analysisUrl = media.url.replace(/\/upload\/[^v][^/]*\//, '/upload/');
+            // Handle different content types
+            if (contentType === 'short') {
+                const short = await Short.findById(mediaId);
+                if (!short) {
+                    throw new Error('Short not found');
+                }
+                analysisUrl = short.videoUrl;
+                isVideo = true;
+                ownerId = short.userId;
+            } else if (contentType === 'story') {
+                const story = await Story.findById(mediaId);
+                if (!story) {
+                    throw new Error('Story not found');
+                }
+                analysisUrl = story.mediaUrl;
+                isVideo = story.mediaType === 'video';
+                ownerId = story.userId;
             } else {
-                // Fallback for images: use url directly
-                analysisUrl = media.url;
+                // Default: post with media model
+                const media = await Media.findById(mediaId);
+                if (!media) {
+                    throw new Error('Media not found');
+                }
+                isVideo = media.type === 'video' || media.url.includes('/video/');
+                if (media.originalUrl && media.originalUrl.length > 50) {
+                    analysisUrl = media.originalUrl;
+                } else if (isVideo) {
+                    analysisUrl = media.url.replace(/\/upload\/[^v][^/]*\//, '/upload/');
+                } else {
+                    analysisUrl = media.url;
+                }
+                const post = await Post.findById(postId);
+                ownerId = post?.userId;
             }
 
-            // Enhanced logging for debugging
-            debugLog(`Media analysis request:`, {
-                mediaId,
-                mediaType: media.type,
-                isVideoDetected: isVideo,
-                originalUrl: media.originalUrl ? media.originalUrl.substring(0, 100) + '...' : 'N/A',
-                url: media.url.substring(0, 100) + '...',
-                analysisUrl: analysisUrl.substring(0, 100) + '...'
-            });
-            debugLog(`Analyzing ${isVideo ? 'VIDEO' : 'IMAGE'}: ${analysisUrl.substring(0, 80)}...`);
-
+            debugLog(`Analyzing ${isVideo ? 'VIDEO' : 'IMAGE'} for ${contentType}: ${analysisUrl.substring(0, 80)}...`);
 
             // Create pending analysis record
             let analysis = await AIAnalysis.findOne({ mediaId });
@@ -285,27 +291,22 @@ const aiAnalysisWorker = new Worker(
                 await analysis.save();
             }
 
-            // NEW: Emit analysis started event for real-time UI updates
-            if (postId) {
-                const post = await Post.findById(postId);
-                if (post) {
-                    emitToUser(post.userId.toString(), 'ai:analysis-started', {
-                        postId,
-                        mediaId,
-                        status: 'analyzing',
-                        message: isVideo ? 'Analyzing video for deepfakes...' : 'Analyzing image for authenticity...',
-                    });
-                    debugLog(`Emitted ai:analysis-started for post ${postId}`);
-                }
+            // Emit analysis started event
+            if (ownerId) {
+                emitToUser(ownerId, 'ai:analysis-started', {
+                    contentType,
+                    contentId: mediaId,
+                    status: 'analyzing',
+                    message: isVideo ? 'Analyzing video for deepfakes...' : 'Analyzing image for authenticity...',
+                });
             }
 
-            // Perform analysis using original URL
-
+            // Perform analysis
             const result = await analyzeMedia(analysisUrl);
             const classification = getClassification(result.confidenceScore);
             const trustLevel = getTrustLevel(classification);
 
-            // Update analysis
+            // Update analysis record
             analysis.confidenceScore = result.confidenceScore;
             analysis.classification = classification;
             analysis.analysisDetails = result.analysisDetails as any;
@@ -314,85 +315,86 @@ const aiAnalysisWorker = new Worker(
             analysis.status = 'completed';
             await analysis.save();
 
-            // Update media
-            media.aiAnalysisId = analysis._id;
-            await media.save();
-
-            // Update post
-            if (postId) {
-                await Post.findByIdAndUpdate(postId, {
+            // Update the source content based on type
+            if (contentType === 'short') {
+                await Short.findByIdAndUpdate(mediaId, {
                     trustLevel,
                     aiAnalysisId: analysis._id,
                 });
-
-                // Get post for notification
-                const post = await Post.findById(postId);
-                if (post) {
-                    // Emit real-time event with full analysis details
-                    emitToUser(post.userId.toString(), 'ai:analysis-complete', {
-                        postId,
-                        analysis: {
-                            confidenceScore: result.confidenceScore,
-                            classification,
-                            trustLevel,
-                            // Include full analysis details for dynamic badge updates
-                            fakeScore: result.fakeScore,
-                            realScore: result.realScore,
-                            processingTimeMs: result.processingTimeMs,
-                            facesDetected: result.analysisDetails?.facesDetected,
-                            avgFaceScore: result.analysisDetails?.avgFaceScore,
-                            avgFftScore: result.analysisDetails?.avgFftScore,
-                            avgEyeScore: result.analysisDetails?.avgEyeScore,
-                            fftBoost: result.analysisDetails?.fftBoost,
-                            eyeBoost: result.analysisDetails?.eyeBoost,
-                            temporalBoost: result.analysisDetails?.temporalBoost,
-                            mediaType: result.analysisDetails?.mediaType,
-                            framesAnalyzed: result.analysisDetails?.framesAnalyzed,
-                            // NEW: Filter detection data for UI
-                            contentType: result.analysisDetails?.contentType,
-                            hasFilter: result.analysisDetails?.hasFilter,
-                            filterIntensity: result.analysisDetails?.filterIntensity,
-                            filterAnalysis: result.analysisDetails?.filterAnalysis,
-                            multiFaceAnalysis: result.analysisDetails?.multiFaceAnalysis,
-                        },
+            } else if (contentType === 'story') {
+                await Story.findByIdAndUpdate(mediaId, {
+                    trustLevel,
+                    aiAnalysisId: analysis._id,
+                });
+            } else {
+                // Post: update both media and post
+                const media = await Media.findById(mediaId);
+                if (media) {
+                    media.aiAnalysisId = analysis._id;
+                    await media.save();
+                }
+                if (postId) {
+                    await Post.findByIdAndUpdate(postId, {
+                        trustLevel,
+                        aiAnalysisId: analysis._id,
                     });
+                }
+            }
 
-                    // Create notification
+            // Emit completion event
+            if (ownerId) {
+                emitToUser(ownerId, 'ai:analysis-complete', {
+                    contentType,
+                    contentId: mediaId,
+                    postId,
+                    analysis: {
+                        confidenceScore: result.confidenceScore,
+                        classification,
+                        trustLevel,
+                        fakeScore: result.fakeScore,
+                        realScore: result.realScore,
+                        processingTimeMs: result.processingTimeMs,
+                        facesDetected: result.analysisDetails?.facesDetected,
+                        avgFaceScore: result.analysisDetails?.avgFaceScore,
+                        avgFftScore: result.analysisDetails?.avgFftScore,
+                        avgEyeScore: result.analysisDetails?.avgEyeScore,
+                        mediaType: result.analysisDetails?.mediaType,
+                        framesAnalyzed: result.analysisDetails?.framesAnalyzed,
+                    },
+                });
+
+                // Create notification for posts (not stories since they expire)
+                if (contentType !== 'story') {
                     await Notification.create({
-                        userId: post.userId,
+                        userId: ownerId,
                         type: 'system',
                         title: 'AI Analysis Complete',
-                        body: `Your post has been analyzed. Trust level: ${trustLevel}`,
-                        link: `/app/posts/${postId}`,
+                        body: `Your ${contentType} has been analyzed. Trust level: ${trustLevel}`,
+                        link: contentType === 'short' ? `/app/shorts/${mediaId}` : `/app/posts/${postId}`,
                         isRead: false,
                     });
                 }
             }
 
-            debugLog(`AI analysis completed for media: ${mediaId} - ${classification}`);
+            debugLog(`AI analysis completed for ${contentType}: ${mediaId} - ${classification}`);
             return { mediaId, classification, trustLevel };
         } catch (error: any) {
             const errorMessage = error?.message || String(error);
-            errorLog(`AI analysis failed for media: ${mediaId}`, isProd ? 'Error occurred' : error);
+            errorLog(`AI analysis failed for ${contentType || 'content'}: ${mediaId}`, isProd ? 'Error occurred' : error);
 
-            // Check if this is a 404 "resource not found" error
             const is404Error = errorMessage.includes('404') ||
                 errorMessage.includes('not found') ||
-                errorMessage.includes('Resource not found') ||
-                errorMessage.includes('Could not download');
+                errorMessage.includes('Resource not found');
 
             if (is404Error) {
-                // Media was deleted - mark as skipped and don't retry
-                debugLog(`Media ${mediaId} no longer exists, marking as skipped`);
+                debugLog(`Content ${mediaId} no longer exists, marking as skipped`);
                 await AIAnalysis.findOneAndUpdate(
                     { mediaId },
-                    { status: 'skipped', errorMessage: 'Media resource no longer exists' }
+                    { status: 'skipped', errorMessage: 'Resource no longer exists' }
                 );
-                // Return successfully so job doesn't retry
                 return { mediaId, classification: 'SKIPPED', trustLevel: 'pending' };
             }
 
-            // For other errors, update status and let the job retry
             await AIAnalysis.findOneAndUpdate(
                 { mediaId },
                 { status: 'failed', errorMessage }
@@ -403,11 +405,10 @@ const aiAnalysisWorker = new Worker(
     },
     {
         connection: getRedisClient(),
-        concurrency: 3, // Process 3 jobs simultaneously
+        concurrency: 3,
         skipVersionCheck: true,
-        // Removed restrictive rate limiter for faster processing
-        lockDuration: 300000, // 5 minute lock for video processing
-        stalledInterval: 30000, // Check stalled jobs every 30s
+        lockDuration: 300000,
+        stalledInterval: 30000,
         maxStalledCount: 2,
         removeOnComplete: { count: 50 },
         removeOnFail: { count: 100 },

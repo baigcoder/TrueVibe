@@ -259,14 +259,14 @@ export function PostCard({ post }: PostCardProps) {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="group/post relative"
         >
-            <Card className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl rounded-[2.5rem] relative">
+            <Card className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] relative">
                 {/* Technical Grid Pattern Overlay */}
                 <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
 
                 {/* Post Glow Accent */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 blur-[100px] pointer-events-none group-hover/post:bg-primary/20 transition-colors duration-1000" />
 
-                <CardHeader className="flex flex-row items-start gap-4 p-6 pb-4 space-y-0 relative z-10">
+                <CardHeader className="flex flex-row items-start gap-3 sm:gap-4 p-4 sm:p-6 pb-2 sm:pb-4 space-y-0 relative z-10">
                     <div className="relative group/avatar cursor-pointer" onClick={() => navigate({ to: `/app/profile/${postOwnerId}` })}>
                         {/* Avatar Ring Animation */}
                         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-primary via-secondary to-accent opacity-0 group-hover/avatar:opacity-100 blur-sm transition-all duration-700 animate-spin-slow" />
@@ -364,7 +364,7 @@ export function PostCard({ post }: PostCardProps) {
                     </div>
                 </CardHeader>
 
-                <CardContent className="px-6 pb-6 space-y-5 relative z-10">
+                <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5 relative z-10">
                     {/* AI Logic Analysis - Technical Implementation */}
                     {((postImage || postVideo) || normalizedTrust !== 'authentic' || post.aiAnalysis) && (
                         <motion.div
@@ -435,7 +435,7 @@ export function PostCard({ post }: PostCardProps) {
                             </div>
                         </div>
                     ) : (
-                        <p className="text-[16px] leading-[1.6] font-medium text-slate-200 whitespace-pre-wrap tracking-tight selection:bg-primary/30">
+                        <p className="text-[14px] sm:text-[16px] leading-[1.6] font-medium text-slate-200 whitespace-pre-wrap tracking-tight selection:bg-primary/30">
                             {post.content}
                         </p>
                     )}
@@ -633,6 +633,7 @@ export function PostCard({ post }: PostCardProps) {
                 onGenerate={generateReport}
                 error={reportError}
                 postId={post._id}
+                contentType={post.media?.[0]?.type === 'video' || post.aiAnalysis?.mediaType === 'video' ? 'short' : 'feed'}
             />
         </motion.div>
     );

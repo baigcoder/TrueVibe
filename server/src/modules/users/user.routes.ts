@@ -7,6 +7,9 @@ import { authenticate, optionalAuth } from '../../shared/middleware/auth.middlew
 import { validateBody } from '../../shared/middleware/validate.middleware.js';
 import { updateProfileSchema, updateSettingsSchema } from './user.schema.js';
 import { Profile } from './Profile.model.js';
+import { AIReport } from '../posts/AIReport.model.js';
+import { Post } from '../posts/Post.model.js';
+
 
 const router = Router();
 
@@ -37,6 +40,71 @@ router.post('/follow-requests/:id/reject', authenticate, userController.rejectFo
 // Protected routes with :id parameter (must come AFTER specific routes)
 router.patch('/me', authenticate, validateBody(updateProfileSchema), userController.updateProfile);
 router.put('/settings', authenticate, validateBody(updateSettingsSchema), userController.updateSettings);
+
+// Get all user's AI reports
+router.get('/me/reports', authenticate, async (req, res, next) => {
+    try {
+        const userId = req.user!.userId;
+        const { type } = req.query; // 'post', 'short', 'story', or undefined for all
+
+        // Get all reports for this user
+        const reports = await AIReport.find({ userId })
+            .sort({ generatedAt: -1 })
+            .lean();
+
+        // Get post IDs to fetch post details
+        const postIds = reports.map(r => r.postId);
+        const posts = await Post.find({ _id: { $in: postIds } })
+            .select('content media createdAt trustLevel')
+            .populate('media', 'url type thumbnail')
+            .lean();
+
+        // Create a map for quick lookup
+        const postMap = new Map(posts.map(p => [p._id.toString(), p]));
+
+        // Combine reports with post data
+        const reportsWithPosts = reports.map(report => {
+            const post = postMap.get(report.postId.toString());
+            return {
+                ...report,
+                post: post ? {
+                    _id: post._id,
+                    content: post.content?.substring(0, 100) + (post.content && post.content.length > 100 ? '...' : ''),
+                    thumbnail: (post.media as any[])?.[0]?.type === 'video'
+                        ? (post.media as any[])?.[0]?.thumbnail || (post.media as any[])?.[0]?.url
+                        : (post.media as any[])?.[0]?.url,
+                    mediaType: (post.media as any[])?.[0]?.type || 'text',
+                    createdAt: post.createdAt,
+                } : null,
+            };
+        });
+
+        // Calculate summary stats
+        const totalReports = reports.length;
+        const verdictCounts = {
+            authentic: reports.filter(r => r.report?.verdict === 'authentic').length,
+            suspicious: reports.filter(r => r.report?.verdict === 'suspicious').length,
+            fake: reports.filter(r => r.report?.verdict === 'fake').length,
+        };
+        const avgConfidence = reports.length > 0
+            ? reports.reduce((sum, r) => sum + (r.report?.confidence || 0), 0) / reports.length
+            : 0;
+
+        res.json({
+            success: true,
+            data: {
+                reports: reportsWithPosts,
+                summary: {
+                    totalReports,
+                    verdictCounts,
+                    avgConfidence: Math.round(avgConfidence * 100),
+                },
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 
 // Cover image upload
 router.patch('/me/cover', authenticate, upload.single('coverImage'), async (req, res, next) => {

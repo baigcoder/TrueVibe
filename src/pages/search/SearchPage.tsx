@@ -90,10 +90,10 @@ export default function SearchPage() {
                         isFocused && "opacity-100"
                     )} />
 
-                    <div className="relative bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-xl sm:rounded-[2rem] p-1.5 sm:p-3 flex items-center gap-1.5 sm:gap-4 shadow-2xl transition-all duration-500 hover:border-white/20 group">
-                        <div className="pl-3 sm:pl-4">
+                    <div className="relative bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl sm:rounded-[2rem] p-1.5 sm:p-2.5 flex items-center gap-1 sm:gap-4 shadow-2xl transition-all duration-500 hover:border-white/20 group">
+                        <div className="pl-2.5 sm:pl-4">
                             <Search className={cn(
-                                "w-4 h-4 sm:w-5 sm:h-5 transition-all duration-500",
+                                "w-3.5 h-3.5 sm:w-5 sm:h-5 transition-all duration-500",
                                 isFocused ? "text-primary scale-110 rotate-12" : "text-slate-500"
                             )} />
                         </div>
@@ -103,7 +103,7 @@ export default function SearchPage() {
                             onBlur={() => setIsFocused(false)}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search network..."
-                            className="flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 text-white font-bold placeholder:text-slate-500/50 h-10 sm:h-14 text-sm sm:text-lg italic"
+                            className="flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 text-white font-bold placeholder:text-slate-500/50 h-9 sm:h-14 text-xs sm:text-lg italic px-1"
                         />
                         <AnimatePresence>
                             {query && (
@@ -111,23 +111,24 @@ export default function SearchPage() {
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
+                                    className="shrink-0"
                                 >
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => setQuery("")}
-                                        className="h-7 w-7 sm:h-10 sm:w-10 text-slate-500 hover:text-white rounded-full bg-white/5 mr-0.5"
+                                        className="h-6 w-6 sm:h-10 sm:w-10 text-slate-500 hover:text-white rounded-full bg-white/5"
                                     >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="w-3 h-3" />
                                     </Button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                        <Button className="bg-gradient-to-br from-primary via-blue-500 to-secondary hover:brightness-110 text-white font-black uppercase italic tracking-wider rounded-lg sm:rounded-2xl px-3 sm:px-8 h-9 sm:h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 text-[9px] sm:text-sm">
-                            {isLoading ? <Loader2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-spin" /> : (
+                        <Button className="bg-gradient-to-br from-primary via-blue-500 to-secondary hover:brightness-110 text-white font-black uppercase italic tracking-wider rounded-xl sm:rounded-2xl px-3 sm:px-8 h-8 sm:h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 text-[8px] sm:text-sm">
+                            {isLoading ? <Loader2 className="w-3 h-3 sm:w-5 sm:h-5 animate-spin" /> : (
                                 <div className="flex items-center gap-1 sm:gap-2">
-                                    <span className="hidden xs:inline">Sync</span>
-                                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span className="xs:inline">Sync</span>
+                                    <TrendingUp className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                                 </div>
                             )}
                         </Button>

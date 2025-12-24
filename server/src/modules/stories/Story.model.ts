@@ -23,6 +23,9 @@ export interface IStory extends Document {
         emoji: string;
         createdAt: Date;
     }[];
+    // AI Analysis fields
+    trustLevel: 'authentic' | 'suspicious' | 'fake' | 'pending';
+    aiAnalysisId?: mongoose.Types.ObjectId;
     expiresAt: Date;
     isDeleted: boolean;
     createdAt: Date;
@@ -70,6 +73,16 @@ const storySchema = new Schema<IStory>(
             emoji: { type: String, required: true },
             createdAt: { type: Date, default: Date.now },
         }],
+        // AI Analysis fields
+        trustLevel: {
+            type: String,
+            enum: ['authentic', 'suspicious', 'fake', 'pending'],
+            default: 'pending',
+        },
+        aiAnalysisId: {
+            type: Schema.Types.ObjectId,
+            ref: 'AIAnalysis',
+        },
         expiresAt: {
             type: Date,
             required: true,

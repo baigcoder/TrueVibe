@@ -400,7 +400,7 @@ export default function AppLayout() {
 
             {/* Right Sidebar - Premium Gen Z Lifestyle Hub */}
             {isFeedPage && (
-                <aside className="hidden xl:flex flex-col w-[360px] fixed right-0 top-0 bottom-0 z-20 py-6 pr-8 space-y-6 overflow-y-auto scrollbar-hide">
+                <aside className="hidden xl:flex flex-col w-[360px] fixed right-0 top-0 bottom-0 z-20 pt-6 pb-6 px-4 space-y-5 overflow-hidden">
                     {/* Aurora Background Effects & Technical Grid Overlay */}
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
                         <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
@@ -436,15 +436,15 @@ export default function AppLayout() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-700 hover:border-white/20 relative group/card"
+                        className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl transition-all duration-700 hover:border-white/20 relative group/card"
                     >
                         {/* Static Technical Accent */}
                         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
 
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 bg-white/[0.02]">
                             <div className="flex items-center gap-3">
                                 <Activity className="w-4 h-4 text-secondary drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
-                                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic italic">Requests</h3>
+                                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic">Requests</h3>
                             </div>
                             {followRequests.length > 0 && (
                                 <div className="px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/30">
@@ -453,7 +453,7 @@ export default function AppLayout() {
                             )}
                         </div>
 
-                        <div className="p-4 max-h-[220px] overflow-y-auto scrollbar-hide space-y-3">
+                        <div className="p-4 space-y-3 max-h-[25vh] overflow-y-auto scrollbar-hide">
                             {loadingRequests ? (
                                 <div className="flex items-center justify-center py-10">
                                     <Loader2 className="w-5 h-5 animate-spin text-secondary" />
@@ -465,7 +465,7 @@ export default function AppLayout() {
                                         initial={{ opacity: 0, x: 10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.05 }}
-                                        className="rounded-2xl p-3 flex items-center gap-3 bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+                                        className="rounded-2xl p-3 flex items-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                                     >
                                         <Avatar
                                             className="w-10 h-10 border-2 border-white/10 rounded-xl shadow-lg cursor-pointer hover:border-secondary transition-all"
@@ -520,7 +520,7 @@ export default function AppLayout() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl relative transition-all duration-700 hover:border-white/20 group/suggestions"
+                        className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl relative transition-all duration-700 hover:border-white/20 group/suggestions"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
@@ -539,7 +539,7 @@ export default function AppLayout() {
                         </div>
 
                         {/* Vertical List Area */}
-                        <div className="p-4 space-y-3">
+                        <div className="p-4 space-y-3 max-h-[40vh] overflow-y-auto scrollbar-hide">
                             {loadingSuggestions ? (
                                 Array(3).fill(0).map((_, i) => (
                                     <div key={i} className="w-full flex items-center gap-3 p-3 bg-white/5 rounded-2xl animate-pulse">
@@ -565,7 +565,7 @@ export default function AppLayout() {
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                             onClick={() => navigate({ to: `/app/profile/${suggestedUser.userId || suggestedUser._id}` })}
-                                            className="w-full flex items-center gap-4 p-3.5 bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 hover:border-primary/40 rounded-[1.8rem] transition-all duration-500 cursor-pointer group relative overflow-hidden"
+                                            className="w-full flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-primary/40 rounded-3xl transition-all duration-500 cursor-pointer group relative overflow-hidden"
                                         >
                                             {/* Profile Aura */}
                                             <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -634,23 +634,24 @@ export default function AppLayout() {
 
             {/* Mobile Nav */}
             <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/10 z-50 shadow-2xl glass-panel pb-safe">
-                <div className="h-full flex items-center justify-around px-4 max-w-md mx-auto">
-                    {/* Only show essential nav items on mobile: Feed, Shorts, Search, Chat */}
+                <div className="h-full flex items-center justify-around px-2 max-w-lg mx-auto">
+                    {/* Mobile nav items: Feed, Shorts, Search, Analytics, Chat, Profile */}
                     {[
                         { path: "/app/feed", icon: Home, label: "Feed" },
                         { path: "/app/shorts", icon: Film, label: "Shorts" },
                         { path: "/app/search", icon: Search, label: "Search" },
+                        { path: "/app/analytics", icon: BarChart2, label: "Analytics" },
                         { path: "/app/chat", icon: MessageSquare, label: "Chat" },
                     ].map((item) => (
                         <Link key={item.path} to={item.path}>
-                            <Button variant="ghost" size="icon" className={cn("h-12 w-12 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive(item.path) ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}
+                            <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive(item.path) ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}
                             >
                                 <item.icon className="w-5 h-5" />
                             </Button>
                         </Link>
                     ))}
                     <Link to="/app/profile/me">
-                        <Button variant="ghost" size="icon" className={cn("h-12 w-12 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive("/app/profile") ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}>
+                        <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive("/app/profile") ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}>
                             <User className="w-5 h-5" />
                         </Button>
                     </Link>
@@ -688,96 +689,152 @@ export default function AppLayout() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsProfileDrawerOpen(false)}
-                            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] lg:hidden"
+                            className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] lg:hidden"
                         />
                         {/* Drawer Content */}
                         <motion.div
-                            initial={{ x: '100%', opacity: 0.5 }}
+                            initial={{ x: '100%', opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: '100%', opacity: 0.5 }}
+                            exit={{ x: '100%', opacity: 0 }}
                             transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-                            className="fixed right-0 top-0 bottom-0 w-[280px] bg-[#0c0c0e]/95 backdrop-blur-3xl border-l border-white/10 z-[101] shadow-2xl lg:hidden flex flex-col pt-safe px-4"
+                            className="fixed right-0 top-0 bottom-0 w-[300px] bg-[#050505]/95 backdrop-blur-3xl border-l border-white/10 z-[101] shadow-[0_0_50px_rgba(0,0,0,1)] lg:hidden flex flex-col pt-safe px-4 overflow-hidden"
                         >
+                            {/* Decorative Grid Overlay */}
+                            <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+                            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
+
                             {/* Header */}
-                            <div className="flex items-center justify-between py-6 px-2">
-                                <h3 className="text-xl font-heading font-black text-white italic uppercase bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Actions</h3>
+                            <div className="flex items-center justify-between py-6 px-2 relative z-10">
+                                <div>
+                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter aether-font leading-none">Actions</h3>
+                                    <div className="h-0.5 w-8 bg-primary rounded-full mt-1" />
+                                </div>
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setIsProfileDrawerOpen(false)}
-                                    className="rounded-xl h-10 w-10 border border-white/5 hover:bg-white/5 active:scale-95"
+                                    className="rounded-xl h-10 w-10 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 active:scale-95 group transition-all"
                                 >
-                                    <X className="w-5 h-5 text-white/70" />
+                                    <X className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
                                 </Button>
                             </div>
 
-                            {/* Profile Info */}
-                            <div className="p-4 bg-white/5 rounded-3xl border border-white/5 mb-6 group">
-                                <Link
-                                    to="/app/profile/me"
-                                    onClick={() => setIsProfileDrawerOpen(false)}
-                                    className="flex items-center gap-4"
-                                >
-                                    <Avatar className="h-14 w-14 border-2 border-primary/30 group-hover:border-primary transition-colors">
-                                        <AvatarImage src={profile?.avatar} />
-                                        <AvatarFallback className="bg-primary/20 text-primary font-bold text-lg">
-                                            {profile?.name?.[0]?.toUpperCase() || '?'}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="font-heading font-black text-white uppercase italic truncate text-lg">{profile?.name || 'User'}</span>
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">@{profile?.handle || 'user'}</span>
-                                    </div>
-                                </Link>
+                            {/* Profile Info - High Fidelity */}
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                                className="relative z-10 mb-8 px-2"
+                            >
+                                <div className="p-5 bg-white/[0.03] rounded-3xl border border-white/10 widget-card group overflow-hidden relative">
+                                    <Link
+                                        to="/app/profile/me"
+                                        onClick={() => setIsProfileDrawerOpen(false)}
+                                        className="flex flex-col gap-4"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative">
+                                                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl group-hover:bg-primary/40 transition-colors" />
+                                                <Avatar className="h-16 w-16 border-2 border-white/10 rounded-2xl shadow-2xl relative z-10">
+                                                    <AvatarImage src={profile?.avatar} className="object-cover" />
+                                                    <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black text-xl">
+                                                        {profile?.name?.[0]?.toUpperCase() || '?'}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-lg border-2 border-[#050505] flex items-center justify-center z-20">
+                                                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="font-black text-white uppercase italic truncate text-lg tracking-tight leading-tight">{profile?.name || 'User'}</span>
+                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest tech-font">ID_SYSTEM_00{profile?._id?.slice(-3) || '001'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Status_Integrity</span>
+                                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">VALIDATED_REAL</span>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
+                                                <ChevronRight className="w-4 h-4" />
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </motion.div>
+
+                            {/* Menu Items - Staggered */}
+                            <div className="space-y-3 flex-1 overflow-y-auto scrollbar-hide relative z-10 px-1">
+                                {[
+                                    { icon: User, label: "Access Profile", sub: "View identity node", route: "/app/profile/me", color: "text-primary", bg: "bg-primary/10" },
+                                    { icon: Settings, label: "System Settings", sub: "Configure directives", route: "/app/settings", color: "text-secondary", bg: "bg-secondary/10" },
+                                    { icon: Bell, label: "Signal Feed", sub: "Neural notifications", route: "/app/notifications", color: "text-orange-400", bg: "bg-orange-500/10", count: totalUnreadCount }
+                                ].map((item, idx) => (
+                                    <motion.div
+                                        key={item.label}
+                                        initial={{ x: 20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.2 + idx * 0.1 }}
+                                    >
+                                        <Link to={item.route as any} onClick={() => setIsProfileDrawerOpen(false)}>
+                                            <Button variant="ghost" className="w-full justify-start gap-4 h-20 rounded-3xl bg-white/[0.03] border border-white/5 hover:bg-white/10 hover:border-white/10 active:scale-[0.98] transition-all group relative overflow-hidden">
+                                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-500", item.bg)}>
+                                                    <item.icon className={cn("w-6 h-6", item.color)} />
+                                                </div>
+                                                <div className="flex flex-col items-start text-left min-w-0">
+                                                    <span className="font-black text-white uppercase tracking-tight text-sm leading-none mb-1">{item.label}</span>
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate max-w-full opacity-60">{item.sub}</span>
+                                                </div>
+                                                {item.count !== undefined && item.count > 0 && (
+                                                    <div className="absolute right-4 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(129,140,248,0.4)]">
+                                                        <span className="text-[10px] font-black text-white">{item.count > 99 ? '99+' : item.count}</span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-20 transition-opacity">
+                                                    <item.icon className="w-12 h-12 text-white" />
+                                                </div>
+                                            </Button>
+                                        </Link>
+                                    </motion.div>
+                                ))}
                             </div>
 
-                            {/* Menu Items */}
-                            <div className="space-y-2 flex-1 overflow-y-auto scrollbar-hide">
-                                <Link to="/app/profile/me" onClick={() => setIsProfileDrawerOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start gap-4 h-14 rounded-2xl bg-white/[0.03] hover:bg-white/10 active:scale-95 transition-all text-white border border-transparent hover:border-primary/20">
-                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                            <User className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <span className="font-bold tracking-tight">Access profile</span>
-                                    </Button>
-                                </Link>
-                                <Link to="/app/settings" onClick={() => setIsProfileDrawerOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start gap-4 h-14 rounded-2xl bg-white/[0.03] hover:bg-white/10 active:scale-95 transition-all text-white border border-transparent hover:border-secondary/20">
-                                        <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                                            <Settings className="w-5 h-5 text-secondary" />
-                                        </div>
-                                        <span className="font-bold tracking-tight">System settings</span>
-                                    </Button>
-                                </Link>
-                                <Link to="/app/notifications" onClick={() => setIsProfileDrawerOpen(false)}>
-                                    <Button variant="ghost" className="w-full justify-start gap-4 h-14 rounded-2xl bg-white/[0.03] hover:bg-white/10 active:scale-95 transition-all text-white relative">
-                                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                                            <Bell className="w-5 h-5 text-orange-400" />
-                                        </div>
-                                        <span className="font-bold tracking-tight">Signal Feed</span>
-                                        {totalUnreadCount > 0 && (
-                                            <span className="absolute right-4 px-2 py-0.5 bg-primary rounded-full text-[10px] font-black">{totalUnreadCount}</span>
-                                        )}
-                                    </Button>
-                                </Link>
-                            </div>
-
-                            {/* Footer / Logout */}
-                            <div className="pb-8 pt-4">
+                            {/* Footer / Logout - KILL SWITCH */}
+                            <motion.div
+                                initial={{ y: 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5 }}
+                                className="pb-10 pt-6 relative z-10 px-2"
+                            >
                                 <Button
                                     onClick={() => {
                                         setIsProfileDrawerOpen(false);
                                         handleLogout();
                                     }}
-                                    className="w-full justify-start gap-4 h-14 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 transition-all text-rose-500 border border-rose-500/10"
+                                    className="w-full justify-center gap-4 h-16 rounded-[2rem] bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 active:scale-95 transition-all duration-500 group relative overflow-hidden shadow-2xl shadow-rose-500/5"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-                                        <LogOut className="w-5 h-5" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="relative z-10 flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                                            <LogOut className="w-5 h-5" />
+                                        </div>
+                                        <span className="font-black uppercase text-sm tracking-[0.3em] aether-font italic">Logout</span>
                                     </div>
-                                    <span className="font-black uppercase text-xs tracking-[0.2em]">Logout_System</span>
+                                    <div className="absolute top-0 right-0 p-2 opacity-5">
+                                        <X className="w-16 h-16" />
+                                    </div>
                                 </Button>
-                                <p className="text-[10px] text-center text-slate-600 mt-6 font-bold uppercase tracking-widest">Version Alpha 1.0.4</p>
-                            </div>
+                                <div className="mt-8 flex flex-col items-center gap-2">
+                                    <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                                        <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em]">Version Alpha 1.0.4</p>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <span className="w-1 h-1 bg-primary/40 rounded-full" />
+                                        <span className="w-1 h-1 bg-secondary/40 rounded-full" />
+                                        <span className="w-1 h-1 bg-orange-500/40 rounded-full" />
+                                    </div>
+                                </div>
+                            </motion.div>
                         </motion.div>
                     </>
                 )}

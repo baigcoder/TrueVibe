@@ -71,12 +71,14 @@ export const notificationQueue = new Queue('notifications', {
 export const addAIAnalysisJob = async (data: {
     mediaId: string;
     postId: string;
+    contentType?: 'post' | 'short' | 'story'; // Type of content being analyzed
+    mediaUrl?: string; // Direct URL for stories/shorts that don't use Media model
 }): Promise<string> => {
     const job = await aiAnalysisQueue.add('analyze-media', data, {
         priority: 1,
         jobId: `ai-${data.mediaId}-${Date.now()}`, // Unique job ID
     });
-    console.log(`[Queue] Added AI job: ${job.id} for media: ${data.mediaId}`);
+    console.log(`[Queue] Added AI job: ${job.id} for ${data.contentType || 'post'}: ${data.mediaId}`);
     return job.id!;
 };
 

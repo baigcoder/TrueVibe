@@ -736,7 +736,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
     return (
         <motion.div
             className={cn(
-                "bg-[#030712]/60 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] group/create transition-all duration-700 border border-white/10",
+                "bg-[#030712]/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] group/create transition-all duration-700 border border-white/10",
                 isExpanded && "bg-[#030712]/80",
                 className
             )}
@@ -749,7 +749,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 isExpanded && "opacity-100"
             )} />
 
-            <div className="p-4 sm:p-6 md:p-8 relative">
+            <div className="p-3 sm:p-6 md:p-8 relative">
                 <div className="flex gap-4 sm:gap-6">
                     <div className="relative pt-1 flex-shrink-0">
                         <motion.div
@@ -783,13 +783,16 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
 
                         <AnimatePresence>
                             {isExpanded && (
-                                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="absolute top-6 right-6">
-                                    <div className="relative w-10 h-10 flex items-center justify-center">
+                                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="absolute top-4 right-4 sm:top-6 sm:right-6">
+                                    <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                                         <svg className="w-full h-full -rotate-90">
-                                            <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
-                                            <circle cx="20" cy="20" r="16" fill="none" stroke={isOverLimit ? "#f43f5e" : progress > 80 ? "#f59e0b" : "#10b981"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 16}`} strokeDashoffset={`${2 * Math.PI * 16 * (1 - progress / 100)}`} className="transition-all duration-500" />
+                                            <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2.5" className="sm:hidden" />
+                                            <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" className="hidden sm:block" />
+
+                                            <circle cx="16" cy="16" r="14" fill="none" stroke={isOverLimit ? "#f43f5e" : progress > 80 ? "#f59e0b" : "#10b981"} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 14}`} strokeDashoffset={`${2 * Math.PI * 14 * (1 - progress / 100)}`} className="transition-all duration-500 sm:hidden" />
+                                            <circle cx="20" cy="20" r="16" fill="none" stroke={isOverLimit ? "#f43f5e" : progress > 80 ? "#f59e0b" : "#10b981"} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 16}`} strokeDashoffset={`${2 * Math.PI * 16 * (1 - progress / 100)}`} className="transition-all duration-500 hidden sm:block" />
                                         </svg>
-                                        <span className={cn("absolute text-[8px] font-black", isOverLimit ? "text-rose-500" : "text-white/40")}>{isOverLimit ? `-${characterCount - maxCharacters}` : `${maxCharacters - characterCount}`}</span>
+                                        <span className={cn("absolute text-[7px] sm:text-[8px] font-black", isOverLimit ? "text-rose-500" : "text-white/40")}>{isOverLimit ? `-${characterCount - maxCharacters}` : `${maxCharacters - characterCount}`}</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -1131,13 +1134,13 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 <AnimatePresence>
                     {
                         isExpanded && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="flex flex-wrap gap-2 mt-6">
-                                <div className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-white/[0.03] border border-white/5">
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="flex flex-wrap gap-2 mt-4 sm:mt-6">
+                                <div className="flex items-center gap-1.5 px-2 sm:px-4 py-1 sm:py-2 rounded-2xl bg-white/[0.03] border border-white/5">
                                     <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden sm:inline">Trust_Verified</span>
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest sm:hidden">TRUST</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-white/[0.03] border border-white/5">
+                                <div className="flex items-center gap-1.5 px-2 sm:px-4 py-1 sm:py-2 rounded-2xl bg-white/[0.03] border border-white/5">
                                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden sm:inline">Neural_Boost</span>
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest sm:hidden">BOOST</span>
@@ -1149,7 +1152,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
             </div >
 
             {/* Bottom Action Bar - ULTIMATE PREMIUM REDESIGN */}
-            <div className="px-3 sm:px-8 py-4 flex items-center justify-between gap-1 border-t border-white/5 bg-white/[0.02]">
+            <div className="px-2 sm:px-8 py-3 sm:py-4 flex items-center justify-between gap-1 border-t border-white/5 bg-white/[0.02]">
                 <div className="flex items-center gap-1 sm:gap-1.5">
                     <input ref={imageInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
                     <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
@@ -1160,7 +1163,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         onClick={() => imageInputRef.current?.click()}
                         disabled={selectedFiles.length >= 4 || hasVideo}
                         className={cn(
-                            "w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl transition-all duration-500 border border-transparent hover:border-indigo-500/20 group/icon relative overflow-hidden",
+                            "w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-500 border border-transparent hover:border-indigo-500/20 group/icon relative overflow-hidden",
                             selectedFiles.length >= 4 || hasVideo ? "opacity-20 cursor-not-allowed" : "opacity-80 hover:opacity-100"
                         )}
                         title="Add photos"
@@ -1175,7 +1178,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         onClick={() => videoInputRef.current?.click()}
                         disabled={selectedFiles.length > 0}
                         className={cn(
-                            "w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl transition-all duration-500 border border-transparent hover:border-rose-500/20 group/icon relative overflow-hidden",
+                            "w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-500 border border-transparent hover:border-rose-500/20 group/icon relative overflow-hidden",
                             selectedFiles.length > 0 ? "opacity-20 cursor-not-allowed" : "opacity-80 hover:opacity-100"
                         )}
                         title="Add video"
@@ -1188,7 +1191,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(245,158,11,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowHashtagInput(false); setShowLocationInput(false); }}
-                        className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl transition-all duration-500 border border-transparent hover:border-amber-500/20 group/icon opacity-80 hover:opacity-100 relative overflow-hidden"
+                        className="w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-500 border border-transparent hover:border-amber-500/20 group/icon opacity-80 hover:opacity-100 relative overflow-hidden"
                         title="Add emoji"
                     >
                         <Smile className={cn("w-5 h-5 text-amber-400 transition-all group-hover/icon:scale-110", showEmojiPicker && "text-amber-300")} />
@@ -1258,7 +1261,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowAICopilot(!showAICopilot); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowPollCreator(false); setShowScheduler(false); }}
                         className={cn(
-                            "w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl transition-all duration-500 group/icon relative overflow-hidden",
+                            "w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-500 group/icon relative overflow-hidden",
                             showAICopilot
                                 ? "bg-primary/20 opacity-100 border-primary/40 shadow-[0_0_15px_rgba(129,140,248,0.2)]"
                                 : "hover:border-primary/20 opacity-80 hover:opacity-100"
@@ -1294,16 +1297,16 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                     animate={{ opacity: 1, scale: 1 }}
                                     onClick={handleManualSave}
                                     disabled={isSavingDraft}
-                                    className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 transition-all text-slate-400 hover:text-white border border-white/5"
+                                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl sm:rounded-2xl bg-white/5 hover:bg-white/10 transition-all text-slate-400 hover:text-white border border-white/5"
                                     title="Save draft"
                                 >
-                                    {isSavingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                                 </motion.button>
                                 <motion.button
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     onClick={() => { setIsExpanded(false); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); }}
-                                    className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-white transition-colors px-2 py-1"
+                                    className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.1em] sm:tracking-[0.2em] hover:text-white transition-colors px-1 sm:px-2 py-1"
                                 >
                                     BACK
                                 </motion.button>
@@ -1315,7 +1318,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         onClick={handleSubmit}
                         disabled={(!content.trim() && selectedFiles.length === 0) || isOverLimit || createPost.isPending || isUploading}
                         className={cn(
-                            "relative group/btn h-10 sm:h-12 px-6 sm:px-10 rounded-full overflow-hidden transition-all duration-700",
+                            "relative group/btn h-9 sm:h-12 px-4 sm:px-10 rounded-full overflow-hidden transition-all duration-700",
                             "bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 border border-white/20 shadow-[0_0_25px_rgba(129,140,248,0.3)]",
                             "hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(129,140,248,0.5)] active:scale-[0.98]",
                             "disabled:opacity-50 disabled:scale-100 text-white"

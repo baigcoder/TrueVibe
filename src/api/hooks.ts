@@ -1206,6 +1206,17 @@ export function useAnalyticsTrust() {
     });
 }
 
+// User's AI Reports for Analytics
+export function useUserReports() {
+    return useQuery({
+        queryKey: ['user', 'reports'],
+        queryFn: async () => {
+            const response = await api.get('/users/me/reports');
+            return response;
+        },
+    });
+}
+
 // ============ Media Hooks ============
 
 export function useUploadUrl() {

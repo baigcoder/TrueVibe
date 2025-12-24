@@ -235,6 +235,7 @@ router.post('/', authenticate, upload.single('video'), async (req, res, next) =>
             await addAIAnalysisJob({
                 mediaId: short._id.toString(),
                 postId: short._id.toString(),
+                contentType: 'short',
             });
         } catch (jobError) {
             console.warn('Failed to queue AI analysis job:', jobError);
