@@ -491,6 +491,63 @@ export const getUserPosts = async (
     }
 };
 
+// Get liked posts for a user
+export const getLikedPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { userId } = req.params;
+        const { cursor, limit = '10' } = req.query;
+
+        const query: Record<string, unknown> = {
+            likes: userId, // Posts where the user has liked
+            isDeleted: false,
+            visibility: 'public',
+        };
+
+        if (cursor) {
+            query._id = { $lt: cursor };
+        }
+
+        const posts = await Post.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit as string, 10) + 1)
+            .populate('media');
+
+        const hasMore = posts.length > parseInt(limit as string, 10);
+        const results = hasMore ? posts.slice(0, -1) : posts;
+
+        // Get unique user IDs to fetch profiles
+        const userIds = [...new Set(results.map(p => p.userId))];
+        const profiles = await Profile.find({
+            $or: [
+                { userId: { $in: userIds } },
+                { supabaseId: { $in: userIds } }
+            ]
+        });
+        const profileMap = new Map(profiles.map(p => [p.userId || p.supabaseId, p]));
+
+        // Attach author to posts
+        const postsWithAuthor = results.map((post) => ({
+            ...post.toJSON(),
+            author: profileMap.get(post.userId) || null,
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                posts: postsWithAuthor,
+                cursor: hasMore ? results[results.length - 1]._id : null,
+                hasMore,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Vote on poll
 export const votePoll = async (
     req: Request,

@@ -9,7 +9,7 @@ import {
     MessageCircle, Camera, Edit3, Grid3X3, Heart,
     UserPlus, UserMinus, Video, Play, Sparkles, Lock, X
 } from "lucide-react";
-import { useProfile, useUserPosts, useFollowUser, useUnfollowUser, useUserShorts, useCancelFollowRequest } from "@/api/hooks";
+import { useProfile, useUserPosts, useUserLikedPosts, useFollowUser, useUnfollowUser, useUserShorts, useCancelFollowRequest } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -109,6 +109,7 @@ export default function ProfilePage() {
     );
     const { data: postsData, isLoading: loadingPosts } = useUserPosts(userId || '');
     const { data: shortsData, isLoading: loadingShorts } = useUserShorts(userId || '');
+    const { data: likedPostsData, isLoading: loadingLikedPosts } = useUserLikedPosts(userId || '');
     const followMutation = useFollowUser();
     const unfollowMutation = useUnfollowUser();
 
@@ -152,6 +153,7 @@ export default function ProfilePage() {
 
     const posts: PostData[] = (postsData?.pages as PostsPage[] | undefined)?.flatMap(p => p?.data?.posts || []) || [];
     const userShorts = (shortsData as { data?: { shorts?: any[] } })?.data?.shorts || [];
+    const likedPosts: PostData[] = (likedPostsData?.pages as PostsPage[] | undefined)?.flatMap(p => p?.data?.posts || []) || [];
 
     // Debug profile data
     console.log('[ProfilePage] Debug:', { userId, isOwnProfile, profileData, apiProfile, profile, hasPendingRequest });
@@ -393,26 +395,26 @@ export default function ProfilePage() {
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-7 group relative overflow-hidden"
+                                    className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] p-4 sm:p-5 md:p-7 group relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-10 -mt-10" />
-                                    <div className="flex items-center justify-between mb-5">
-                                        <div className="flex items-center gap-2">
-                                            <Sparkles className="w-4 h-4 text-primary" />
-                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Trust Level</span>
+                                    <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-primary/5 blur-3xl rounded-full -mr-10 -mt-10" />
+                                    <div className="flex items-center justify-between mb-3 sm:mb-5">
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest">Trust Level</span>
                                         </div>
                                         <div className={cn(
-                                            "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest",
+                                            "px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[8px] sm:text-[10px] font-bold uppercase tracking-widest",
                                             trustScore >= 80 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
                                         )}>
                                             {trustScore >= 80 ? "Certified" : "Authentic"}
                                         </div>
                                     </div>
-                                    <div className="flex items-end gap-2.5 mb-5">
-                                        <span className="text-5xl font-bold text-white tracking-tighter tabular-nums">{trustScore}</span>
-                                        <span className="text-sm font-bold text-slate-500 mb-2">/ 100</span>
+                                    <div className="flex items-end gap-1.5 sm:gap-2.5 mb-3 sm:mb-5">
+                                        <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tighter tabular-nums">{trustScore}</span>
+                                        <span className="text-xs sm:text-sm font-bold text-slate-500 mb-1 sm:mb-2">/ 100</span>
                                     </div>
-                                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-1.5 sm:h-2 w-full bg-white/5 rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${trustScore}%` }}
@@ -425,18 +427,18 @@ export default function ProfilePage() {
                                 </motion.div>
 
                                 {/* Bio & Links */}
-                                <div className="space-y-6 px-2">
+                                <div className="space-y-4 sm:space-y-6 px-1 sm:px-2">
                                     {displayProfile.bio && (
-                                        <p className="text-slate-300 font-medium leading-[1.6] text-base">
+                                        <p className="text-slate-300 font-medium leading-[1.6] text-sm sm:text-base">
                                             {displayProfile.bio}
                                         </p>
                                     )}
 
-                                    <div className="grid grid-cols-1 gap-4">
+                                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
                                         {displayProfile.location && (
-                                            <div className="flex items-center gap-3.5 text-slate-400 font-medium text-sm">
-                                                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                                    <MapPin className="w-4 h-4 text-primary" />
+                                            <div className="flex items-center gap-2.5 sm:gap-3.5 text-slate-400 font-medium text-xs sm:text-sm">
+                                                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                                    <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                                                 </div>
                                                 {displayProfile.location}
                                             </div>
@@ -446,17 +448,17 @@ export default function ProfilePage() {
                                                 href={displayProfile.website}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-3.5 text-slate-400 font-medium text-sm hover:text-primary transition-colors group"
+                                                className="flex items-center gap-2.5 sm:gap-3.5 text-slate-400 font-medium text-xs sm:text-sm hover:text-primary transition-colors group"
                                             >
-                                                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
-                                                    <LinkIcon className="w-4 h-4" />
+                                                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-colors group-hover:border-primary/50 group-hover:bg-primary/5">
+                                                    <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                 </div>
                                                 {(displayProfile.website as string).replace(/^https?:\/\//, '')}
                                             </a>
                                         )}
-                                        <div className="flex items-center gap-3.5 text-slate-400 font-medium text-sm">
-                                            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                                <Calendar className="w-4 h-4 text-slate-500" />
+                                        <div className="flex items-center gap-2.5 sm:gap-3.5 text-slate-400 font-medium text-xs sm:text-sm">
+                                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
                                             </div>
                                             Joined {joinDate}
                                         </div>
@@ -464,22 +466,22 @@ export default function ProfilePage() {
                                 </div>
 
                                 {/* Stats Card */}
-                                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 flex gap-2">
+                                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] p-2 sm:p-3 flex gap-1 sm:gap-2">
                                     {stats.map((stat) => (
                                         <div
                                             key={stat.label}
                                             onClick={stat.clickable ? stat.onClick : undefined}
                                             className={cn(
-                                                "flex-1 py-4 text-center rounded-2xl transition-colors",
+                                                "flex-1 py-3 sm:py-4 text-center rounded-xl sm:rounded-2xl transition-colors",
                                                 stat.clickable
                                                     ? "hover:bg-white/10 cursor-pointer active:scale-95"
                                                     : "hover:bg-white/5"
                                             )}
                                         >
-                                            <div className="text-2xl font-bold text-white tabular-nums tracking-tight">
+                                            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white tabular-nums tracking-tight">
                                                 {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                                             </div>
-                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">{stat.label}</div>
+                                            <div className="text-[8px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 sm:mt-1.5">{stat.label}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -494,53 +496,53 @@ export default function ProfilePage() {
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[3rem] p-16 text-center relative overflow-hidden"
+                                    className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 md:p-16 text-center relative overflow-hidden"
                                 >
                                     {/* Background effects */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+                                    <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-primary/10 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none" />
 
                                     <div className="relative z-10">
                                         <motion.div
                                             initial={{ scale: 0.8 }}
                                             animate={{ scale: 1 }}
                                             transition={{ type: "spring", bounce: 0.3 }}
-                                            className="w-28 h-28 mx-auto mb-8 rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center"
+                                            className="w-20 h-20 sm:w-28 sm:h-28 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center"
                                         >
-                                            <Lock className="w-12 h-12 text-slate-500" />
+                                            <Lock className="w-8 h-8 sm:w-12 sm:h-12 text-slate-500" />
                                         </motion.div>
 
-                                        <h3 className="font-heading font-black text-3xl text-white mb-4 tracking-tight italic uppercase">
+                                        <h3 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white mb-2 sm:mb-4 tracking-tight italic uppercase">
                                             Profile Locked
                                         </h3>
-                                        <p className="text-slate-400 text-base max-w-sm mx-auto leading-relaxed mb-8">
+                                        <p className="text-slate-400 text-sm sm:text-base max-w-sm mx-auto leading-relaxed mb-5 sm:mb-8 px-2">
                                             Follow <span className="text-primary font-bold">@{displayProfile.handle}</span> to see their posts, shorts, and full profile information.
                                         </p>
 
                                         <Button
                                             onClick={handleFollow}
                                             disabled={followMutation.isPending}
-                                            className="bg-gradient-to-r from-primary via-primary to-secondary text-white rounded-2xl h-14 px-12 gap-3 font-bold text-sm uppercase tracking-wider shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
+                                            className="bg-gradient-to-r from-primary via-primary to-secondary text-white rounded-xl sm:rounded-2xl h-11 sm:h-14 px-6 sm:px-12 gap-2 sm:gap-3 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all"
                                         >
                                             {followMutation.isPending ? (
-                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                                             ) : (
                                                 <>
-                                                    <UserPlus className="w-5 h-5" />
+                                                    <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                                                     Follow to Unlock
                                                 </>
                                             )}
                                         </Button>
 
-                                        <div className="flex items-center justify-center gap-6 mt-10 text-slate-500">
-                                            <div className="flex items-center gap-2">
-                                                <Grid3X3 className="w-4 h-4" />
-                                                <span className="text-sm font-medium">Posts Hidden</span>
+                                        <div className="flex items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-10 text-slate-500">
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <Grid3X3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                <span className="text-xs sm:text-sm font-medium">Posts Hidden</span>
                                             </div>
                                             <div className="w-1 h-1 rounded-full bg-slate-600" />
-                                            <div className="flex items-center gap-2">
-                                                <Video className="w-4 h-4" />
-                                                <span className="text-sm font-medium">Shorts Hidden</span>
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                <span className="text-xs sm:text-sm font-medium">Shorts Hidden</span>
                                             </div>
                                         </div>
                                     </div>
@@ -584,12 +586,12 @@ export default function ProfilePage() {
                                                         <Loader2 className="w-10 h-10 animate-spin text-primary" />
                                                     </div>
                                                 ) : posts.length === 0 ? (
-                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[3rem] p-24 text-center">
-                                                        <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                            <Grid3X3 className="w-10 h-10 text-slate-600" />
+                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                            <Grid3X3 className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
                                                         </div>
-                                                        <h3 className="font-bold text-2xl text-white mb-3 tracking-tight">No posts yet</h3>
-                                                        <p className="text-slate-400 text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No posts yet</h3>
+                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
                                                             {isOwnProfile ? "Share your first post with the community!" : "This user hasn't shared anything yet."}
                                                         </p>
                                                     </div>
@@ -620,12 +622,12 @@ export default function ProfilePage() {
                                                         <Loader2 className="w-10 h-10 animate-spin text-primary" />
                                                     </div>
                                                 ) : userShorts.length === 0 ? (
-                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[3rem] p-24 text-center">
-                                                        <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                            <Video className="w-10 h-10 text-slate-600" />
+                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                            <Video className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
                                                         </div>
-                                                        <h3 className="font-bold text-2xl text-white mb-3 tracking-tight">No shorts</h3>
-                                                        <p className="text-slate-400 text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No shorts</h3>
+                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
                                                             {isOwnProfile ? "Post your first short to get started!" : "No video shorts available here."}
                                                         </p>
                                                     </div>
@@ -687,15 +689,45 @@ export default function ProfilePage() {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -10 }}
-                                                className="bg-white/[0.03] border border-white/10 rounded-[3rem] p-24 text-center"
+                                                className="space-y-6"
                                             >
-                                                <div className="w-24 h-24 mx-auto mb-8 rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                    <Heart className="w-10 h-10 text-slate-600" />
-                                                </div>
-                                                <h3 className="font-bold text-2xl text-white mb-3 tracking-tight">Privacy Protected</h3>
-                                                <p className="text-slate-400 text-sm max-w-[280px] mx-auto leading-relaxed">
-                                                    {isOwnProfile ? "Your liked posts are only visible to you." : "This user's resonance history is private."}
-                                                </p>
+                                                {!isOwnProfile ? (
+                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                            <Heart className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
+                                                        </div>
+                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">Privacy Protected</h3>
+                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                            This user's liked posts are private.
+                                                        </p>
+                                                    </div>
+                                                ) : loadingLikedPosts ? (
+                                                    <div className="flex justify-center py-20">
+                                                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                                    </div>
+                                                ) : likedPosts.length === 0 ? (
+                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                            <Heart className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
+                                                        </div>
+                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No liked posts yet</h3>
+                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                            Posts you like will appear here!
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    likedPosts.map((post, index) => (
+                                                        <motion.div
+                                                            key={post._id}
+                                                            initial={{ opacity: 0, scale: 0.98, y: 20 }}
+                                                            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                                                            viewport={{ once: true }}
+                                                            transition={{ delay: index * 0.05 }}
+                                                        >
+                                                            <PostCard post={post} />
+                                                        </motion.div>
+                                                    ))
+                                                )}
                                             </motion.div>
                                         </TabsContent>
                                     </AnimatePresence>

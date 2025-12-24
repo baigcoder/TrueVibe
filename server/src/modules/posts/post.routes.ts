@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
     createPost, getPost, updatePost, deletePost,
     likePost, unlikePost, savePost, unsavePost, repost,
-    getAIAnalysis, getUserPosts, getTrendingHashtags, getHashtagPosts,
+    getAIAnalysis, getUserPosts, getLikedPosts, getTrendingHashtags, getHashtagPosts,
     votePoll, pinPost, unpinPost, createQuotePost,
     saveDraft, getDrafts, deleteDraft, publishDraft,
     getScheduledPosts, cancelScheduledPost,
@@ -43,6 +43,9 @@ router.get('/:id/ai-analysis', optionalAuth, getAIAnalysis);
 
 // Get user posts
 router.get('/user/:userId', optionalAuth, getUserPosts);
+
+// Get user liked posts
+router.get('/user/:userId/likes', optionalAuth, getLikedPosts);
 
 // ============ HASHTAGS ============
 // Get trending hashtags

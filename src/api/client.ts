@@ -191,6 +191,8 @@ export const postsApi = {
     getAIAnalysis: (id: string) => api.get(`/posts/${id}/ai-analysis`),
     getUserPosts: (userId: string, params?: Record<string, string>) =>
         api.get(`/posts/user/${userId}`, params),
+    getLikedPosts: (userId: string, params?: Record<string, string>) =>
+        api.get(`/posts/user/${userId}/likes`, params),
     // Poll voting
     votePoll: (id: string, optionIndex: number) => api.post(`/posts/${id}/vote`, { optionIndex }),
     // Pin/Unpin

@@ -113,6 +113,16 @@ export function useUserPosts(userId: string) {
     });
 }
 
+export function useUserLikedPosts(userId: string) {
+    return useInfiniteQuery({
+        queryKey: ['users', userId, 'liked-posts'],
+        queryFn: ({ pageParam }) => postsApi.getLikedPosts(userId, pageParam ? { cursor: pageParam } : undefined),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage: any) => lastPage?.data?.cursor || undefined,
+        enabled: !!userId,
+    });
+}
+
 // Suggested users hook - requires authentication
 export function useSuggestedUsers(limit?: number) {
     return useQuery({
