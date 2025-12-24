@@ -84,21 +84,21 @@ export default function LandingPage() {
             <BackgroundAtmosphere />
 
             {/* Refined Header */}
-            <header className="fixed top-0 left-0 right-0 z-[100] px-4 sm:px-8 py-6 bg-transparent">
+            <header className="fixed top-0 left-0 right-0 z-[100] px-3 sm:px-8 py-4 sm:py-6 bg-black/50 backdrop-blur-xl sm:bg-transparent">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-3 group">
+                    <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
                         <div className="relative">
                             <motion.div
                                 whileHover={{ rotate: 180 }}
-                                className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-[0_0_20px_rgba(129,140,248,0.4)] transition-all"
+                                className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg sm:rounded-xl flex items-center justify-center text-white font-black text-lg sm:text-xl shadow-[0_0_20px_rgba(129,140,248,0.4)] transition-all"
                             >
                                 V
                             </motion.div>
                         </div>
                         <div className="flex flex-col">
-                            <span className="font-heading font-black text-xl text-white italic tracking-tighter leading-none">TRUEVIBE</span>
-                            <div className="flex items-center gap-1.5 mt-1">
-                                <span className="text-[7px] font-black text-slate-500 uppercase tracking-[0.4em]">PROTOCOL_ACTIVE</span>
+                            <span className="font-heading font-black text-base sm:text-xl text-white italic tracking-tighter leading-none">TRUEVIBE</span>
+                            <div className="hidden xs:flex items-center gap-1.5 mt-1">
+                                <span className="text-[6px] sm:text-[7px] font-black text-slate-500 uppercase tracking-[0.3em] sm:tracking-[0.4em]">PROTOCOL_ACTIVE</span>
                                 <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
                             </div>
                         </div>
@@ -113,16 +113,17 @@ export default function LandingPage() {
                         ))}
                     </nav>
 
-                    <div className="flex items-center gap-4">
-                        <Link to="/auth/login">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <Link to="/auth/login" className="hidden sm:block">
                             <Button variant="ghost" className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-white hover:bg-white/5 px-6">
                                 DECODE
                             </Button>
                         </Link>
                         <Link to="/auth/signup">
-                            <Button className="bg-primary hover:bg-primary/90 text-white font-heading font-black italic rounded-xl px-8 h-12 shadow-[0_0_25px_rgba(129,140,248,0.3)] transition-all active:scale-95 text-[10px] tracking-[0.2em] uppercase border border-white/10 group">
-                                SYNC_IDENTITY
-                                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                            <Button className="bg-primary hover:bg-primary/90 text-white font-heading font-black italic rounded-lg sm:rounded-xl px-4 sm:px-8 h-9 sm:h-12 shadow-[0_0_25px_rgba(129,140,248,0.3)] transition-all active:scale-95 text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase border border-white/10 group">
+                                <span className="hidden sm:inline">SYNC_IDENTITY</span>
+                                <span className="sm:hidden">JOIN</span>
+                                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         </Link>
                     </div>
@@ -138,16 +139,16 @@ export default function LandingPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-xl text-primary text-[9px] font-black uppercase tracking-[0.5em] mb-12 shadow-2xl"
+                        className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-xl text-primary text-[7px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.5em] mb-8 sm:mb-12 shadow-2xl max-w-[90vw] overflow-hidden"
                     >
-                        <span className="relative flex h-2 w-2">
+                        <span className="relative flex h-2 w-2 flex-shrink-0">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                         </span>
-                        <MatrixText text="AUTHENTICITY_SYNC:ESTABLISHED" delay={500} />
+                        <span className="truncate"><MatrixText text="AUTHENTICITY_SYNC:ESTABLISHED" delay={500} /></span>
                     </motion.div>
 
-                    <h1 className="font-heading text-4xl xs:text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-white italic uppercase tracking-tighter mb-8 leading-[0.85] drop-shadow-[0_0_50px_rgba(255,255,255,0.1)]">
+                    <h1 className="font-heading text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white italic uppercase tracking-tighter mb-6 sm:mb-8 leading-[0.85] drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] px-2">
                         <MatrixText text="UNCOVER" delay={800} /> <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-rose-400 animate-gradient-xy">
                             <MatrixText text="THE_REAL" delay={1200} />
@@ -159,19 +160,21 @@ export default function LandingPage() {
                         Detect synthesis. Verify vision. Synchronize your vibe.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 px-4 mb-32">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 mb-16 sm:mb-32 w-full max-w-lg sm:max-w-none mx-auto">
                         <Link to="/auth/signup" className="w-full sm:w-auto">
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button size="lg" className="h-16 px-12 text-[11px] rounded-2xl bg-white text-black hover:bg-slate-100 font-heading font-black italic tracking-[0.25em] transition-all flex items-center gap-4 group shadow-[0_20px_40px_rgba(255,255,255,0.1)]">
-                                    INITIALIZE_UPLINK
+                                <Button size="lg" className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 text-[10px] sm:text-[11px] rounded-xl sm:rounded-2xl bg-white text-black hover:bg-slate-100 font-heading font-black italic tracking-[0.15em] sm:tracking-[0.25em] transition-all flex items-center justify-center gap-3 sm:gap-4 group shadow-[0_20px_40px_rgba(255,255,255,0.1)]">
+                                    <span className="hidden sm:inline">INITIALIZE_UPLINK</span>
+                                    <span className="sm:hidden">GET STARTED</span>
                                     <ZapIcon className="w-4 h-4 text-primary animate-pulse" />
                                 </Button>
                             </motion.div>
                         </Link>
                         <Link to="/modules" className="w-full sm:w-auto">
-                            <Button size="lg" variant="outline" className="h-16 px-12 text-[11px] rounded-2xl border-white/10 bg-white/[0.02] backdrop-blur-3xl text-white font-heading font-black italic tracking-[0.25em] hover:bg-white/5 transition-all w-full md:w-auto shadow-xl group">
-                                EXPLORE_ARCHITECTURE
-                                <Layout className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity ml-3" />
+                            <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 text-[10px] sm:text-[11px] rounded-xl sm:rounded-2xl border-white/10 bg-white/[0.02] backdrop-blur-3xl text-white font-heading font-black italic tracking-[0.15em] sm:tracking-[0.25em] hover:bg-white/5 transition-all shadow-xl group flex items-center justify-center">
+                                <span className="hidden sm:inline">EXPLORE_ARCHITECTURE</span>
+                                <span className="sm:hidden">EXPLORE</span>
+                                <Layout className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity ml-2 sm:ml-3" />
                             </Button>
                         </Link>
                     </div>
