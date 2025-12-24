@@ -9,6 +9,8 @@ import { updateProfileSchema, updateSettingsSchema } from './user.schema.js';
 import { Profile } from './Profile.model.js';
 import { AIReport } from '../posts/AIReport.model.js';
 import { Post } from '../posts/Post.model.js';
+import { Short } from '../shorts/Short.model.js';
+import { Story } from '../stories/Story.model.js';
 
 
 const router = Router();
@@ -41,41 +43,97 @@ router.post('/follow-requests/:id/reject', authenticate, userController.rejectFo
 router.patch('/me', authenticate, validateBody(updateProfileSchema), userController.updateProfile);
 router.put('/settings', authenticate, validateBody(updateSettingsSchema), userController.updateSettings);
 
-// Get all user's AI reports
+// Get all user's AI reports (posts, shorts, and stories)
 router.get('/me/reports', authenticate, async (req, res, next) => {
     try {
         const userId = req.user!.userId;
         const { type } = req.query; // 'post', 'short', 'story', or undefined for all
 
+        // Build query filter
+        const filter: { userId: string; contentType?: string } = { userId };
+        if (type && ['post', 'short', 'story'].includes(type as string)) {
+            filter.contentType = type as string;
+        }
+
         // Get all reports for this user
-        const reports = await AIReport.find({ userId })
+        const reports = await AIReport.find(filter)
             .sort({ generatedAt: -1 })
             .lean();
 
-        // Get post IDs to fetch post details
-        const postIds = reports.map(r => r.postId);
-        const posts = await Post.find({ _id: { $in: postIds } })
-            .select('content media createdAt trustLevel')
-            .populate('media', 'url type thumbnail')
-            .lean();
+        // Separate reports by content type
+        const postReports = reports.filter(r => !r.contentType || r.contentType === 'post');
+        const shortReports = reports.filter(r => r.contentType === 'short');
+        const storyReports = reports.filter(r => r.contentType === 'story');
 
-        // Create a map for quick lookup
+        // Fetch content from respective collections
+        const postIds = postReports.map(r => r.postId);
+        const shortIds = shortReports.map(r => r.postId);
+        const storyIds = storyReports.map(r => r.postId);
+
+        const [posts, shorts, stories] = await Promise.all([
+            Post.find({ _id: { $in: postIds } })
+                .select('content media createdAt trustLevel')
+                .populate('media', 'url type thumbnail')
+                .lean(),
+            Short.find({ _id: { $in: shortIds } })
+                .select('caption videoUrl thumbnailUrl createdAt trustLevel')
+                .lean(),
+            Story.find({ _id: { $in: storyIds } })
+                .select('caption mediaUrl mediaType thumbnailUrl createdAt trustLevel')
+                .lean(),
+        ]);
+
+        // Create maps for quick lookup
         const postMap = new Map(posts.map(p => [p._id.toString(), p]));
+        const shortMap = new Map(shorts.map(s => [s._id.toString(), s]));
+        const storyMap = new Map(stories.map(s => [s._id.toString(), s]));
 
-        // Combine reports with post data
-        const reportsWithPosts = reports.map(report => {
-            const post = postMap.get(report.postId.toString());
+        // Combine reports with content data
+        const reportsWithContent = reports.map(report => {
+            const contentType = report.contentType || 'post';
+            let content: { _id: any; content?: string; thumbnail?: string; mediaType?: string; createdAt?: Date } | null = null;
+
+            if (contentType === 'post') {
+                const post = postMap.get(report.postId.toString());
+                if (post) {
+                    content = {
+                        _id: post._id,
+                        content: post.content?.substring(0, 100) + (post.content && post.content.length > 100 ? '...' : ''),
+                        thumbnail: (post.media as any[])?.[0]?.type === 'video'
+                            ? (post.media as any[])?.[0]?.thumbnail || (post.media as any[])?.[0]?.url
+                            : (post.media as any[])?.[0]?.url,
+                        mediaType: (post.media as any[])?.[0]?.type || 'text',
+                        createdAt: post.createdAt,
+                    };
+                }
+            } else if (contentType === 'short') {
+                const short = shortMap.get(report.postId.toString());
+                if (short) {
+                    content = {
+                        _id: short._id,
+                        content: short.caption?.substring(0, 100) + (short.caption && short.caption.length > 100 ? '...' : ''),
+                        thumbnail: short.thumbnailUrl || short.videoUrl,
+                        mediaType: 'video',
+                        createdAt: short.createdAt,
+                    };
+                }
+            } else if (contentType === 'story') {
+                const story = storyMap.get(report.postId.toString());
+                if (story) {
+                    content = {
+                        _id: story._id,
+                        content: story.caption?.substring(0, 100) + (story.caption && story.caption.length > 100 ? '...' : ''),
+                        thumbnail: story.thumbnailUrl || story.mediaUrl,
+                        mediaType: story.mediaType,
+                        createdAt: story.createdAt,
+                    };
+                }
+            }
+
             return {
                 ...report,
-                post: post ? {
-                    _id: post._id,
-                    content: post.content?.substring(0, 100) + (post.content && post.content.length > 100 ? '...' : ''),
-                    thumbnail: (post.media as any[])?.[0]?.type === 'video'
-                        ? (post.media as any[])?.[0]?.thumbnail || (post.media as any[])?.[0]?.url
-                        : (post.media as any[])?.[0]?.url,
-                    mediaType: (post.media as any[])?.[0]?.type || 'text',
-                    createdAt: post.createdAt,
-                } : null,
+                contentType,
+                post: content, // Keep 'post' key for backward compatibility
             };
         });
 
@@ -86,6 +144,11 @@ router.get('/me/reports', authenticate, async (req, res, next) => {
             suspicious: reports.filter(r => r.report?.verdict === 'suspicious').length,
             fake: reports.filter(r => r.report?.verdict === 'fake').length,
         };
+        const contentTypeCounts = {
+            post: postReports.length,
+            short: shortReports.length,
+            story: storyReports.length,
+        };
         const avgConfidence = reports.length > 0
             ? reports.reduce((sum, r) => sum + (r.report?.confidence || 0), 0) / reports.length
             : 0;
@@ -93,10 +156,11 @@ router.get('/me/reports', authenticate, async (req, res, next) => {
         res.json({
             success: true,
             data: {
-                reports: reportsWithPosts,
+                reports: reportsWithContent,
                 summary: {
                     totalReports,
                     verdictCounts,
+                    contentTypeCounts,
                     avgConfidence: Math.round(avgConfidence * 100),
                 },
             },

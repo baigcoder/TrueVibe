@@ -172,6 +172,7 @@ export const usersApi = {
     acceptFollowRequest: (id: string) => api.post(`/users/follow-requests/${id}/accept`),
     rejectFollowRequest: (id: string) => api.post(`/users/follow-requests/${id}/reject`),
     cancelFollowRequest: (targetUserId: string) => api.delete(`/users/${targetUserId}/follow-request`),
+    getMyReports: (type?: 'post' | 'short' | 'story') => api.get('/users/me/reports', type ? { type } : undefined),
 };
 
 

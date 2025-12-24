@@ -144,7 +144,7 @@ export function AIReportModal({
     report,
     isLoading,
     isGenerating,
-    onGenerate,
+    onGenerate: _onGenerate,
     error,
     postId,
     contentType = 'feed'

@@ -1210,10 +1210,7 @@ export function useAnalyticsTrust() {
 export function useUserReports() {
     return useQuery({
         queryKey: ['user', 'reports'],
-        queryFn: async () => {
-            const response = await api.get('/users/me/reports');
-            return response;
-        },
+        queryFn: () => usersApi.getMyReports(),
     });
 }
 

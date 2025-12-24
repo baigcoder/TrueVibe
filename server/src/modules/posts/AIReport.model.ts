@@ -26,6 +26,7 @@ export interface IAIReportContent {
 export interface IAIReport extends Document {
     _id: mongoose.Types.ObjectId;
     postId: mongoose.Types.ObjectId;
+    contentType: 'post' | 'short' | 'story';  // Type of content the report is for
     userId: string; // Owner who requested the report (Supabase UUID)
     analysisId: mongoose.Types.ObjectId;
     report: IAIReportContent;
@@ -74,8 +75,14 @@ const aiReportSchema = new Schema<IAIReport>(
     {
         postId: {
             type: Schema.Types.ObjectId,
-            ref: 'Post',
+            refPath: 'contentTypeRef', // Dynamic reference based on contentType
             required: true,
+            index: true,
+        },
+        contentType: {
+            type: String,
+            enum: ['post', 'short', 'story'],
+            default: 'post',
             index: true,
         },
         userId: {
