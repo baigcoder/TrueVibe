@@ -34,6 +34,8 @@ const startServer = async (): Promise<void> => {
         const host = '0.0.0.0';
 
         server.listen(port, host, () => {
+            // Always log when server starts (critical for debugging)
+            console.log(`🚀 Server listening on http://${host}:${port} [${config.env}]`);
             debugLog(`
 🚀 TrueVibe Server is LISTENING!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

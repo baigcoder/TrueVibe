@@ -1,6 +1,8 @@
 import { Queue, QueueEvents } from 'bullmq';
 import { getRedisClient } from '../config/redis.js';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 // ============================================
 // AI ANALYSIS QUEUE - Enhanced for Multi-User
 // ============================================
@@ -18,26 +20,32 @@ export const aiAnalysisQueue = new Queue('ai-analysis', {
     },
 });
 
-// Queue event listeners for debugging
-const aiQueueEvents = new QueueEvents('ai-analysis', {
-    connection: getRedisClient(),
-});
+// Queue event listeners for debugging (only in non-production to reduce connections)
+if (!isProd) {
+    try {
+        const aiQueueEvents = new QueueEvents('ai-analysis', {
+            connection: getRedisClient(),
+        });
 
-aiQueueEvents.on('waiting', ({ jobId }) => {
-    console.log(`[Queue] AI job ${jobId} waiting...`);
-});
+        aiQueueEvents.on('waiting', ({ jobId }) => {
+            console.log(`[Queue] AI job ${jobId} waiting...`);
+        });
 
-aiQueueEvents.on('active', ({ jobId }) => {
-    console.log(`[Queue] AI job ${jobId} started processing`);
-});
+        aiQueueEvents.on('active', ({ jobId }) => {
+            console.log(`[Queue] AI job ${jobId} started processing`);
+        });
 
-aiQueueEvents.on('completed', ({ jobId }) => {
-    console.log(`[Queue] AI job ${jobId} completed ✅`);
-});
+        aiQueueEvents.on('completed', ({ jobId }) => {
+            console.log(`[Queue] AI job ${jobId} completed ✅`);
+        });
 
-aiQueueEvents.on('failed', ({ jobId, failedReason }) => {
-    console.error(`[Queue] AI job ${jobId} failed: ${failedReason}`);
-});
+        aiQueueEvents.on('failed', ({ jobId, failedReason }) => {
+            console.error(`[Queue] AI job ${jobId} failed: ${failedReason}`);
+        });
+    } catch (err) {
+        console.warn('QueueEvents initialization skipped:', err);
+    }
+}
 
 // Analytics Aggregation Queue
 export const analyticsQueue = new Queue('analytics', {
