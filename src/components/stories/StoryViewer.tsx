@@ -347,7 +347,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                     </div>
 
                     {/* Bottom Interactivity */}
-                    <div className="absolute bottom-20 sm:bottom-8 left-0 right-0 z-30 px-4 sm:px-6 space-y-4 sm:space-y-6 pb-[env(safe-area-inset-bottom,0px)]">
+                    <div className="absolute bottom-24 sm:bottom-8 left-0 right-0 z-30 px-4 sm:px-6 space-y-4 sm:space-y-6 pb-[env(safe-area-inset-bottom,0px)]">
                         {!isOwner ? (
                             <div className="flex items-center gap-2 sm:gap-3">
                                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-5 py-2.5 sm:py-3 shadow-2xl flex-1 focus-within:bg-white/20 transition-all">
