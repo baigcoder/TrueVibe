@@ -139,23 +139,28 @@ export function TrustBadge({
     const realPercent = 100 - fakePercent;
 
     // Derive the ACTUAL level from SCORE FIRST to ensure accuracy
-    // This ensures 74% authentic shows as VERIFIED, not SUSPICIOUS
-    // Thresholds: 70%+ authentic = VERIFIED, 50-70% = SUSPICIOUS, 30-50% = LIKELY FAKE, <30% = FAKE
+    // This ensures 66% authentic shows as VERIFIED, not SUSPICIOUS
+    // More lenient thresholds based on real-world testing:
+    // - Under 35% fake = VERIFIED (authentic)
+    // - 35-50% fake = SUSPICIOUS (needs review)
+    // - 50-65% fake = LIKELY FAKE (high risk)
+    // - 65%+ fake = DEEPFAKE (confirmed)
     let rawLevel: string;
     if (isPendingState) {
         rawLevel = level.toLowerCase();
     } else if (analysisDetails?.fakeScore !== undefined) {
-        // fakeScore is 0-1 (0.26 = 26% fake, 74% authentic)
+        // fakeScore is 0-1 (0.34 = 34% fake, 66% authentic)
         const fakePct = analysisDetails.fakeScore;
-        if (fakePct <= 0.30) rawLevel = 'authentic';          // 70%+ authentic = VERIFIED
-        else if (fakePct <= 0.50) rawLevel = 'suspicious';    // 50-70% authentic = SUSPICIOUS
-        else if (fakePct <= 0.70) rawLevel = 'likely_fake';   // 30-50% authentic = LIKELY FAKE
-        else rawLevel = 'fake';                                // <30% authentic = FAKE
+        if (fakePct < 0.35) rawLevel = 'authentic';          // 65%+ authentic = VERIFIED
+        else if (fakePct < 0.50) rawLevel = 'suspicious';    // 50-65% authentic = SUSPICIOUS
+        else if (fakePct < 0.65) rawLevel = 'likely_fake';   // 35-50% authentic = LIKELY FAKE
+        else rawLevel = 'fake';                               // <35% authentic = DEEPFAKE
     } else if (analysisDetails?.classification) {
         rawLevel = analysisDetails.classification.toLowerCase();
     } else {
         rawLevel = typeof level === 'string' ? level.toLowerCase() : level;
     }
+
 
     const derivedLevel = rawLevel as TrustLevel;
 
