@@ -490,26 +490,26 @@ export function PostCard({ post }: PostCardProps) {
                     )}
                 </CardContent>
 
-                <CardFooter className="px-6 py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-2">
+                <CardFooter className="px-3 sm:px-6 py-3 sm:py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLike}
                             disabled={likePost.isPending || unlikePost.isPending}
                             className={cn(
-                                "flex items-center gap-2.5 px-4 h-11 rounded-2xl transition-all duration-500 group/btn",
+                                "flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-4 h-9 sm:h-11 rounded-xl sm:rounded-2xl transition-all duration-500 group/btn",
                                 post.isLiked
                                     ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
                                     : "bg-white/5 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 border border-white/5"
                             )}
                         >
                             {likePost.isPending || unlikePost.isPending ? (
-                                <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+                                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
                             ) : (
-                                <Heart className={cn("w-4.5 h-4.5 transition-all duration-500 group-hover/btn:scale-110", post.isLiked && "fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]")} />
+                                <Heart className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all duration-500 group-hover/btn:scale-110", post.isLiked && "fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]")} />
                             )}
-                            <span className="text-[11px] font-black tracking-widest">{likesCount}</span>
+                            <span className="text-[10px] sm:text-[11px] font-black tracking-widest">{likesCount}</span>
                         </motion.button>
 
                         <motion.button
@@ -517,14 +517,14 @@ export function PostCard({ post }: PostCardProps) {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowComments(!showComments)}
                             className={cn(
-                                "flex items-center gap-2.5 px-4 h-11 rounded-2xl transition-all duration-500 group/btn",
+                                "flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-4 h-9 sm:h-11 rounded-xl sm:rounded-2xl transition-all duration-500 group/btn",
                                 showComments
                                     ? "bg-primary/15 text-primary border border-primary/30"
                                     : "bg-white/5 text-slate-400 hover:bg-primary/10 hover:text-primary border border-white/5"
                             )}
                         >
-                            <MessageCircle className={cn("w-4.5 h-4.5 transition-all duration-500 group-hover/btn:scale-110", showComments && "fill-current drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")} />
-                            <span className="text-[11px] font-black tracking-widest">{commentsCount}</span>
+                            <MessageCircle className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all duration-500 group-hover/btn:scale-110", showComments && "fill-current drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")} />
+                            <span className="text-[10px] sm:text-[11px] font-black tracking-widest">{commentsCount}</span>
                         </motion.button>
 
                         <div className="h-4 w-px bg-white/10 mx-1 hidden sm:block" />
@@ -549,13 +549,13 @@ export function PostCard({ post }: PostCardProps) {
                         whileHover={{ scale: 1.1, color: "#FDE047" }}
                         whileTap={{ scale: 0.9 }}
                         className={cn(
-                            "h-11 w-11 flex items-center justify-center rounded-2xl transition-all",
+                            "h-9 w-9 sm:h-11 sm:w-11 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all",
                             post.isSaved
                                 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
                                 : "bg-white/5 text-slate-400 hover:bg-white/10 border border-white/5"
                         )}
                     >
-                        <Bookmark className={cn("w-4.5 h-4.5 transition-all", post.isSaved && "fill-current")} />
+                        <Bookmark className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all", post.isSaved && "fill-current")} />
                     </motion.button>
                 </CardFooter>
 
