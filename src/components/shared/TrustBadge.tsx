@@ -335,7 +335,7 @@ export function TrustBadge({
                             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                             exit={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(8px)" }}
                             transition={{ type: "spring", damping: 25, stiffness: 400 }}
-                            className="fixed sm:absolute left-0 right-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1 z-[9999] sm:w-[220px] origin-bottom sm:origin-top-left px-1.5 sm:px-0 mb-safe sm:mb-0"
+                            className="fixed sm:absolute left-2 right-2 bottom-20 sm:bottom-auto sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1 z-[9999] sm:w-[220px] origin-bottom sm:origin-top-left sm:px-0 pb-safe sm:pb-0"
                         >
                             {/* Main Panel */}
                             <div className="bg-[#030712] border border-white/10 rounded-t-2xl sm:rounded-xl shadow-[0_0_50px_-12px_rgba(0,0,0,1)] overflow-hidden">
