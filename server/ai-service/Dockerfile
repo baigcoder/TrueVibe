@@ -32,8 +32,8 @@ ENV PYTHONUNBUFFERED=1
 ENV LIGHTWEIGHT_MODE=false
 ENV ENV=production
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+# Health check - extended start-period for model loading
+HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
 # Run with limited workers for memory efficiency
