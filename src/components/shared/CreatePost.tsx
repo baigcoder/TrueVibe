@@ -1316,15 +1316,15 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         disabled={(!content.trim() && selectedFiles.length === 0) || isOverLimit || createPost.isPending || isUploading}
                         className={cn(
                             "relative group/btn h-10 sm:h-12 px-6 sm:px-10 rounded-full overflow-hidden transition-all duration-700",
-                            "bg-[#0D1117] border border-white/10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]",
-                            "hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:scale-100",
-                            content.trim().length > 0 ? "text-white" : "text-slate-500"
+                            "bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 border border-white/20 shadow-[0_0_25px_rgba(129,140,248,0.3)]",
+                            "hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(129,140,248,0.5)] active:scale-[0.98]",
+                            "disabled:opacity-50 disabled:scale-100 text-white"
                         )}
                     >
                         {/* Animated Gradient Background for Button */}
                         <div className={cn(
-                            "absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 transition-opacity duration-700",
-                            content.trim().length > 0 ? "opacity-100" : "opacity-0"
+                            "absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 transition-opacity duration-700",
+                            content.trim().length > 0 ? "opacity-100" : "opacity-40"
                         )} />
 
                         {/* Glass Overlay */}
