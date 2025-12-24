@@ -22,7 +22,7 @@ import {
     Fingerprint
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AIReport, DetectionItem, TechnicalDetail } from "@/hooks/useAIReport";
+import type { AIReport, DetectionItem } from "@/hooks/useAIReport";
 import { useDownloadPDFReport, useEmailReport } from "@/hooks/useDownloadReport";
 
 interface AIReportModalProps {

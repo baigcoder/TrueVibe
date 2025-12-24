@@ -57,7 +57,7 @@ export function ThreadedComment({
     const unlikeMutation = useUnlikeComment();
     const deleteMutation = useDeleteComment();
 
-    const replies = repliesData?.pages.flatMap(page => page?.data?.comments || []) || [];
+    const replies = repliesData?.pages.flatMap(page => (page as any)?.data?.comments || []) || [];
 
     const handleLike = () => {
         if (comment.isLiked) {
@@ -110,7 +110,7 @@ export function ThreadedComment({
             <div className="py-3">
                 <div className="flex gap-3">
                     {/* Avatar */}
-                    <Link to="/app/profile/$userId" params={{ userId: comment.userId._id }}>
+                    <Link to="/app/profile/$id" params={{ id: comment.userId._id }}>
                         <Avatar className="w-8 h-8 ring-1 ring-white/10">
                             <AvatarImage src={comment.userId.avatar} />
                             <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
@@ -123,8 +123,8 @@ export function ThreadedComment({
                         {/* Header */}
                         <div className="flex items-center gap-2 mb-1">
                             <Link
-                                to="/app/profile/$userId"
-                                params={{ userId: comment.userId._id }}
+                                to="/app/profile/$id"
+                                params={{ id: comment.userId._id }}
                                 className="font-semibold text-sm text-white hover:underline truncate"
                             >
                                 {comment.userId.name}

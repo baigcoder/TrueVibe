@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api/client';
 import {
-    Shield, AlertTriangle, Users, FileWarning, CheckCircle2, XCircle,
+    Shield, AlertTriangle, Users, FileWarning, CheckCircle2,
     Ban, Loader2, RefreshCw, Eye, Trash2, MessageCircle, Image,
     TrendingUp, AlertOctagon, UserX, Activity
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+// Avatar imports removed - not currently used
+// import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -37,9 +38,9 @@ export default function ModerationDashboard() {
         queryFn: () => adminApi.getReports('pending', 50),
     });
 
-    const stats = statsData?.data as any;
-    const queue = queueData?.data as any;
-    const reports = reportsData?.data?.reports as any[] || [];
+    const stats = (statsData as any)?.data as any;
+    const queue = (queueData as any)?.data as any;
+    const reports = ((reportsData as any)?.data?.reports as any[]) || [];
 
     const tabs: { id: TabType; label: string; icon: typeof Shield }[] = [
         { id: 'overview', label: 'Overview', icon: Activity },

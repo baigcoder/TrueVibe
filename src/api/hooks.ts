@@ -877,7 +877,7 @@ export function useReplyToComment() {
             content: string
         }) =>
             commentsApi.create({ parentId, postId, shortId, content }),
-        onMutate: async ({ parentId, postId, shortId, content }) => {
+        onMutate: async ({ parentId, content }) => {
             // Optimistically add reply
             const queryKey = ['comments', 'replies', parentId];
             await queryClient.cancelQueries({ queryKey });

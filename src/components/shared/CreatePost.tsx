@@ -40,7 +40,6 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
     const [filePreviews, setFilePreviews] = useState<{ url: string; type: 'image' | 'video' }[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0); // 0-100 percentage
-    const [isCompressing, setIsCompressing] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showHashtagInput, setShowHashtagInput] = useState(false);
     const [hashtags, setHashtags] = useState<string[]>([]);
@@ -190,230 +189,8 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
         });
     };
 
-    // Compress video before upload for faster transfer (enhanced compatibility version)
-    const compressVideo = async (file: File): Promise<File> => {
-        // Skip if not a video or already small (< 5MB)
-        if (!file.type.startsWith('video/') || file.size < 5 * 1024 * 1024) {
-            return file;
-        }
-
-        // Check for MediaRecorder support
-        if (typeof MediaRecorder === 'undefined') {
-            console.log('⚠️ MediaRecorder not supported, skipping compression');
-            return file;
-        }
-
-        // Detect browser capabilities
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-        // Safari and iOS have limited MediaRecorder support - skip compression
-        if (isSafari || isIOS) {
-            console.log('⚠️ Safari/iOS detected - using direct upload (better compatibility)');
-            return file;
-        }
-
-        console.log(`🎬 Compressing video: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
-        setIsCompressing(true);
-
-        // Timeout protection - max 30 seconds for compression
-        const COMPRESSION_TIMEOUT = 30000;
-
-        return new Promise((resolve) => {
-            const timeoutId = setTimeout(() => {
-                console.log('⚠️ Compression timeout (30s), using original file');
-                setIsCompressing(false);
-                resolve(file);
-            }, COMPRESSION_TIMEOUT);
-
-            const cleanup = () => {
-                clearTimeout(timeoutId);
-                setIsCompressing(false);
-            };
-
-            const video = document.createElement('video');
-            video.muted = true; // Muted for autoplay compatibility
-            video.playsInline = true;
-            video.crossOrigin = 'anonymous';
-            video.preload = 'metadata';
-
-            video.onloadedmetadata = async () => {
-                try {
-                    // Target: 720p max for good balance of quality and size
-                    const maxHeight = 720;
-                    const maxWidth = 1280;
-
-                    let targetWidth = video.videoWidth;
-                    let targetHeight = video.videoHeight;
-
-                    // Scale down if needed
-                    if (targetWidth > maxWidth || targetHeight > maxHeight) {
-                        const scale = Math.min(maxWidth / targetWidth, maxHeight / targetHeight);
-                        targetWidth = Math.round(targetWidth * scale);
-                        targetHeight = Math.round(targetHeight * scale);
-                    }
-
-                    // Ensure even dimensions for codec compatibility
-                    targetWidth = Math.floor(targetWidth / 2) * 2;
-                    targetHeight = Math.floor(targetHeight / 2) * 2;
-
-                    // Minimum dimensions
-                    targetWidth = Math.max(targetWidth, 320);
-                    targetHeight = Math.max(targetHeight, 180);
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = targetWidth;
-                    canvas.height = targetHeight;
-                    const ctx = canvas.getContext('2d');
-
-                    if (!ctx) {
-                        console.log('⚠️ Canvas context unavailable, skipping compression');
-                        cleanup();
-                        resolve(file);
-                        return;
-                    }
-
-                    // Determine best supported codec (prefer VP9 > VP8 > default)
-                    const codecOptions = [
-                        'video/webm;codecs=vp9',
-                        'video/webm;codecs=vp8',
-                        'video/webm',
-                    ];
-
-                    let selectedMimeType = 'video/webm';
-                    for (const codec of codecOptions) {
-                        if (MediaRecorder.isTypeSupported(codec)) {
-                            selectedMimeType = codec;
-                            break;
-                        }
-                    }
-
-                    console.log(`📹 Using codec: ${selectedMimeType}`);
-
-                    // Lower bitrate for faster uploads (1.5 Mbps is decent quality)
-                    const targetBitrate = 1_500_000;
-
-                    // Get video stream from canvas
-                    const canvasStream = canvas.captureStream(24); // 24fps
-
-                    let recorder: MediaRecorder;
-                    try {
-                        recorder = new MediaRecorder(canvasStream, {
-                            mimeType: selectedMimeType,
-                            videoBitsPerSecond: targetBitrate,
-                        });
-                    } catch (recorderErr) {
-                        console.log('⚠️ MediaRecorder creation failed:', recorderErr);
-                        cleanup();
-                        resolve(file);
-                        return;
-                    }
-
-                    const chunks: Blob[] = [];
-                    recorder.ondataavailable = (e) => {
-                        if (e.data.size > 0) chunks.push(e.data);
-                    };
-
-                    recorder.onstop = () => {
-                        try {
-                            if (chunks.length === 0) {
-                                console.log('⚠️ No data recorded, using original');
-                                cleanup();
-                                resolve(file);
-                                return;
-                            }
-
-                            const blob = new Blob(chunks, { type: 'video/webm' });
-                            const compressedFile = new File(
-                                [blob],
-                                file.name.replace(/\.[^.]+$/, '.webm'),
-                                { type: 'video/webm', lastModified: Date.now() }
-                            );
-
-                            const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
-                            const newSizeMB = (compressedFile.size / 1024 / 1024).toFixed(1);
-                            const reduction = Math.round((1 - compressedFile.size / file.size) * 100);
-
-                            console.log(`🎬 Video compressed: ${originalSizeMB}MB → ${newSizeMB}MB (${reduction}% smaller)`);
-
-                            // Only use compressed if it's actually smaller and has content
-                            if (compressedFile.size < file.size && compressedFile.size > 1000) {
-                                cleanup();
-                                resolve(compressedFile);
-                            } else {
-                                console.log('⚠️ Compressed not beneficial, using original');
-                                cleanup();
-                                resolve(file);
-                            }
-                        } catch (err) {
-                            console.log('⚠️ Error creating compressed file:', err);
-                            cleanup();
-                            resolve(file);
-                        }
-
-                        URL.revokeObjectURL(video.src);
-                    };
-
-                    recorder.onerror = (event) => {
-                        console.log('⚠️ MediaRecorder error:', event);
-                        cleanup();
-                        resolve(file);
-                    };
-
-                    // Start recording and play video
-                    recorder.start(100); // Collect data every 100ms for smoother recording
-                    video.currentTime = 0;
-
-                    try {
-                        await video.play();
-                    } catch (playErr) {
-                        console.log('⚠️ Video play failed:', playErr);
-                        cleanup();
-                        resolve(file);
-                        return;
-                    }
-
-                    // Draw frames to canvas
-                    let frameCount = 0;
-                    const drawFrame = () => {
-                        if (video.ended || video.paused) {
-                            if (recorder.state === 'recording') {
-                                recorder.stop();
-                            }
-                            return;
-                        }
-                        ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
-                        frameCount++;
-                        requestAnimationFrame(drawFrame);
-                    };
-
-                    drawFrame();
-
-                    // Stop when video ends
-                    video.onended = () => {
-                        console.log(`📹 Recorded ${frameCount} frames`);
-                        if (recorder.state === 'recording') {
-                            recorder.stop();
-                        }
-                    };
-
-                } catch (err) {
-                    console.error('Video compression error:', err);
-                    cleanup();
-                    resolve(file);
-                }
-            };
-
-            video.onerror = (e) => {
-                console.log('⚠️ Video load error:', e);
-                cleanup();
-                resolve(file);
-            };
-
-            video.src = URL.createObjectURL(file);
-            video.load();
-        });
-    };
+    // NOTE: Video compression disabled - browser-based compression is too slow for larger videos
+    // Cloudinary handles server-side optimization much faster with eager transformations
 
     // Process file (compress based on type)
     // NOTE: Video compression disabled - browser-based compression is too slow for larger videos
@@ -1057,28 +834,21 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                             )}
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity" />
 
-                                            {/* Compression/Upload Progress Overlay */}
-                                            {(isCompressing || isUploading) && preview.type === 'video' && (
+                                            {/* Upload Progress Overlay */}
+                                            {isUploading && preview.type === 'video' && (
                                                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
                                                     <div className="relative w-16 h-16 mb-3">
-                                                        <svg className="w-full h-full -rotate-90 animate-spin" style={{ animationDuration: '2s' }}>
+                                                        <svg className="w-full h-full -rotate-90" style={{ animationDuration: '2s' }}>
                                                             <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                                                            <circle cx="32" cy="32" r="28" fill="none" stroke={isCompressing ? "#8b5cf6" : "#10b981"} strokeWidth="4" strokeLinecap="round" strokeDasharray="176" strokeDashoffset={isCompressing ? "88" : `${176 * (1 - uploadProgress / 100)}`} className="transition-all duration-300" />
+                                                            <circle cx="32" cy="32" r="28" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeDasharray="176" strokeDashoffset={`${176 * (1 - uploadProgress / 100)}`} className="transition-all duration-300" />
                                                         </svg>
                                                         <div className="absolute inset-0 flex items-center justify-center">
-                                                            {isCompressing ? (
-                                                                <Sparkles className="w-6 h-6 text-violet-400 animate-pulse" />
-                                                            ) : (
-                                                                <span className="text-xs font-bold text-white">{uploadProgress}%</span>
-                                                            )}
+                                                            <span className="text-xs font-bold text-white">{uploadProgress}%</span>
                                                         </div>
                                                     </div>
                                                     <span className="text-xs font-bold text-white/80 uppercase tracking-widest">
-                                                        {isCompressing ? 'Compressing...' : 'Uploading...'}
+                                                        Uploading...
                                                     </span>
-                                                    {isCompressing && (
-                                                        <span className="text-[10px] text-white/50 mt-1">Preserving audio quality</span>
-                                                    )}
                                                 </div>
                                             )}
 
