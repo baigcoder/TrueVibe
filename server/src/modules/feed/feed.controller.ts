@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Post } from '../posts/Post.model.js';
 import { Profile } from '../users/Profile.model.js';
 import { Follow } from '../users/Follow.model.js';
+import { getFriendIds } from '../users/followHelpers.js';
 import { cacheGet, cacheSet } from '../../config/redis.js';
 
 // Helper to attach authors and interaction status to posts
@@ -61,7 +62,7 @@ async function attachAuthorsAndStatus(posts: any[], currentUserId?: string) {
     });
 }
 
-// Main personalized feed
+// Main personalized feed - shows posts from friends only (mutual follows)
 export const getMainFeed = async (
     req: Request,
     res: Response,
@@ -71,19 +72,29 @@ export const getMainFeed = async (
         const { cursor, limit = '10' } = req.query;
         const userId = req.user?.userId;
 
-        // Only use cache for anonymous users (logged-in users need fresh isLiked status)
+        // Anonymous users see empty feed - they need to login to see content
         if (!userId) {
-            const cacheKey = `feed:main:anon:${cursor || 'initial'}`;
-            const cached = await cacheGet<any>(cacheKey);
-            if (cached) {
-                res.json({ success: true, data: cached });
-                return;
-            }
+            res.json({
+                success: true,
+                data: { posts: [], cursor: null, hasMore: false },
+            });
+            return;
+        }
+
+        // Get friends (mutual follows) - both users follow each other
+        const friendIds = await getFriendIds(userId);
+
+        // Include own posts + friends' posts
+        const allowedUserIds = [userId, ...friendIds];
+
+        if (allowedUserIds.length === 1 && allowedUserIds[0] === userId) {
+            // No friends, only show own posts
         }
 
         const query: Record<string, unknown> = {
+            userId: { $in: allowedUserIds },
             isDeleted: false,
-            visibility: 'public',
+            visibility: { $in: ['public', 'followers'] },
         };
 
         if (cursor) {
@@ -107,11 +118,6 @@ export const getMainFeed = async (
             hasMore,
         };
 
-        // Cache for 1 minute (only for anonymous users)
-        if (!userId) {
-            await cacheSet(`feed:main:anon:${cursor || 'initial'}`, responseData, 60);
-        }
-
         res.json({
             success: true,
             data: responseData,
@@ -121,7 +127,7 @@ export const getMainFeed = async (
     }
 };
 
-// Following feed
+// Following feed - shows posts from friends only (mutual follows)
 export const getFollowingFeed = async (
     req: Request,
     res: Response,
@@ -131,11 +137,10 @@ export const getFollowingFeed = async (
         const { cursor, limit = '10' } = req.query;
         const userId = req.user!.userId;
 
-        // Get followed users
-        const following = await Follow.find({ followerId: userId }).select('followingId');
-        const followingIds = following.map((f) => f.followingId);
+        // Get friends (mutual follows) - both users follow each other
+        const friendIds = await getFriendIds(userId);
 
-        if (followingIds.length === 0) {
+        if (friendIds.length === 0) {
             res.json({
                 success: true,
                 data: { posts: [], cursor: null, hasMore: false },
@@ -144,7 +149,7 @@ export const getFollowingFeed = async (
         }
 
         const query: Record<string, unknown> = {
-            userId: { $in: followingIds },
+            userId: { $in: friendIds },
             isDeleted: false,
             visibility: { $in: ['public', 'followers'] },
         };

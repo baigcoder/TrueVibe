@@ -6,6 +6,7 @@ import { requireAuth } from '../../shared/middleware/supabase.middleware.js';
 import { Story } from './Story.model.js';
 import { Profile } from '../users/Profile.model.js';
 import { Follow } from '../users/Follow.model.js';
+import { getFriendIds } from '../users/followHelpers.js';
 
 const router = Router();
 
@@ -22,19 +23,19 @@ const upload = multer({
     },
 });
 
-// Get stories from followed users
+// Get stories from friends only (mutual follows)
 router.get('/feed', requireAuth, async (req, res, next) => {
     try {
         const userId = req.auth!.userId;
 
-        // Get followed users
-        const follows = await Follow.find({ followerId: userId }).select('followingId');
-        const followedIds = follows.map(f => f.followingId.toString());
-        followedIds.push(userId); // Include own stories
+        // Get friends (mutual follows) - both users follow each other
+        const friendIds = await getFriendIds(userId);
+        // Include own stories + friends' stories
+        const allowedUserIds = [userId, ...friendIds];
 
         // Get active stories (not expired, not deleted)
         const stories = await Story.find({
-            userId: { $in: followedIds },
+            userId: { $in: allowedUserIds },
             expiresAt: { $gt: new Date() },
             isDeleted: false,
         })
