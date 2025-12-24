@@ -5,9 +5,20 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { config } from '../../config/index.js';
+import { loggingConfig } from '../../config/security.config.js';
+import { User } from '../../modules/users/User.model.js';
 
 // Supabase config
 const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET || '';
+const isProd = config.env === 'production';
+
+// Secure logging - only in development
+const debugLog = (...args: unknown[]) => {
+    if (loggingConfig.enabled) {
+        console.log('[Supabase Auth]', ...args);
+    }
+};
 
 // Extend Express Request type for auth
 declare global {
@@ -53,30 +64,61 @@ export const requireAuth = async (
         }
 
         const token = authHeader.replace('Bearer ', '');
-
-        // Verify JWT token
         let payload: JWTPayload;
 
-        console.log('[Auth Debug] JWT Secret configured:', !!SUPABASE_JWT_SECRET, 'Token length:', token.length);
+        // In production, JWT secret is required
+        if (isProd && !SUPABASE_JWT_SECRET) {
+            debugLog('CRITICAL: No JWT secret configured in production');
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'SERVER_ERROR',
+                    message: 'Server configuration error',
+                },
+            });
+            return;
+        }
 
         if (SUPABASE_JWT_SECRET) {
             // Verify with JWT secret
             try {
                 payload = jwt.verify(token, SUPABASE_JWT_SECRET) as JWTPayload;
-                console.log('[Auth Debug] Verified with secret, sub:', payload.sub);
-            } catch (verifyError: any) {
-                console.error('[Auth Debug] Verification failed:', verifyError.message);
+                debugLog('Token verified successfully');
+            } catch (verifyError: unknown) {
+                const errorMessage = verifyError instanceof Error ? verifyError.message : 'Unknown error';
+                debugLog('Verification failed:', errorMessage);
                 throw verifyError;
             }
         } else {
-            // Fallback: decode without verification (for development)
-            console.log('[Auth Debug] No secret, using decode fallback');
+            // Development only: decode without verification
+            if (isProd) {
+                res.status(401).json({
+                    success: false,
+                    error: {
+                        code: 'UNAUTHORIZED',
+                        message: 'Invalid token',
+                    },
+                });
+                return;
+            }
+            debugLog('Development mode - decoding without verification');
             const decoded = jwt.decode(token);
-            console.log('[Auth Debug] Decoded token:', decoded ? 'Success' : 'Failed');
             if (!decoded || typeof decoded === 'string') {
                 throw new Error('Invalid token format');
             }
             payload = decoded as JWTPayload;
+        }
+
+        // Validate token expiry
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+            res.status(401).json({
+                success: false,
+                error: {
+                    code: 'UNAUTHORIZED',
+                    message: 'Token expired',
+                },
+            });
+            return;
         }
 
         if (!payload.sub) {
@@ -103,10 +145,11 @@ export const requireAuth = async (
             role: 'user',
         };
 
-        console.log('[Auth Debug] Auth successful, userId:', payload.sub);
+        debugLog('Auth successful, userId:', payload.sub);
         next();
-    } catch (error: any) {
-        console.error('[Auth Debug] Supabase auth error:', error.message);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        debugLog('Auth error:', errorMessage);
         res.status(401).json({
             success: false,
             error: {
@@ -140,7 +183,8 @@ export const optionalAuth = async (
                 } catch {
                     // Invalid token, continue without auth
                 }
-            } else {
+            } else if (!isProd) {
+                // Development only
                 payload = jwt.decode(token) as JWTPayload;
             }
 
@@ -166,7 +210,7 @@ export const optionalAuth = async (
 };
 
 /**
- * Admin-only middleware (basic implementation)
+ * Admin-only middleware with database verification
  */
 export const adminOnly = async (
     req: Request,
@@ -185,15 +229,39 @@ export const adminOnly = async (
             return;
         }
 
-        // For now, deny all admin access until properly configured
-        res.status(403).json({
-            success: false,
-            error: {
-                code: 'FORBIDDEN',
-                message: 'Admin access required',
-            },
+        // Verify admin role from database
+        const user = await User.findOne({
+            $or: [
+                { _id: req.auth.userId },
+                { email: req.auth.email }
+            ]
         });
-        return;
+
+        if (!user || user.role !== 'admin') {
+            debugLog(`Admin access denied for user: ${req.auth.userId}`);
+            res.status(403).json({
+                success: false,
+                error: {
+                    code: 'FORBIDDEN',
+                    message: 'Admin access required',
+                },
+            });
+            return;
+        }
+
+        if (user.status !== 'active') {
+            res.status(403).json({
+                success: false,
+                error: {
+                    code: 'FORBIDDEN',
+                    message: 'Account is not active',
+                },
+            });
+            return;
+        }
+
+        debugLog(`Admin access granted for user: ${req.auth.userId}`);
+        next();
     } catch (error) {
         next(error);
     }

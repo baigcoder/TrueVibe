@@ -189,6 +189,19 @@ export interface AIAnalysisUpdate {
         confidenceScore: number;
         classification: 'AUTHENTIC' | 'SUSPICIOUS' | 'LIKELY_FAKE';
         trustLevel: 'authentic' | 'suspicious' | 'likely_fake';
+        // Enhanced v5 analysis details
+        fakeScore?: number;
+        realScore?: number;
+        processingTimeMs?: number;
+        facesDetected?: number;
+        avgFaceScore?: number;
+        avgFftScore?: number;
+        avgEyeScore?: number;
+        fftBoost?: number;
+        eyeBoost?: number;
+        temporalBoost?: number;
+        mediaType?: 'image' | 'video';
+        framesAnalyzed?: number;
     };
 }
 
@@ -209,3 +222,4 @@ export function useAIAnalysisUpdate(callback: (data: AIAnalysisUpdate) => void) 
         };
     }, [socket, callback]);
 }
+

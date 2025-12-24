@@ -558,10 +558,10 @@ export default function ShortsPage() {
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsCreateOpen(true)}
-                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary via-purple-500 to-rose-400 p-0.5 shadow-2xl shadow-primary/40 group"
+                    className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-purple-500 to-rose-400 p-0.5 shadow-2xl shadow-primary/40 group"
                 >
-                    <div className="w-full h-full bg-slate-900 rounded-[1.3rem] flex items-center justify-center transition-all group-hover:bg-transparent">
-                        <Plus className="w-7 h-7 text-white" />
+                    <div className="w-full h-full bg-slate-950/80 backdrop-blur-xl rounded-[0.9rem] flex items-center justify-center transition-all group-hover:bg-transparent">
+                        <Plus className="w-5 h-5 text-white" />
                     </div>
                 </motion.button>
             </div>

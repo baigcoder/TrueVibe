@@ -80,9 +80,13 @@ class ApiClient {
         // Get auth token (async to ensure we wait for it)
         const token = await this.getAuthToken();
         const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
             ...(fetchOptions.headers as Record<string, string> || {}),
         };
+
+        // Only set Content-Type to JSON if body is NOT FormData
+        if (!(fetchOptions.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         // Add Authorization header if we have a token
         if (token) {
@@ -111,46 +115,25 @@ class ApiClient {
     async post<T>(endpoint: string, body?: unknown): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'POST',
-            body: body ? JSON.stringify(body) : undefined,
+            body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
         });
     }
 
     async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
-        const token = await this.getAuthToken();
-        const headers: Record<string, string> = {};
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        // Don't set Content-Type - let browser set it with boundary for multipart/form-data
-
-        const response = await fetch(`${this.baseUrl}${endpoint}`, {
-            method: 'POST',
-            credentials: 'include',
-            headers,
-            body: formData,
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error?.message || 'Request failed');
-        }
-
-        return data;
+        return this.post<T>(endpoint, formData);
     }
 
     async put<T>(endpoint: string, body?: unknown): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'PUT',
-            body: body ? JSON.stringify(body) : undefined,
+            body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
         });
     }
 
     async patch<T>(endpoint: string, body?: unknown): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'PATCH',
-            body: body ? JSON.stringify(body) : undefined,
+            body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
         });
     }
 
@@ -339,6 +322,19 @@ export const storiesApi = {
     delete: (id: string) => api.delete(`/stories/${id}`),
 };
 
+// Story Highlights API
+export const highlightsApi = {
+    getMy: () => api.get('/highlights/me'),
+    getUser: (userId: string) => api.get(`/highlights/user/${userId}`),
+    getById: (id: string) => api.get(`/highlights/${id}`),
+    create: (data: { title: string; coverImageUrl?: string }) => api.post('/highlights', data),
+    update: (id: string, data: { title?: string; coverImageUrl?: string }) => api.patch(`/highlights/${id}`, data),
+    delete: (id: string) => api.delete(`/highlights/${id}`),
+    addStory: (highlightId: string, storyId: string) => api.post(`/highlights/${highlightId}/stories`, { storyId }),
+    removeStory: (highlightId: string, storyIndex: number) => api.delete(`/highlights/${highlightId}/stories/${storyIndex}`),
+};
+
+
 // Notifications API
 export const notificationApi = {
     getNotifications: (cursor?: string, limit: number = 20) =>
@@ -353,3 +349,124 @@ export const searchApi = {
         api.get('/search', { q, type, limit: limit.toString() }),
 };
 
+// Admin API (requires admin role)
+export const adminApi = {
+    getStats: () => api.get('/admin/stats'),
+    getModerationQueue: (limit?: number) => api.get('/admin/moderation-queue', limit ? { limit: String(limit) } : undefined),
+    getReports: (status?: string, limit?: number) => api.get('/admin/reports', {
+        status: status || 'pending',
+        limit: String(limit || 50)
+    }),
+    resolveReport: (id: string, data: { status: string; resolution: string }) => api.put(`/admin/reports/${id}`, data),
+    suspendUser: (id: string, reason: string) => api.put(`/admin/users/${id}/suspend`, { reason }),
+    restoreUser: (id: string) => api.put(`/admin/users/${id}/restore`),
+    overrideAI: (id: string, data: { newClassification: string; reason: string }) => api.put(`/admin/ai-analysis/${id}/override`, data),
+};
+
+// Gamification API
+export const gamificationApi = {
+    getMyStats: () => api.get('/gamification/me/stats'),
+    getMyBadges: () => api.get('/gamification/me/badges'),
+    getUserStats: (userId: string) => api.get(`/gamification/user/${userId}`),
+    getAllBadges: () => api.get('/gamification/badges'),
+    getLeaderboard: (type?: 'xp' | 'streak', limit?: number) =>
+        api.get('/gamification/leaderboard', { type: type || 'xp', limit: String(limit || 20) }),
+    recordActivity: (action: string, xpAmount?: number) =>
+        api.post('/gamification/activity', { action, xpAmount }),
+};
+
+// Group Call API
+export const groupCallApi = {
+    create: (data: { title?: string; callType?: 'audio' | 'video'; maxParticipants?: number; isPrivate?: boolean }) =>
+        api.post('/group-calls/create', data),
+    join: (roomId: string, inviteCode?: string) =>
+        api.post(`/group-calls/${roomId}/join`, { inviteCode }),
+    leave: (roomId: string) =>
+        api.post(`/group-calls/${roomId}/leave`),
+    getDetails: (roomId: string) =>
+        api.get(`/group-calls/${roomId}`),
+    updateState: (roomId: string, data: { isMuted?: boolean; isVideoOff?: boolean }) =>
+        api.patch(`/group-calls/${roomId}/state`, data),
+    endCall: (roomId: string) =>
+        api.post(`/group-calls/${roomId}/end`),
+    getActiveCall: () =>
+        api.get('/group-calls'),
+};
+
+// Audio/Sounds API for Shorts
+export const audioApi = {
+    browse: (genre?: string, sort?: 'trending' | 'recent' | 'featured', limit?: number) =>
+        api.get('/audio/browse', {
+            ...(genre && { genre }),
+            sort: sort || 'trending',
+            limit: String(limit || 20),
+        }),
+    search: (q: string, limit?: number) =>
+        api.get('/audio/search', { q, limit: String(limit || 20) }),
+    trending: (limit?: number) =>
+        api.get('/audio/trending', { limit: String(limit || 10) }),
+    getById: (id: string) =>
+        api.get(`/audio/${id}`),
+    save: (id: string) =>
+        api.post(`/audio/${id}/save`),
+    unsave: (id: string) =>
+        api.delete(`/audio/${id}/save`),
+    getMySaved: (limit?: number) =>
+        api.get('/audio/my/saved', { limit: String(limit || 20) }),
+    createOriginal: (data: { title: string; audioUrl: string; duration: number; coverUrl?: string }) =>
+        api.post('/audio/original', data),
+    recordUsage: (id: string) =>
+        api.post(`/audio/${id}/use`),
+    getGenres: () =>
+        api.get('/audio/meta/genres'),
+};
+
+// Live Streaming API
+export const livestreamApi = {
+    create: (data: {
+        title: string;
+        description?: string;
+        category?: string;
+        tags?: string[];
+        visibility?: 'public' | 'followers' | 'private';
+        scheduledFor?: string;
+        thumbnailUrl?: string;
+    }) => api.post('/livestream/create', data),
+    start: (id: string) => api.post(`/livestream/${id}/start`),
+    end: (id: string, recordingUrl?: string) => api.post(`/livestream/${id}/end`, { recordingUrl }),
+    join: (id: string) => api.post(`/livestream/${id}/join`),
+    leave: (id: string) => api.post(`/livestream/${id}/leave`),
+    like: (id: string) => api.post(`/livestream/${id}/like`),
+    getById: (id: string) => api.get(`/livestream/${id}`),
+    discover: (category?: string, limit?: number) =>
+        api.get('/livestream/discover', {
+            ...(category && { category }),
+            limit: String(limit || 20),
+        }),
+    upcoming: (limit?: number) =>
+        api.get('/livestream/upcoming', { limit: String(limit || 10) }),
+    getMyStreams: (status?: 'scheduled' | 'live' | 'ended') =>
+        api.get('/livestream/my/streams', status ? { status } : undefined),
+    getCategories: () => api.get('/livestream/meta/categories'),
+};
+
+// E2E Encryption API
+export const encryptionApi = {
+    registerKeys: (data: {
+        identityPublicKey: string;
+        signedPreKey: { keyId: number; publicKey: string; signature: string };
+        oneTimePreKeys: Array<{ keyId?: number; publicKey: string }>;
+    }) => api.post('/encryption/keys/register', data),
+    getPreKeyBundle: (userId: string) => api.get(`/encryption/keys/${userId}/bundle`),
+    replenishKeys: (oneTimePreKeys: Array<{ keyId?: number; publicKey: string }>) =>
+        api.post('/encryption/keys/replenish', { oneTimePreKeys }),
+    getKeyCount: () => api.get('/encryption/keys/count'),
+    establishSession: (data: {
+        conversationId: string;
+        recipientId: string;
+        ephemeralPublicKey: string;
+        usedPreKeyId?: number;
+    }) => api.post('/encryption/session/establish', data),
+    getSession: (conversationId: string) => api.get(`/encryption/session/${conversationId}`),
+    getStatus: (userId: string) => api.get(`/encryption/status/${userId}`),
+};

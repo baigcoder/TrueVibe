@@ -26,7 +26,7 @@ export interface IAIReportContent {
 export interface IAIReport extends Document {
     _id: mongoose.Types.ObjectId;
     postId: mongoose.Types.ObjectId;
-    userId: mongoose.Types.ObjectId; // Owner who requested the report
+    userId: string; // Owner who requested the report (Supabase UUID)
     analysisId: mongoose.Types.ObjectId;
     report: IAIReportContent;
     modelUsed: 'gemini' | 'gpt' | 'groq' | 'fallback';
@@ -79,8 +79,7 @@ const aiReportSchema = new Schema<IAIReport>(
             index: true,
         },
         userId: {
-            type: Schema.Types.ObjectId,
-            ref: 'User',
+            type: String,
             required: true,
             index: true,
         },

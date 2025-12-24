@@ -1,19 +1,42 @@
-import { Queue } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import { getRedisClient } from '../config/redis.js';
 
-// AI Analysis Queue
+// ============================================
+// AI ANALYSIS QUEUE - Enhanced for Multi-User
+// ============================================
 export const aiAnalysisQueue = new Queue('ai-analysis', {
     connection: getRedisClient(),
-    skipVersionCheck: true, // Suppress eviction policy warnings
+    skipVersionCheck: true,
     defaultJobOptions: {
         attempts: 3,
         backoff: {
             type: 'exponential',
-            delay: 1000,
+            delay: 2000, // Start with 2s delay
         },
-        removeOnComplete: 100,
-        removeOnFail: 1000,
+        removeOnComplete: 50,  // Keep fewer completed jobs
+        removeOnFail: 100,
     },
+});
+
+// Queue event listeners for debugging
+const aiQueueEvents = new QueueEvents('ai-analysis', {
+    connection: getRedisClient(),
+});
+
+aiQueueEvents.on('waiting', ({ jobId }) => {
+    console.log(`[Queue] AI job ${jobId} waiting...`);
+});
+
+aiQueueEvents.on('active', ({ jobId }) => {
+    console.log(`[Queue] AI job ${jobId} started processing`);
+});
+
+aiQueueEvents.on('completed', ({ jobId }) => {
+    console.log(`[Queue] AI job ${jobId} completed ✅`);
+});
+
+aiQueueEvents.on('failed', ({ jobId, failedReason }) => {
+    console.error(`[Queue] AI job ${jobId} failed: ${failedReason}`);
 });
 
 // Analytics Aggregation Queue
@@ -36,14 +59,17 @@ export const notificationQueue = new Queue('notifications', {
     },
 });
 
-// Helper to add AI analysis job
+// Helper to add AI analysis job with confirmation
 export const addAIAnalysisJob = async (data: {
     mediaId: string;
     postId: string;
-}): Promise<void> => {
-    await aiAnalysisQueue.add('analyze-media', data, {
+}): Promise<string> => {
+    const job = await aiAnalysisQueue.add('analyze-media', data, {
         priority: 1,
+        jobId: `ai-${data.mediaId}-${Date.now()}`, // Unique job ID
     });
+    console.log(`[Queue] Added AI job: ${job.id} for media: ${data.mediaId}`);
+    return job.id!;
 };
 
 // Helper to add analytics job
@@ -66,4 +92,15 @@ export const addNotificationJob = async (data: {
     await notificationQueue.add('send', data);
 };
 
-console.log('✅ BullMQ queues initialized');
+// Queue health check
+export const getQueueHealth = async () => {
+    const [waiting, active, completed, failed] = await Promise.all([
+        aiAnalysisQueue.getWaitingCount(),
+        aiAnalysisQueue.getActiveCount(),
+        aiAnalysisQueue.getCompletedCount(),
+        aiAnalysisQueue.getFailedCount(),
+    ]);
+    return { waiting, active, completed, failed };
+};
+
+console.log('✅ BullMQ queues initialized (enhanced)');

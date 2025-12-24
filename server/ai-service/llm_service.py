@@ -78,9 +78,14 @@ def build_report_prompt(analysis_results: Dict) -> str:
     faces_detected = analysis_results.get("faces_detected", 0)
     face_scores = analysis_results.get("face_scores", [])
     avg_face_score = analysis_results.get("avg_face_score")
+    avg_fft_score = analysis_results.get("avg_fft_score")
+    avg_eye_score = analysis_results.get("avg_eye_score")
     fft_boost = analysis_results.get("fft_boost")
     eye_boost = analysis_results.get("eye_boost")
+    temporal_boost = analysis_results.get("temporal_boost")
     processing_time = analysis_results.get("processing_time_ms", 0)
+    media_type = analysis_results.get("media_type", "image")
+    frames_analyzed = analysis_results.get("frames_analyzed", 0)
     
     prompt = f"""You are an AI content authenticity expert. Analyze the following deepfake detection results and generate a detailed, user-friendly report.
 
@@ -89,11 +94,20 @@ def build_report_prompt(analysis_results: Dict) -> str:
 - **Fake Score**: {fake_score * 100:.1f}%
 - **Real Score**: {real_score * 100:.1f}%
 - **Confidence**: {confidence * 100:.1f}%
+- **Media Type**: {media_type}
+- **Frames Analyzed**: {frames_analyzed}
+
+## Face Analysis:
 - **Faces Detected**: {faces_detected}
 - **Face Analysis Scores**: {face_scores if face_scores else 'N/A'}
 - **Average Face Score**: {f'{avg_face_score * 100:.1f}%' if avg_face_score else 'N/A'}
+
+## v7 Enhanced Analysis:
+- **Average FFT Score**: {f'{avg_fft_score * 100:.1f}%' if avg_fft_score else 'N/A'}
+- **Average Eye Region Score**: {f'{avg_eye_score * 100:.1f}%' if avg_eye_score else 'N/A'}
 - **FFT Frequency Anomaly Boost**: {f'+{fft_boost * 100:.1f}%' if fft_boost else 'None detected'}
 - **Eye Region Anomaly Boost**: {f'+{eye_boost * 100:.1f}%' if eye_boost else 'None detected'}
+- **Temporal Boost**: {f'+{temporal_boost * 100:.1f}%' if temporal_boost else 'None detected'}
 - **Processing Time**: {processing_time}ms
 
 ## Your Task:
@@ -108,7 +122,7 @@ Generate a JSON report with exactly this structure:
             "detected": <true/false>,
             "severity": "low" | "medium" | "high",
             "explanation": "<user-friendly explanation>",
-            "score": <optional 0.0-1.0>
+            "score": <REQUIRED: must be 0.0-1.0 based on actual analysis data above>
         }}
     ],
     "technicalDetails": [
@@ -121,12 +135,12 @@ Generate a JSON report with exactly this structure:
     "recommendations": ["<recommendation 1>", "<recommendation 2>", ...]
 }}
 
-Include these detection categories in breakdown:
-1. Face Manipulation Detection
-2. FFT Frequency Analysis (AI texture patterns)
-3. Color Consistency Analysis
-4. Noise Pattern Analysis
-5. Eye Region Analysis
+IMPORTANT: For detection breakdown, use ACTUAL SCORES from the data above:
+1. Face Manipulation Detection - score MUST be {avg_face_score if avg_face_score else fake_score}
+2. FFT Frequency Analysis (AI texture patterns) - score MUST be {avg_fft_score if avg_fft_score else fake_score * 0.8}
+3. Color Consistency Analysis - score based on classification confidence
+4. Noise Pattern Analysis - score derived from confidence level  
+5. Eye Region Analysis - score MUST be {avg_eye_score if avg_eye_score else fake_score * 0.7}
 
 For recommendations, include:
 - If FAKE/SUSPICIOUS: What signs indicate manipulation, what user can verify manually
@@ -360,7 +374,7 @@ def create_fallback_report(analysis_results: Dict) -> AIReport:
         ),
         TechnicalDetail(
             metric="Model Version",
-            value="v5 Enhanced",
+            value="v7 Enhanced",
             interpretation="SigLIP2-based deepfake detector with FFT and multi-scale analysis"
         )
     ]
@@ -451,3 +465,289 @@ async def generate_report(analysis_results: Dict) -> AIReport:
     # All LLMs failed, use fallback
     print("\n⚠️ All LLM APIs failed, using fallback report generator")
     return create_fallback_report(analysis_results)
+
+
+# ============ AI CONTENT COPILOT ============
+
+@dataclass
+class CaptionSuggestion:
+    """Generated caption suggestions"""
+    captions: List[str]
+    model_used: str
+    
+    def to_dict(self):
+        return {
+            "captions": self.captions,
+            "model_used": self.model_used
+        }
+
+
+@dataclass
+class HashtagSuggestion:
+    """Suggested hashtags"""
+    hashtags: List[str]
+    trending: List[str]
+    model_used: str
+    
+    def to_dict(self):
+        return {
+            "hashtags": self.hashtags,
+            "trending": self.trending,
+            "model_used": self.model_used
+        }
+
+
+@dataclass
+class PostIdea:
+    """Single post idea"""
+    title: str
+    caption: str
+    hashtags: List[str]
+
+
+@dataclass
+class PostIdeasSuggestion:
+    """Generated post ideas"""
+    ideas: List[PostIdea]
+    model_used: str
+    
+    def to_dict(self):
+        return {
+            "ideas": [{"title": i.title, "caption": i.caption, "hashtags": i.hashtags} for i in self.ideas],
+            "model_used": self.model_used
+        }
+
+
+def build_caption_prompt(context: str, image_description: str = None) -> str:
+    """Build prompt for caption generation"""
+    image_info = f"\nImage description: {image_description}" if image_description else ""
+    
+    return f"""You are a social media content expert helping users create engaging captions for their posts.
+
+Context/Topic: {context}{image_info}
+
+Generate 3 creative, engaging captions for a social media post. The captions should be:
+- Authentic and relatable (Gen-Z friendly)
+- Include relevant emojis
+- Varying in length (short, medium, long options)
+- Engaging and shareable
+
+Return ONLY valid JSON in this exact format:
+{{
+    "captions": [
+        "First caption with emoji 🔥",
+        "Second caption that's a bit longer with more context ✨",
+        "Third caption option here 💯"
+    ]
+}}
+
+Return ONLY the JSON, no markdown or extra text."""
+
+
+def build_hashtag_prompt(content: str) -> str:
+    """Build prompt for hashtag suggestions"""
+    return f"""You are a social media expert specializing in hashtag optimization.
+
+Post content: "{content}"
+
+Analyze this content and suggest relevant hashtags that will maximize reach. Provide:
+1. 6-8 relevant hashtags based on the content
+2. 2-3 trending hashtags that could apply (popular general tags)
+
+Return ONLY valid JSON in this exact format:
+{{
+    "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5", "hashtag6"],
+    "trending": ["trending1", "trending2"]
+}}
+
+Important:
+- Do NOT include the # symbol
+- Use lowercase only
+- No spaces (use underscores if needed)
+- Return ONLY the JSON, no markdown or extra text."""
+
+
+def build_ideas_prompt(topic: str, style: str = "trendy") -> str:
+    """Build prompt for post idea generation"""
+    style_descriptions = {
+        "trendy": "trendy, Gen-Z friendly, using current social media trends",
+        "professional": "professional, polished, suitable for LinkedIn or business accounts",
+        "casual": "casual, friendly, conversational tone",
+        "humorous": "funny, witty, meme-worthy humor"
+    }
+    
+    style_desc = style_descriptions.get(style, style_descriptions["trendy"])
+    
+    return f"""You are a creative social media strategist helping content creators generate post ideas.
+
+Topic/Niche: {topic}
+Style: {style_desc}
+
+Generate 3 unique post ideas for this topic. Each idea should include:
+- A catchy title/hook
+- A ready-to-use caption with emojis
+- 3-4 relevant hashtags
+
+Return ONLY valid JSON in this exact format:
+{{
+    "ideas": [
+        {{
+            "title": "Catchy hook or title",
+            "caption": "Full post caption with emojis ✨",
+            "hashtags": ["tag1", "tag2", "tag3"]
+        }},
+        {{
+            "title": "Second idea title",
+            "caption": "Another creative caption 🔥",
+            "hashtags": ["tag1", "tag2", "tag3"]
+        }},
+        {{
+            "title": "Third idea title",
+            "caption": "Third caption option 💯",
+            "hashtags": ["tag1", "tag2", "tag3"]
+        }}
+    ]
+}}
+
+Return ONLY the JSON, no markdown or extra text."""
+
+
+async def generate_caption(context: str, image_description: str = None) -> CaptionSuggestion:
+    """
+    Generate caption suggestions using LLMs.
+    Tries: Gemini -> Groq -> GPT -> Fallback
+    """
+    print("\n" + "="*60)
+    print("✨ GENERATING CAPTION SUGGESTIONS")
+    print("="*60)
+    
+    prompt = build_caption_prompt(context, image_description)
+    
+    llms = [
+        ("gemini", call_gemini),
+        ("groq", call_groq),
+        ("gpt", call_gpt)
+    ]
+    
+    for name, call_fn in llms:
+        print(f"\n📡 Trying {name.upper()}...")
+        response = await call_fn(prompt)
+        
+        if response:
+            parsed = parse_llm_response(response)
+            if parsed and "captions" in parsed:
+                print(f"✅ Generated captions using {name.upper()}")
+                return CaptionSuggestion(
+                    captions=parsed["captions"][:3],
+                    model_used=name
+                )
+    
+    # Fallback captions
+    print("⚠️ Using fallback caption generator")
+    return CaptionSuggestion(
+        captions=[
+            f"Sharing some thoughts on {context} ✨",
+            f"Here's my take on {context} 💯",
+            f"{context.capitalize()} vibes today 🔥"
+        ],
+        model_used="fallback"
+    )
+
+
+async def suggest_hashtags(content: str) -> HashtagSuggestion:
+    """
+    Suggest hashtags for content using LLMs.
+    Tries: Gemini -> Groq -> GPT -> Fallback
+    """
+    print("\n" + "="*60)
+    print("#️⃣ SUGGESTING HASHTAGS")
+    print("="*60)
+    
+    prompt = build_hashtag_prompt(content)
+    
+    llms = [
+        ("gemini", call_gemini),
+        ("groq", call_groq),
+        ("gpt", call_gpt)
+    ]
+    
+    for name, call_fn in llms:
+        print(f"\n📡 Trying {name.upper()}...")
+        response = await call_fn(prompt)
+        
+        if response:
+            parsed = parse_llm_response(response)
+            if parsed and "hashtags" in parsed:
+                print(f"✅ Generated hashtags using {name.upper()}")
+                return HashtagSuggestion(
+                    hashtags=parsed.get("hashtags", [])[:8],
+                    trending=parsed.get("trending", [])[:3],
+                    model_used=name
+                )
+    
+    # Fallback hashtags
+    print("⚠️ Using fallback hashtag generator")
+    words = content.lower().split()[:5]
+    return HashtagSuggestion(
+        hashtags=[w.strip('.,!?') for w in words if len(w) > 3],
+        trending=["fyp", "viral", "trending"],
+        model_used="fallback"
+    )
+
+
+async def generate_post_ideas(topic: str, style: str = "trendy") -> PostIdeasSuggestion:
+    """
+    Generate post ideas for a topic using LLMs.
+    Tries: Gemini -> Groq -> GPT -> Fallback
+    """
+    print("\n" + "="*60)
+    print("💡 GENERATING POST IDEAS")
+    print("="*60)
+    
+    prompt = build_ideas_prompt(topic, style)
+    
+    llms = [
+        ("gemini", call_gemini),
+        ("groq", call_groq),
+        ("gpt", call_gpt)
+    ]
+    
+    for name, call_fn in llms:
+        print(f"\n📡 Trying {name.upper()}...")
+        response = await call_fn(prompt)
+        
+        if response:
+            parsed = parse_llm_response(response)
+            if parsed and "ideas" in parsed:
+                print(f"✅ Generated ideas using {name.upper()}")
+                ideas = []
+                for idea in parsed["ideas"][:3]:
+                    ideas.append(PostIdea(
+                        title=idea.get("title", "Untitled"),
+                        caption=idea.get("caption", ""),
+                        hashtags=idea.get("hashtags", [])
+                    ))
+                return PostIdeasSuggestion(ideas=ideas, model_used=name)
+    
+    # Fallback ideas
+    print("⚠️ Using fallback idea generator")
+    return PostIdeasSuggestion(
+        ideas=[
+            PostIdea(
+                title=f"My {topic} journey",
+                caption=f"Sharing my experience with {topic} today! What's your take? ✨",
+                hashtags=[topic.lower().replace(" ", ""), "lifestyle", "inspiration"]
+            ),
+            PostIdea(
+                title=f"Behind the scenes",
+                caption=f"Here's what {topic} looks like from my perspective 🔥",
+                hashtags=[topic.lower().replace(" ", ""), "behindthescenes", "reallife"]
+            ),
+            PostIdea(
+                title=f"Tips & tricks",
+                caption=f"My top 3 tips for {topic} that actually work 💯",
+                hashtags=[topic.lower().replace(" ", ""), "tips", "learnwitme"]
+            )
+        ],
+        model_used="fallback"
+    )

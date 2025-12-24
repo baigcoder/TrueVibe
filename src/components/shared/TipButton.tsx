@@ -65,7 +65,7 @@ export function TipButton({ authorName }: TipButtonProps) {
                 onMouseLeave={() => setIsHovered(false)}
                 onClick={() => setShowOptions(!showOptions)}
                 className={cn(
-                    "relative gap-2 px-4 h-10 rounded-xl transition-all duration-500 overflow-hidden",
+                    "relative gap-1.5 sm:gap-2 px-2.5 sm:px-4 h-9 sm:h-10 rounded-xl transition-all duration-500 overflow-hidden",
                     "text-amber-500/50 hover:text-amber-400 hover:bg-amber-500/10",
                     showOptions && "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20"
                 )}
@@ -99,12 +99,17 @@ export function TipButton({ authorName }: TipButtonProps) {
                             <Sparkles className="w-4.5 h-4.5" />
                         </motion.div>
                     ) : (
-                        <Gift className={cn("w-4.5 h-4.5 transition-transform", isHovered && "scale-110")} />
+                        <Gift className={cn("w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform", isHovered && "scale-110")} />
                     )}
                 </div>
 
-                <span className="font-heading font-black italic uppercase text-[10px] tracking-[0.1em]">
-                    {isTipping ? "Synergizing..." : "Send Love"}
+                <span className="font-heading font-black italic uppercase text-[9px] sm:text-[10px] tracking-tight sm:tracking-[0.1em]">
+                    {isTipping ? "..." : (
+                        <>
+                            <span className="inline sm:hidden">Love</span>
+                            <span className="hidden sm:inline">Send Love</span>
+                        </>
+                    )}
                 </span>
 
                 {/* Subtle Glow Overlay */}

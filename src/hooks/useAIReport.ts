@@ -51,12 +51,20 @@ interface GetReportResponse {
     };
 }
 
+// Helper to validate MongoDB ObjectId format
+function isValidObjectId(id: string): boolean {
+    return /^[a-fA-F0-9]{24}$/.test(id);
+}
+
 // Generate AI Report (mutation)
 export function useGenerateReport(postId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async () => {
+            if (!postId || !isValidObjectId(postId)) {
+                throw new Error('Invalid post ID');
+            }
             const response = await api.post<GenerateReportResponse>(`/posts/${postId}/generate-report`);
             return response.data;
         },
@@ -72,10 +80,13 @@ export function useGetReport(postId: string, enabled = true) {
     return useQuery({
         queryKey: ['ai-report', postId],
         queryFn: async () => {
+            if (!postId || !isValidObjectId(postId)) {
+                throw new Error('Invalid post ID');
+            }
             const response = await api.get<GetReportResponse>(`/posts/${postId}/report`);
             return response.data;
         },
-        enabled,
+        enabled: enabled && !!postId && isValidObjectId(postId),
         staleTime: 1000 * 60 * 30, // 30 minutes - reports don't change often
         retry: false, // Don't retry on 404
     });
@@ -83,7 +94,8 @@ export function useGetReport(postId: string, enabled = true) {
 
 // Hook that combines both - fetch existing or generate new
 export function useAIReport(postId: string, isOwner: boolean) {
-    const { data: existingReport, isLoading: isLoadingReport, error } = useGetReport(postId, isOwner);
+    const isValidId = !!postId && isValidObjectId(postId);
+    const { data: existingReport, isLoading: isLoadingReport, error } = useGetReport(postId, isOwner && isValidId);
     const generateMutation = useGenerateReport(postId);
 
     // existingReport is GetReportResponse.data = { report: AIReport }
@@ -96,8 +108,9 @@ export function useAIReport(postId: string, isOwner: boolean) {
         isCached,
         isLoading: isLoadingReport,
         isGenerating: generateMutation.isPending,
-        error: error as Error | null,
+        error: isValidId ? (error as Error | null) : null,
         generateReport: generateMutation.mutateAsync,
         hasReport: !!report,
     };
 }
+

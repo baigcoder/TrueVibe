@@ -26,6 +26,7 @@ import { Route as AppNotificationsRouteImport } from './routes/app/notifications
 import { Route as AppFeedRouteImport } from './routes/app/feed'
 import { Route as AppChatRouteImport } from './routes/app/chat'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
+import { Route as AppAdminRouteImport } from './routes/app/admin'
 import { Route as AppProfileMeRouteImport } from './routes/app/profile/me'
 import { Route as AppProfileIdRouteImport } from './routes/app/profile/$id'
 
@@ -114,6 +115,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileMeRoute = AppProfileMeRouteImport.update({
   id: '/profile/me',
   path: '/profile/me',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/modules': typeof ModulesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/app/admin': typeof AppAdminRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
   '/app/feed': typeof AppFeedRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/modules': typeof ModulesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/app/admin': typeof AppAdminRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
   '/app/feed': typeof AppFeedRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/modules': typeof ModulesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/app/admin': typeof AppAdminRoute
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
   '/app/feed': typeof AppFeedRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/modules'
     | '/privacy'
     | '/terms'
+    | '/app/admin'
     | '/app/analytics'
     | '/app/chat'
     | '/app/feed'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/modules'
     | '/privacy'
     | '/terms'
+    | '/app/admin'
     | '/app/analytics'
     | '/app/chat'
     | '/app/feed'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/modules'
     | '/privacy'
     | '/terms'
+    | '/app/admin'
     | '/app/analytics'
     | '/app/chat'
     | '/app/feed'
@@ -385,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profile/me': {
       id: '/app/profile/me'
       path: '/profile/me'
@@ -403,6 +422,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppChatRoute: typeof AppChatRoute
   AppFeedRoute: typeof AppFeedRoute
@@ -415,6 +435,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppChatRoute: AppChatRoute,
   AppFeedRoute: AppFeedRoute,

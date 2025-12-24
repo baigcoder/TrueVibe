@@ -5,6 +5,7 @@ export interface IUser extends Document {
     _id: mongoose.Types.ObjectId;
     email: string;
     password?: string;
+    supabaseId?: string;  // Supabase user ID for auth integration
     role: 'user' | 'admin';
     status: 'active' | 'suspended' | 'pending';
     verified: boolean;
@@ -44,6 +45,12 @@ const userSchema = new Schema<IUser>(
             type: String,
             minlength: [6, 'Password must be at least 6 characters'],
             select: false, // Don't return password by default
+        },
+        supabaseId: {
+            type: String,
+            sparse: true,
+            unique: true,
+            index: true,
         },
         role: {
             type: String,

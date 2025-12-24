@@ -11,6 +11,8 @@ import { NotFoundError, ForbiddenError } from '../../shared/middleware/error.mid
 import { addAIAnalysisJob } from '../../jobs/queues.js';
 import { createNotification } from '../notifications/notification.service.js';
 import { config } from '../../config/index.js';
+import { User } from '../users/User.model.js';
+import { sendPDFReportEmail, isEmailConfigured } from '../../services/email.service.js';
 
 // Create post
 export const createPost = async (
@@ -22,6 +24,8 @@ export const createPost = async (
         const userId = req.user!.userId;
         const { content, mediaIds, visibility } = req.body;
 
+        console.log('[Post] Creating post:', { userId, mediaIds: mediaIds?.length || 0, mediaIdsList: mediaIds });
+
         // Create post
         const post = await Post.create({
             userId,
@@ -31,19 +35,35 @@ export const createPost = async (
             trustLevel: mediaIds?.length ? 'pending' : 'authentic', // No media = authentic
         });
 
+        console.log('[Post] Created:', post._id.toString());
+
         // If there are media files, queue AI analysis
         if (mediaIds?.length) {
+            console.log('[Post] Queueing AI analysis for', mediaIds.length, 'media files');
             for (const mediaId of mediaIds) {
+                // Fetch media to log its type
+                const mediaDoc = await Media.findById(mediaId);
+                console.log('[Post] Media:', {
+                    mediaId,
+                    type: mediaDoc?.type,
+                    url: mediaDoc?.url?.substring(0, 80),
+                    originalUrl: mediaDoc?.originalUrl?.substring(0, 80)
+                });
+
                 await addAIAnalysisJob({
                     mediaId,
                     postId: post._id.toString(),
                 });
+                console.log('[Post] Queued AI job for mediaId:', mediaId, 'type:', mediaDoc?.type);
             }
+        } else {
+            console.log('[Post] No media files to analyze');
         }
 
         // Populate for response
         const populatedPost = await Post.findById(post._id)
             .populate('media')
+            .populate('aiAnalysisId')
             .populate({
                 path: 'userId',
                 model: 'Profile',
@@ -1088,9 +1108,13 @@ export const generateReport = async (
             throw new NotFoundError('Post not found');
         }
 
-        // Only the author can generate a report
-        if (post.userId.toString() !== userId) {
-            throw new ForbiddenError('Only the post owner can generate AI reports');
+        // Get the current user to check role (userId is Supabase UUID, not MongoDB ObjectId)
+        const currentUser = await User.findOne({ supabaseId: userId });
+        const isAdmin = currentUser?.role === 'admin';
+
+        // The author OR an admin can generate a report
+        if (post.userId.toString() !== userId && !isAdmin) {
+            throw new ForbiddenError('Only the post owner or an admin can generate AI reports');
         }
 
         // Check if report already exists
@@ -1117,20 +1141,41 @@ export const generateReport = async (
         const aiServiceUrl = config.ai.serviceUrl?.replace('/analyze', '') || 'http://localhost:8000';
 
         const analysisResults = {
-            fake_score: analysis.analysisDetails?.deepfakeAnalysis?.fakeScore || 0,
-            real_score: analysis.analysisDetails?.deepfakeAnalysis?.realScore || 1,
-            classification: analysis.analysisDetails?.deepfakeAnalysis?.classification || 'real',
-            confidence: analysis.confidenceScore / 100,
-            faces_detected: analysis.analysisDetails?.faceDetection?.detected ? 1 : 0,
+            fake_score: analysis.analysisDetails?.deepfakeAnalysis?.fakeScore ||
+                analysis.analysisDetails?.fakeScore ||
+                (analysis.confidenceScore ? analysis.confidenceScore / 100 : 0),
+            real_score: analysis.analysisDetails?.deepfakeAnalysis?.realScore ||
+                analysis.analysisDetails?.realScore ||
+                (1 - (analysis.confidenceScore ? analysis.confidenceScore / 100 : 0)),
+            classification: analysis.analysisDetails?.deepfakeAnalysis?.classification ||
+                analysis.classification || 'real',
+            confidence: analysis.confidenceScore ? analysis.confidenceScore / 100 : 0.5,
+            // Face detection
+            faces_detected: analysis.analysisDetails?.facesDetected ||
+                (analysis.analysisDetails?.faceDetection?.detected ? 1 : 0),
+            face_scores: analysis.analysisDetails?.faceScores || [],
+            avg_face_score: analysis.analysisDetails?.avgFaceScore,
+            // v5 Enhanced analysis fields
+            avg_fft_score: analysis.analysisDetails?.avgFftScore,
+            avg_eye_score: analysis.analysisDetails?.avgEyeScore,
+            fft_boost: analysis.analysisDetails?.fftBoost,
+            eye_boost: analysis.analysisDetails?.eyeBoost,
+            temporal_boost: analysis.analysisDetails?.temporalBoost,
+            // Metadata
             processing_time_ms: analysis.processingTimeMs,
             model_version: analysis.modelVersion,
+            media_type: analysis.analysisDetails?.mediaType || 'image',
+            frames_analyzed: analysis.analysisDetails?.framesAnalyzed,
         };
 
         console.log(`📝 Generating AI report for post ${id}...`);
 
         const response = await fetch(`${aiServiceUrl}/generate-report`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': config.ai.apiKey
+            },
             body: JSON.stringify({ analysis_results: analysisResults }),
         });
 
@@ -1196,18 +1241,26 @@ export const getReport = async (
             throw new NotFoundError('Post not found');
         }
 
-        // Only the author can view reports
-        if (post.userId.toString() !== userId) {
-            throw new ForbiddenError('Only the post owner can view AI reports');
+        // Get the current user to check role
+        const currentUser = await User.findOne({ supabaseId: userId });
+        if (!currentUser) {
+            throw new NotFoundError('User not found');
+        }
+        const isAdmin = currentUser.role === 'admin';
+
+        // The author OR an admin can view reports
+        // Compare MongoDB _id (post.userId) with current user's MongoDB _id
+        if (post.userId.toString() !== currentUser._id.toString() && !isAdmin) {
+            throw new ForbiddenError('Only the post owner or an admin can view AI reports');
         }
 
-        // Get the report
-        const report = await AIReport.findOne({ postId: id, userId });
+        // Get the report - for admins, find any report for this post
+        const report = await AIReport.findOne(isAdmin ? { postId: id } : { postId: id, userId });
 
         if (!report) {
-            res.status(404).json({
-                success: false,
-                error: 'Report not found. Generate one first.',
+            res.json({
+                success: true,
+                data: { report: null },
             });
             return;
         }
@@ -1215,6 +1268,352 @@ export const getReport = async (
         res.json({
             success: true,
             data: { report },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Download PDF report for a post
+ * Generates a professional PDF with debug images
+ * Only accessible by post owner
+ */
+export const downloadPDFReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+        const { analysis_results, report_content } = req.body;
+
+        // Get the post with populated media to access media URLs
+        const post = await Post.findById(id).populate('media');
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        // Get the current user to check role
+        const currentUser = await User.findOne({ supabaseId: userId });
+        const isAdmin = currentUser?.role === 'admin';
+
+        // The author OR an admin can download reports
+        if (post.userId.toString() !== userId && !isAdmin) {
+            throw new ForbiddenError('Only the post owner or an admin can download AI reports');
+        }
+
+        // Get AI analysis for the post
+        const analysis = await AIAnalysis.findOne({ postId: id });
+        if (!analysis || analysis.status !== 'completed') {
+            res.status(400).json({
+                success: false,
+                error: 'AI analysis not completed yet. Please wait for analysis to finish.',
+            });
+            return;
+        }
+
+        // Call Python AI service to generate PDF report
+        const aiServiceUrl = config.ai.serviceUrl?.replace('/analyze', '') || 'http://localhost:8000';
+
+        // Build analysis results from stored analysis data
+        const analysisData = {
+            fake_score: analysis_results?.fake_score ?? (analysis.analysisDetails?.deepfakeAnalysis?.fakeScore || 0),
+            real_score: analysis_results?.real_score ?? (analysis.analysisDetails?.deepfakeAnalysis?.realScore || 1),
+            classification: analysis_results?.classification ?? (analysis.analysisDetails?.deepfakeAnalysis?.classification || 'real'),
+            confidence: analysis_results?.confidence ?? (analysis.confidenceScore / 100),
+            faces_detected: analysis_results?.faces_detected ?? (analysis.analysisDetails?.facesDetected || 0),
+            face_scores: analysis_results?.face_scores ?? (analysis.analysisDetails?.faceScores || []),
+            avg_face_score: analysis_results?.avg_face_score ?? analysis.analysisDetails?.avgFaceScore,
+            avg_fft_score: analysis_results?.avg_fft_score ?? analysis.analysisDetails?.avgFftScore,
+            avg_eye_score: analysis_results?.avg_eye_score ?? analysis.analysisDetails?.avgEyeScore,
+            fft_boost: analysis_results?.fft_boost ?? analysis.analysisDetails?.fftBoost,
+            eye_boost: analysis_results?.eye_boost ?? analysis.analysisDetails?.eyeBoost,
+            temporal_boost: analysis_results?.temporal_boost ?? analysis.analysisDetails?.temporalBoost,
+            processing_time_ms: analysis_results?.processing_time_ms ?? analysis.processingTimeMs,
+            model_version: analysis_results?.model_version ?? analysis.modelVersion,
+            // Include debug frames from stored analysis for PDF report
+            debug_frames: analysis.analysisDetails?.debugFrames || [],
+        };
+
+        // Get or generate report content
+        let reportContent = report_content;
+        if (!reportContent) {
+            // Try to get existing report
+            const existingReport = await AIReport.findOne({ postId: id, userId });
+            if (existingReport) {
+                reportContent = {
+                    verdict: existingReport.report.verdict,
+                    confidence: existingReport.report.confidence,
+                    summary: existingReport.report.summary,
+                    detectionBreakdown: existingReport.report.detectionBreakdown || [],
+                    technicalDetails: existingReport.report.technicalDetails || [],
+                    recommendations: existingReport.report.recommendations || [],
+                };
+            } else {
+                res.status(400).json({
+                    success: false,
+                    error: 'Please generate an AI report first before downloading the PDF.',
+                });
+                return;
+            }
+        }
+
+        console.log(`📄 Generating PDF report for post ${id}...`);
+        console.log(`   📊 Debug frames count: ${(analysis.analysisDetails as any)?.debugFrames?.length || 0}`);
+
+        // Get the analyzed media URL from the post (image or video thumbnail)
+        const postData = post.toObject() as any;
+        // Try to find an image first, then video thumbnail, then video URL with thumbnail suffix
+        let analyzedImageUrl: string | null = null;
+        const imageMedia = postData.media?.find((m: any) => m.type === 'image');
+        const videoMedia = postData.media?.find((m: any) => m.type === 'video');
+
+        if (imageMedia?.url) {
+            analyzedImageUrl = imageMedia.url;
+        } else if (videoMedia?.thumbnail) {
+            // Use video thumbnail if available
+            analyzedImageUrl = videoMedia.thumbnail;
+        } else if (videoMedia?.url) {
+            // For Cloudinary videos, transform URL to get first frame as image
+            const videoUrl = videoMedia.url as string;
+            if (videoUrl.includes('cloudinary')) {
+                // Cloudinary format: insert 'so_0' (start offset 0) and change extension to jpg
+                // Transform: /video/upload/... to /video/upload/so_0,f_jpg/.../filename.jpg
+                const transformedUrl = videoUrl
+                    .replace('/video/upload/', '/video/upload/so_0,f_jpg/')
+                    .replace(/\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i, '.jpg');
+                analyzedImageUrl = transformedUrl;
+                console.log(`   🎬 Video thumbnail URL: ${analyzedImageUrl}`);
+            } else {
+                analyzedImageUrl = null; // Can't get thumbnail, use debug frames only
+            }
+        } else {
+            analyzedImageUrl = postData.image || null;
+        }
+
+        const response = await fetch(`${aiServiceUrl}/generate-pdf-report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': config.ai.apiKey
+            },
+            body: JSON.stringify({
+                analysis_results: analysisData,
+                report_content: reportContent,
+                analyzed_image_url: analyzedImageUrl,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`PDF generation error: ${errorText}`);
+            throw new Error(`Failed to generate PDF: ${errorText}`);
+        }
+
+        const pdfResponse = await response.json() as {
+            pdf_base64: string;
+            filename: string;
+            success: boolean;
+            message: string;
+        };
+
+        if (!pdfResponse.success) {
+            throw new Error(pdfResponse.message || 'PDF generation failed');
+        }
+
+        console.log(`✅ PDF report generated for post ${id}`);
+
+        res.json({
+            success: true,
+            data: pdfResponse,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Email PDF report to admin
+ */
+export const emailPDFReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+        const { analysis_results, report_content } = req.body;
+
+        // Check if email is configured
+        if (!isEmailConfigured()) {
+            res.status(400).json({
+                success: false,
+                error: 'Email service is not configured on the server. Please check SMTP settings.',
+            });
+            return;
+        }
+
+        // Get the post
+        const post = await Post.findById(id).populate('media');
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        // Get the current user to check role
+        const currentUser = await User.findOne({ supabaseId: userId });
+        const isAdmin = currentUser?.role === 'admin';
+
+        // The author OR an admin can request email reports
+        if (post.userId.toString() !== userId && !isAdmin) {
+            throw new ForbiddenError('Only the post owner or an admin can request emailed AI reports');
+        }
+
+        // Get AI analysis for the post
+        const analysis = await AIAnalysis.findOne({ postId: id });
+        if (!analysis || analysis.status !== 'completed') {
+            res.status(400).json({
+                success: false,
+                error: 'AI analysis not completed yet. Please wait for analysis to finish.',
+            });
+            return;
+        }
+
+        // Get the POST AUTHOR's email to send the report to
+        // The post.userId contains the Supabase UUID of the post author
+        console.log(`📧 Looking up post author for userId: ${post.userId}`);
+        const postAuthor = await User.findOne({ supabaseId: post.userId });
+        console.log(`📧 Post author found:`, postAuthor ? `email: ${postAuthor.email}` : 'NOT FOUND');
+
+        if (!postAuthor || !postAuthor.email) {
+            console.error(`❌ Post author not found or no email. post.userId: ${post.userId}`);
+            res.status(400).json({
+                success: false,
+                error: `The post author (ID: ${post.userId}) does not have an email address configured in the User collection.`,
+            });
+            return;
+        }
+
+        // Call Python AI service to generate PDF report
+        const aiServiceUrl = config.ai.serviceUrl?.replace('/analyze', '') || 'http://localhost:8000';
+
+        // Build analysis results - INCLUDE debug_frames for complete report
+        const analysisData = {
+            fake_score: analysis_results?.fake_score ?? (analysis.analysisDetails?.deepfakeAnalysis?.fakeScore || 0),
+            real_score: analysis_results?.real_score ?? (analysis.analysisDetails?.deepfakeAnalysis?.realScore || 1),
+            classification: analysis_results?.classification ?? (analysis.analysisDetails?.deepfakeAnalysis?.classification || 'real'),
+            confidence: analysis_results?.confidence ?? (analysis.confidenceScore / 100),
+            faces_detected: analysis_results?.faces_detected ?? (analysis.analysisDetails?.facesDetected || 0),
+            face_scores: analysis_results?.face_scores ?? (analysis.analysisDetails?.faceScores || []),
+            avg_face_score: analysis_results?.avg_face_score ?? analysis.analysisDetails?.avgFaceScore,
+            avg_fft_score: analysis_results?.avg_fft_score ?? analysis.analysisDetails?.avgFftScore,
+            avg_eye_score: analysis_results?.avg_eye_score ?? analysis.analysisDetails?.avgEyeScore,
+            fft_boost: analysis_results?.fft_boost ?? analysis.analysisDetails?.fftBoost,
+            eye_boost: analysis_results?.eye_boost ?? analysis.analysisDetails?.eyeBoost,
+            temporal_boost: analysis_results?.temporal_boost ?? analysis.analysisDetails?.temporalBoost,
+            processing_time_ms: analysis_results?.processing_time_ms ?? analysis.processingTimeMs,
+            model_version: analysis_results?.model_version ?? analysis.modelVersion,
+            // Include debug frames from stored analysis for PDF report (same as download)
+            debug_frames: (analysis.analysisDetails as any)?.debugFrames || [],
+        };
+
+        // Get analyzed image URL (same logic as downloadPDFReport)
+        const postData = post.toObject() as any;
+        let analyzedImageUrl: string | null = null;
+        const imageMedia = postData.media?.find((m: any) => m.type === 'image');
+        const videoMedia = postData.media?.find((m: any) => m.type === 'video');
+
+        if (imageMedia?.url) {
+            analyzedImageUrl = imageMedia.url;
+        } else if (videoMedia?.thumbnail) {
+            analyzedImageUrl = videoMedia.thumbnail;
+        } else if (videoMedia?.url) {
+            const videoUrl = videoMedia.url as string;
+            if (videoUrl.includes('cloudinary')) {
+                analyzedImageUrl = videoUrl
+                    .replace('/video/upload/', '/video/upload/so_0,f_jpg/')
+                    .replace(/\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i, '.jpg');
+            }
+        } else {
+            analyzedImageUrl = postData.image || null;
+        }
+
+        // Get or generate report content
+        let reportContent = report_content;
+        if (!reportContent) {
+            const existingReport = await AIReport.findOne({ postId: id });
+            if (existingReport) {
+                reportContent = {
+                    verdict: existingReport.report.verdict,
+                    confidence: existingReport.report.confidence,
+                    summary: existingReport.report.summary,
+                    detectionBreakdown: existingReport.report.detectionBreakdown || [],
+                    technicalDetails: existingReport.report.technicalDetails || [],
+                    recommendations: existingReport.report.recommendations || [],
+                };
+            } else {
+                res.status(400).json({
+                    success: false,
+                    error: 'Please generate an AI report first before emailing the PDF.',
+                });
+                return;
+            }
+        }
+
+        console.log(`📄 Generating PDF for email - post ${id}...`);
+        console.log(`   📊 Debug frames count: ${analysisData.debug_frames?.length || 0}`);
+
+        const response = await fetch(`${aiServiceUrl}/generate-pdf-report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': config.ai.apiKey
+            },
+            body: JSON.stringify({
+                analysis_results: analysisData,
+                report_content: reportContent,
+                analyzed_image_url: analyzedImageUrl,  // Include the analyzed image
+            }),
+        });
+
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to generate PDF for email: ${errorText}`);
+        }
+
+        const pdfResponse = await response.json() as {
+            pdf_base64: string;
+            filename: string;
+            success: boolean;
+        };
+
+        if (!pdfResponse.success) {
+            throw new Error('PDF generation failed for email');
+        }
+
+        // Get post image URL for preview in email if available
+        const postImageUrl = (post.media as any)?.[0]?.url;
+
+        // Send email to the POST AUTHOR (the person who created the post)
+        await sendPDFReportEmail({
+            recipientEmail: postAuthor.email,
+            recipientName: 'User',
+            postId: id,
+            pdfBase64: pdfResponse.pdf_base64,
+            pdfFilename: pdfResponse.filename,
+            verdict: reportContent.verdict,
+            confidence: reportContent.confidence,
+            postImageUrl
+        });
+
+        console.log(`📧 PDF report for post ${id} sent to post author: ${postAuthor.email}`);
+
+        res.json({
+            success: true,
+            message: `Report successfully emailed to post author (${postAuthor.email}).`,
         });
     } catch (error) {
         next(error);

@@ -60,17 +60,19 @@ export const VideoPresets = {
         video_codec: 'auto',
         quality: 'auto:good',
         format: 'mp4',
+        audio_codec: 'aac',  // Preserve audio
     },
     // High quality
     high: {
         video_codec: 'h265',
         quality: 'auto:best',
         format: 'mp4',
+        audio_codec: 'aac',  // Preserve audio
     },
 } as const;
 
 /**
- * Generate signed upload params with eager transformations
+ * Generate signed upload params with eager transformations for IMAGES
  * Cloudinary will automatically generate compressed versions on upload
  */
 export const generateSignedUploadParams = (
@@ -99,6 +101,47 @@ export const generateSignedUploadParams = (
             .map(t => Object.entries(t).map(([k, v]) => `${k}_${v}`).join(','))
             .join('|');
     }
+
+    const signature = cloudinary.utils.api_sign_request(
+        params,
+        config.cloudinary.apiSecret
+    );
+
+    return {
+        signature,
+        timestamp,
+        cloudName: config.cloudinary.cloudName,
+        apiKey: config.cloudinary.apiKey,
+        folder,
+        eager: params.eager as string,
+    };
+};
+
+/**
+ * Generate signed upload params with eager transformations for VIDEOS
+ * Creates compressed mp4 version for fast playback
+ */
+export const generateVideoUploadParams = (
+    folder: string = 'truevibe'
+): SignedUploadParams => {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+
+    // Video eager transformations - create compressed versions on upload
+    // Format: vc_auto,q_auto:good,ac_aac,f_mp4 (video codec, quality, audio codec, format)
+    const eagerTransforms = [
+        // Standard quality - balanced compression for fast playback
+        'vc_auto,q_auto:good,ac_aac,f_mp4',
+        // Mobile/preview - smaller file for quick loading
+        'vc_auto,q_auto:eco,w_640,ac_aac,f_mp4',
+    ];
+
+    const params: Record<string, unknown> = {
+        timestamp,
+        folder,
+        resource_type: 'video',
+        eager: eagerTransforms.join('|'),
+        eager_async: true, // Process in background - don't block upload
+    };
 
     const signature = cloudinary.utils.api_sign_request(
         params,
@@ -203,10 +246,13 @@ export const generateSrcSet = (publicId: string): string => {
 
 /**
  * Get original quality URL (no compression)
+ * @param publicId - Cloudinary public ID
+ * @param resourceType - 'image' or 'video' (defaults to 'image')
  */
-export const getOriginalUrl = (publicId: string): string => {
+export const getOriginalUrl = (publicId: string, resourceType: 'image' | 'video' = 'image'): string => {
     return cloudinary.url(publicId, {
         secure: true,
+        resource_type: resourceType,
         transformation: [],
     });
 };

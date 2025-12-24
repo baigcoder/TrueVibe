@@ -10,6 +10,8 @@ import { VoiceRoomPanel } from "@/components/chat/VoiceRoomPanel";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
 import { NotificationManager } from "@/components/NotificationManager";
+// Import logger to silence console in production
+import "@/lib/logger";
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -83,7 +85,26 @@ function AppContent() {
       <NotificationManager />
       <CallOverlay />
       <VoiceRoomPanel />
-      <Toaster position="top-right" theme="dark" richColors />
+      <Toaster
+        position="top-center"
+        theme="dark"
+        richColors
+        closeButton
+        toastOptions={{
+          style: {
+            background: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '1.25rem',
+            color: '#fff',
+            fontSize: '14px',
+            padding: '12px 20px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          },
+        }}
+      />
     </AuthLoader>
   );
 }

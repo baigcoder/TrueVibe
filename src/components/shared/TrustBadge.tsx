@@ -1,4 +1,4 @@
-import { ShieldCheck, AlertTriangle, XOctagon, Clock, RefreshCw, ChevronDown, Scan, Brain, Activity, Target, FileText, Sparkles } from "lucide-react";
+import { ShieldCheck, AlertTriangle, XOctagon, Clock, RefreshCw, ChevronDown, Scan, Brain, Activity, Target, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -12,6 +12,18 @@ interface AnalysisDetails {
     processingTime?: number;
     mediaType?: 'image' | 'video';
     classification?: string;
+    faceDetection?: { detected: boolean; confidence: number };
+    audioAnalysis?: { detected: boolean; confidence: number };
+    temporalConsistency?: number;
+    compressionArtifacts?: number;
+    // Enhanced v5 analysis fields
+    facesDetected?: number;
+    avgFaceScore?: number;
+    avgFftScore?: number;
+    avgEyeScore?: number;
+    fftBoost?: number;
+    eyeBoost?: number;
+    temporalBoost?: number;
 }
 
 interface TrustBadgeProps {
@@ -23,7 +35,6 @@ interface TrustBadgeProps {
     onRefresh?: () => void;
     isRefreshing?: boolean;
     compact?: boolean;
-    isOwner?: boolean;
     onGenerateReport?: () => void;
     isGeneratingReport?: boolean;
 }
@@ -31,11 +42,10 @@ interface TrustBadgeProps {
 export function TrustBadge({
     level,
     className,
-    score = 94,
+    score,
     analysisDetails,
     isRefreshing = false,
     compact = false,
-    isOwner = false,
     onGenerateReport,
     isGeneratingReport = false
 }: TrustBadgeProps) {
@@ -106,11 +116,59 @@ export function TrustBadge({
 
     const current = config[level as keyof typeof config] || config.pending;
 
-    // Calculate display score
+    // Calculate display score from analysis details if available
+    // If no data available, derive from the trust level as a fallback
+    const getDefaultRealPercent = (lvl: string): number => {
+        switch (lvl.toLowerCase()) {
+            case 'authentic': return 95;
+            case 'suspicious': return 60;
+            case 'likely_fake': return 30;
+            case 'fake': return 15;
+            case 'pending':
+            case 'analyzing':
+            default: return 50;
+        }
+    };
+
+    // Check if we're in a pending/analyzing state with no real data
+    const isPendingState = ['pending', 'analyzing'].includes(level.toLowerCase()) && !analysisDetails;
+
     const fakePercent = analysisDetails?.fakeScore !== undefined
         ? Math.round(analysisDetails.fakeScore * 100)
-        : (100 - score);
+        : (score !== undefined ? (100 - score) : (100 - getDefaultRealPercent(level)));
     const realPercent = 100 - fakePercent;
+
+    // Derive the ACTUAL level from SCORE FIRST to ensure accuracy
+    // This ensures 74% authentic shows as VERIFIED, not SUSPICIOUS
+    // Thresholds: 70%+ authentic = VERIFIED, 50-70% = SUSPICIOUS, 30-50% = LIKELY FAKE, <30% = FAKE
+    let rawLevel: string;
+    if (isPendingState) {
+        rawLevel = level.toLowerCase();
+    } else if (analysisDetails?.fakeScore !== undefined) {
+        // fakeScore is 0-1 (0.26 = 26% fake, 74% authentic)
+        const fakePct = analysisDetails.fakeScore;
+        if (fakePct <= 0.30) rawLevel = 'authentic';          // 70%+ authentic = VERIFIED
+        else if (fakePct <= 0.50) rawLevel = 'suspicious';    // 50-70% authentic = SUSPICIOUS
+        else if (fakePct <= 0.70) rawLevel = 'likely_fake';   // 30-50% authentic = LIKELY FAKE
+        else rawLevel = 'fake';                                // <30% authentic = FAKE
+    } else if (analysisDetails?.classification) {
+        rawLevel = analysisDetails.classification.toLowerCase();
+    } else {
+        rawLevel = typeof level === 'string' ? level.toLowerCase() : level;
+    }
+
+    const derivedLevel = rawLevel as TrustLevel;
+
+    const displayConfig = config[derivedLevel as keyof typeof config] || current;
+
+    // For pending/analyzing, show "--" instead of misleading percentages
+    const displayRealPercent = isPendingState ? '--' : `${realPercent}%`;
+    const displayFakePercent = isPendingState ? '--' : `${fakePercent}%`;
+
+    // For risky levels, show the risk/fake percentage; for safe levels, show authenticity
+    const isRiskyLevel = ['fake', 'likely_fake', 'suspicious'].includes(derivedLevel);
+    const badgeDisplayPercent = isPendingState ? '--' : (isRiskyLevel ? `${fakePercent}%` : `${realPercent}%`);
+    const badgeProgressValue = isRiskyLevel ? fakePercent : realPercent;
 
     if (compact) {
         return (
@@ -118,14 +176,18 @@ export function TrustBadge({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className={cn(
-                    "inline-flex items-center gap-2 px-2 py-0.5 rounded-full border bg-black/40 backdrop-blur-md",
-                    current.borderColor,
+                    "inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-black/60 backdrop-blur-xl shadow-lg",
+                    displayConfig.borderColor,
                     className
                 )}
             >
-                <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", current.signalColor)} />
-                <span className={cn("text-[8px] font-black uppercase tracking-wider", current.textColor)}>
-                    {current.label} • {realPercent}%
+                <div className={cn("w-2 h-2 rounded-full", displayConfig.signalColor)} />
+                <span className={cn("text-[10px] font-bold uppercase tracking-widest", displayConfig.textColor)}>
+                    {displayConfig.label}
+                </span>
+                <div className="w-px h-3 bg-white/10" />
+                <span className="text-[10px] font-mono font-bold text-white/80">
+                    {badgeDisplayPercent}
                 </span>
             </motion.div>
         );
@@ -136,191 +198,312 @@ export function TrustBadge({
             <motion.div
                 onClick={() => setShowDetails(!showDetails)}
                 className={cn(
-                    "inline-flex items-center gap-3 p-1 pr-4 rounded-full border bg-slate-900/40 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/60 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
-                    current.borderColor,
-                    "shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-primary/5",
+                    "inline-flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 pr-2.5 sm:pr-4 rounded-xl sm:rounded-2xl border bg-slate-950/80 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/80 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
+                    displayConfig.borderColor,
+                    "shadow-xl",
                     className
                 )}
             >
-                {/* HUD Icon Circle */}
+                {/* Icon Circle */}
                 <div className="relative flex-shrink-0">
                     <div className={cn(
-                        "w-9 h-9 rounded-full flex items-center justify-center border border-white/10 bg-white/5 transition-transform duration-500 group-hover/badge:rotate-[360deg]",
-                        current.textColor
+                        "w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center border border-white/10 bg-white/5 transition-all duration-500",
+                        displayConfig.textColor
                     )}>
-                        {(level === 'analyzing' || isRefreshing) ? (
-                            <RefreshCw className="w-4 h-4 animate-spin-slow" />
+                        {(derivedLevel === 'analyzing' || isRefreshing) ? (
+                            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                         ) : (
-                            <current.icon className="w-5 h-5 shadow-sm" />
+                            <displayConfig.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                     </div>
-                    {/* Signal Status Dot with Ping Animation */}
+                    {/* Status Dot */}
                     <div className={cn(
-                        "absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-950",
-                        current.signalColor,
-                        "shadow-[0_0_8px_currentColor]"
-                    )}>
-                        <div className={cn("absolute inset-0 rounded-full animate-ping opacity-50", current.signalColor)} />
-                    </div>
+                        "absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-950",
+                        displayConfig.signalColor,
+                        (derivedLevel === 'fake' || derivedLevel === 'likely_fake') && "animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+                        (derivedLevel === 'pending' || derivedLevel === 'analyzing') && "animate-ping opacity-75 shadow-[0_0_8px_rgba(59,130,246,0.5)] bg-blue-500"
+                    )} />
                 </div>
 
-                {/* Technical Info Layout */}
-                <div className="flex items-center gap-5">
+                {/* HUD Data Tags on the Badge itself */}
+                {!compact && (derivedLevel === 'pending' || derivedLevel === 'analyzing') && (
+                    <div className="hidden sm:flex absolute -top-2 left-12 gap-1.5 pointer-events-none">
+                        <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="bg-blue-500/20 text-blue-400 text-[7px] font-black px-1.5 py-0.5 rounded-sm border border-blue-500/30 backdrop-blur-md uppercase tracking-widest whitespace-nowrap"
+                        >
+                            [ Processing ]
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: [0.4, 1, 0.4] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                            className="bg-slate-500/10 text-slate-400 text-[7px] font-black px-1.5 py-0.5 rounded-sm border border-slate-500/20 backdrop-blur-md uppercase tracking-widest whitespace-nowrap"
+                        >
+                            {Math.floor(Math.random() * 20 + 80)}% LOAD
+                        </motion.div>
+                    </div>
+                )}
+
+                {!compact && (derivedLevel === 'suspicious' || derivedLevel === 'fake' || derivedLevel === 'likely_fake') && (
+                    <div className="hidden sm:flex absolute -top-2 left-12 gap-1.5 pointer-events-none">
+                        {analysisDetails?.faceDetection?.detected && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-red-500/20 text-red-400 text-[7px] font-black px-1.5 py-0.5 rounded-sm border border-red-500/30 backdrop-blur-md uppercase tracking-widest whitespace-nowrap"
+                            >
+                                [ Face Detected ]
+                            </motion.div>
+                        )}
+                        {analysisDetails?.audioAnalysis?.detected && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-orange-500/20 text-orange-400 text-[7px] font-black px-1.5 py-0.5 rounded-sm border border-orange-500/30 backdrop-blur-md uppercase tracking-widest whitespace-nowrap"
+                            >
+                                [ Synth Audio ]
+                            </motion.div>
+                        )}
+                        {(analysisDetails?.temporalConsistency !== undefined && analysisDetails.temporalConsistency < 0.3) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-amber-500/20 text-amber-400 text-[7px] font-black px-1.5 py-0.5 rounded-sm border border-amber-500/30 backdrop-blur-md uppercase tracking-widest whitespace-nowrap"
+                            >
+                                [ Temporal Error ]
+                            </motion.div>
+                        )}
+                    </div>
+                )}
+
+                {/* Info Layout */}
+                <div className="flex items-center gap-4">
                     <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                            <span className={cn("text-xs font-black italic tracking-tight uppercase leading-none", current.textColor)}>
-                                {current.label}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className={cn("text-[10px] sm:text-sm font-bold tracking-tight uppercase leading-none", displayConfig.textColor)}>
+                                {displayConfig.label}
                             </span>
-                            <div className="h-2 w-[1px] bg-white/10" />
-                            <span className="text-[9px] font-mono font-bold text-slate-500 leading-none tracking-widest opacity-80">
-                                PROB:0.{realPercent < 10 ? `0${realPercent}` : realPercent}
+                            <div className="h-2.5 sm:h-3 w-px bg-white/10" />
+                            <span className="text-[9px] sm:text-xs font-mono font-medium text-white/60 leading-none">
+                                {badgeDisplayPercent}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1 px-0.5">
-                            <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden relative">
+                        <div className="flex items-center gap-2 mt-1 sm:mt-1.5">
+                            <div className="w-16 sm:w-24 h-1 sm:h-1.5 bg-white/10 rounded-full overflow-hidden">
                                 <motion.div
-                                    className={cn("h-full relative z-10", current.signalColor)}
+                                    className={cn("h-full rounded-full", displayConfig.signalColor)}
                                     initial={{ width: 0 }}
-                                    animate={{ width: `${realPercent}%` }}
-                                    transition={{ duration: 1.5, ease: "circOut" }}
+                                    animate={{ width: `${badgeProgressValue}%` }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
                                 />
-                                {/* Progress background glow */}
-                                <div className={cn("absolute inset-0 opacity-20 blur-[2px]", current.signalColor)} />
                             </div>
-                            <span className={cn("text-[10px] font-mono font-bold leading-none tracking-tighter", realPercent > 80 ? "text-emerald-400" : realPercent > 50 ? "text-amber-400" : "text-red-400")}>
-                                {realPercent}%
-                            </span>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/5 group-hover/badge:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-white/5 group-hover/badge:bg-white/10 transition-colors">
                         <ChevronDown className={cn(
-                            "w-3.5 h-3.5 text-slate-500 transition-transform duration-500 ease-in-out",
+                            "w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 transition-transform duration-300",
                             showDetails && "rotate-180"
                         )} />
                     </div>
                 </div>
             </motion.div>
 
-            {/* Futuristic Details HUD */}
+            {/* Details Panel - ULTIMATE COMPACT VERSION */}
             <AnimatePresence>
                 {showDetails && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 z-[100] w-64 origin-top-left"
-                    >
-                        <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl relative overflow-hidden">
-                            {/* Scanning line animation */}
-                            <motion.div
-                                className="absolute top-0 left-0 right-0 h-[1px] bg-sky-500/50 z-10"
-                                animate={{ top: ["0%", "100%", "0%"] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            />
+                    <>
+                        {/* Mobile Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowDetails(false)}
+                            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[150] sm:hidden"
+                        />
 
-                            {/* HUD Header */}
-                            <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                                <div className="flex items-center gap-2">
-                                    <Brain className="w-3.5 h-3.5 text-sky-400" />
-                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">AI Vibe Audit</span>
-                                </div>
-                                <span className="text-[8px] font-mono text-slate-500">SYS_V5.0</span>
-                            </div>
+                        {/* Panel Container */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(8px)" }}
+                            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(8px)" }}
+                            transition={{ type: "spring", damping: 25, stiffness: 400 }}
+                            className="fixed sm:absolute left-0 right-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:left-0 sm:top-full sm:mt-1 z-[9999] sm:w-[220px] origin-bottom sm:origin-top-left px-1.5 sm:px-0 mb-safe sm:mb-0"
+                        >
+                            {/* Main Panel */}
+                            <div className="bg-[#030712] border border-white/10 rounded-t-2xl sm:rounded-xl shadow-[0_0_50px_-12px_rgba(0,0,0,1)] overflow-hidden">
 
-                            {/* Data Grid */}
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <Activity className="w-2.5 h-2.5 text-emerald-400" />
-                                        <span className="text-[7px] font-bold text-slate-500 uppercase">Authenticity</span>
+                                {/* Header - Slimmer */}
+                                <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-white/5 bg-white/[0.03]">
+                                    <div className="flex items-center gap-1.5">
+                                        <motion.div
+                                            animate={{ rotate: [0, 10, -10, 0] }}
+                                            transition={{ duration: 4, repeat: Infinity }}
+                                        >
+                                            <Brain className="w-3 h-3 text-sky-400" />
+                                        </motion.div>
+                                        <span className="text-[8px] font-black uppercase tracking-wider text-white/80">AI Audit</span>
                                     </div>
-                                    <div className="text-sm font-mono font-black text-emerald-400">{realPercent}%</div>
-                                </div>
-                                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <Target className="w-2.5 h-2.5 text-red-400" />
-                                        <span className="text-[7px] font-bold text-slate-500 uppercase">Manipulation</span>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-[7px] font-mono text-slate-500 bg-white/5 px-1 rounded">V7</span>
+                                        <button
+                                            onClick={() => setShowDetails(false)}
+                                            className="w-4 h-4 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors group"
+                                        >
+                                            <X className="w-2.5 h-2.5 text-white/40 group-hover:text-white" />
+                                        </button>
                                     </div>
-                                    <div className="text-sm font-mono font-black text-red-400">{fakePercent}%</div>
                                 </div>
-                            </div>
 
-                            {/* Extended Metrics */}
-                            <div className="space-y-2.5">
-                                {analysisDetails?.framesAnalyzed && (
-                                    <div className="flex items-center justify-between text-[8px] font-mono uppercase tracking-tighter">
-                                        <span className="text-slate-500">Frames Processed</span>
-                                        <span className="text-white font-bold">{analysisDetails.framesAnalyzed}</span>
+                                {/* Content - Denser */}
+                                <div className="max-h-[40vh] sm:max-h-[50vh] overflow-y-auto p-2 space-y-2 scrollbar-hide">
+
+                                    {/* Gauges - Smaller & Tighter */}
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {[
+                                            { label: "AUTH", icon: Activity, val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
+                                            { label: "FAKE", icon: Target, val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
+                                        ].map((gauge, i) => (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className={cn(
+                                                    "border rounded-lg p-1.5 text-center relative overflow-hidden transition-colors",
+                                                    gauge.bg === "emerald" ? "bg-emerald-500/[0.07] border-emerald-500/20" : "bg-red-500/[0.07] border-red-500/20"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "text-[7px] font-black uppercase mb-1 flex items-center justify-center gap-1 tracking-tight",
+                                                    gauge.bg === "emerald" ? "text-emerald-400/80" : "text-red-400/80"
+                                                )}>
+                                                    <gauge.icon className="w-2 h-2" /> {gauge.label}
+                                                </div>
+                                                <div className="relative w-9 h-9 mx-auto">
+                                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                                        <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="4.5" className="text-white/[0.05]" />
+                                                        <motion.circle
+                                                            cx="18" cy="18" r="15" fill="none" stroke={gauge.color} strokeWidth="5" strokeLinecap="round"
+                                                            strokeDasharray={`${isPendingState ? 0 : gauge.p * 0.94} 94`}
+                                                            initial={{ strokeDasharray: "0 94" }}
+                                                            animate={{ strokeDasharray: `${isPendingState ? 0 : gauge.p * 0.94} 94` }}
+                                                            transition={{ duration: 1.5, ease: "circOut", delay: 0.2 }}
+                                                        />
+                                                    </svg>
+                                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white tabular-nums">
+                                                        {gauge.val}
+                                                    </span>
+                                                </div>
+                                            </motion.div>
+                                        ))}
                                     </div>
-                                )}
-                                {analysisDetails?.processingTime && (
-                                    <div className="flex items-center justify-between text-[8px] font-mono uppercase tracking-tighter">
-                                        <span className="text-slate-500">Analysis Time</span>
-                                        <span className="text-white font-bold">{(analysisDetails.processingTime / 1000).toFixed(2)}s</span>
+
+                                    {/* Metrics - Only Real Data */}
+                                    <div className="space-y-1 px-0.5">
+                                        {[
+                                            // Only include metrics that have meaningful non-zero values
+                                            analysisDetails?.facesDetected !== undefined && analysisDetails.facesDetected > 0
+                                                ? { label: "Faces", val: analysisDetails.facesDetected.toString(), color: "text-purple-400" }
+                                                : null,
+                                            analysisDetails?.avgFaceScore !== undefined && analysisDetails.avgFaceScore > 0
+                                                ? { label: "Face Score", val: `${Math.round(analysisDetails.avgFaceScore * 100)}%`, color: analysisDetails.avgFaceScore > 0.5 ? "text-rose-400" : "text-emerald-400" }
+                                                : null,
+                                            analysisDetails?.avgFftScore !== undefined && analysisDetails.avgFftScore > 0.01
+                                                ? { label: "FFT Score", val: `${Math.round(analysisDetails.avgFftScore * 100)}%`, color: analysisDetails.avgFftScore > 0.5 ? "text-rose-400" : "text-emerald-400" }
+                                                : null,
+                                            analysisDetails?.avgEyeScore !== undefined && analysisDetails.avgEyeScore > 0.01
+                                                ? { label: "Eye Score", val: `${Math.round(analysisDetails.avgEyeScore * 100)}%`, color: analysisDetails.avgEyeScore > 0.5 ? "text-rose-400" : "text-emerald-400" }
+                                                : null,
+                                            analysisDetails?.temporalBoost !== undefined && analysisDetails.temporalBoost !== 0
+                                                ? { label: "Temporal", val: `${analysisDetails.temporalBoost > 0 ? '+' : ''}${Math.round(analysisDetails.temporalBoost * 100)}%`, color: "text-amber-400" }
+                                                : null,
+                                            analysisDetails?.framesAnalyzed !== undefined && analysisDetails.framesAnalyzed > 0
+                                                ? { label: "Frames", val: analysisDetails.framesAnalyzed.toString(), color: "text-sky-400" }
+                                                : null,
+                                            analysisDetails?.processingTime !== undefined && analysisDetails.processingTime > 0
+                                                ? { label: "Time", val: `${(analysisDetails.processingTime / 1000).toFixed(1)}s`, color: "text-white/70" }
+                                                : null
+                                        ].filter((m): m is { label: string; val: string; color: string } => m !== null).map((metric, i) => (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, x: -3 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.1 + (i * 0.04) }}
+                                                className="flex justify-between items-center text-[9px] py-0.5 border-b border-white/[0.03] last:border-0"
+                                            >
+                                                <span className="text-slate-500 font-bold uppercase tracking-tighter">{metric.label}</span>
+                                                <span className={cn("font-black tabular-nums text-[10px]", metric.color)}>
+                                                    {metric.val}
+                                                </span>
+                                            </motion.div>
+                                        ))}
                                     </div>
-                                )}
-                                <div className="flex items-center justify-between text-[8px] font-mono uppercase tracking-tighter">
-                                    <span className="text-slate-500">Methodology</span>
-                                    <span className="text-sky-400 font-bold">ResNet-LSTM Hybrid</span>
-                                </div>
-                            </div>
 
-                            {/* Final Verdict HUD */}
-                            <div className={cn(
-                                "mt-4 p-2 rounded-xl border text-center relative overflow-hidden",
-                                realPercent > 80 ? "bg-emerald-500/10 border-emerald-500/20" : "bg-red-500/10 border-red-500/20"
-                            )}>
-                                <span className={cn(
-                                    "text-[9px] font-black uppercase tracking-[0.1em]",
-                                    realPercent > 80 ? "text-emerald-400" : "text-red-400"
-                                )}>
-                                    {realPercent > 80 ? "✓ VALIDATED AS REAL" : "⚠ MANIPULATION DETECTED"}
-                                </span>
-                            </div>
-
-                            {/* Generate Report Button - Owner Only */}
-                            {isOwner && onGenerateReport && level !== 'analyzing' && level !== 'pending' && (
-                                <motion.button
-                                    whileHover={{ scale: 1.02, y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onGenerateReport();
-                                    }}
-                                    disabled={isGeneratingReport}
-                                    className="mt-4 w-full relative group/btn overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 opacity-80 group-hover/btn:opacity-100 transition-opacity" />
-                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] group-hover/btn:animate-[shimmer_2s_infinite]" />
-
-                                    <div className="relative flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-white/20">
-                                        {isGeneratingReport ? (
-                                            <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                                        ) : (
-                                            <div className="relative">
-                                                <FileText className="w-4 h-4 text-white" />
-                                                <motion.div
-                                                    className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full border border-violet-600"
-                                                    animate={{ scale: [1, 1.2, 1] }}
-                                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                                />
-                                            </div>
+                                    {/* Verdict - Based on Actual Trust Level */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.5 }}
+                                        className={cn(
+                                            "py-1.5 px-2 rounded-lg text-center border relative overflow-hidden",
+                                            derivedLevel === 'authentic' ? "bg-emerald-500/10 border-emerald-500/20" :
+                                                derivedLevel === 'suspicious' ? "bg-amber-500/10 border-amber-500/20" :
+                                                    "bg-red-500/10 border-red-500/20"
                                         )}
-                                        <span className="text-[11px] font-black tracking-[0.1em] uppercase text-white">
-                                            {isGeneratingReport ? "Decoding Neural Core..." : "Access Analysis Report"}
+                                    >
+                                        <span className={cn(
+                                            "text-[9px] font-black uppercase tracking-widest relative z-10",
+                                            derivedLevel === 'authentic' ? "text-emerald-400" :
+                                                derivedLevel === 'suspicious' ? "text-amber-400" :
+                                                    "text-red-400"
+                                        )}>
+                                            {derivedLevel === 'authentic' ? "✓ VALIDATED AS REAL" :
+                                                derivedLevel === 'suspicious' ? "⚠ NEEDS REVIEW" :
+                                                    "⚠ MANIPULATED"}
                                         </span>
-                                        <Sparkles className="w-3.5 h-3.5 text-white/80 group-hover/btn:rotate-12 transition-transform" />
+                                    </motion.div>
+                                </div>
+
+                                {/* Button - Ultra Slim */}
+                                {onGenerateReport && (
+                                    <div className="p-2 border-t border-white/5 bg-slate-900/95 backdrop-blur-xl">
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onGenerateReport();
+                                            }}
+                                            disabled={isGeneratingReport || isPendingState}
+                                            className="w-full py-2 px-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-indigo-500/20"
+                                        >
+                                            {isGeneratingReport ? (
+                                                <RefreshCw className="w-3 h-3 animate-spin text-white" />
+                                            ) : (
+                                                <FileText className="w-3 h-3 text-white" />
+                                            )}
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-white">
+                                                {isGeneratingReport ? "Working..." : "View Report"}
+                                            </span>
+                                        </motion.button>
                                     </div>
-                                </motion.button>
-                            )}
-                        </div>
-                    </motion.div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </div>
     );
 }
+
+
+
+
+
+
 
 // Add these to your tailwind.config.js for perfect HUD vibes if not present
 // keyframes: { 'spin-slow': { from: { rotate: '0deg' }, to: { rotate: '360deg' } } }

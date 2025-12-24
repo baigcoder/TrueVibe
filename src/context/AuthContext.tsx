@@ -54,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const syncProfile = useCallback(async (currentUser: User, accessToken: string) => {
         // Prevent duplicate sync calls
         if (hasSyncedRef.current || syncingRef.current) {
-            console.log('Profile sync skipped - already synced or in progress');
             return;
         }
 
@@ -69,11 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const identities = userToSync.identities || [];
             const googleIdentity = identities.find(i => i.provider === 'google');
             const googleData = googleIdentity?.identity_data || {};
-
-            console.log('[Sync Debug] Fresh user fetched:', !!freshUser);
-            console.log('[Sync Debug] User metadata:', metadata);
-            console.log('[Sync Debug] Google identity data:', googleData);
-            console.log('[Sync Debug] Identities:', identities.map(i => ({ provider: i.provider, id: i.id })));
 
             // Try multiple possible name fields (Google OAuth uses different ones)
             const name = googleData.full_name ||
@@ -93,9 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 identities[0]?.identity_data?.picture ||
                 '';
 
-            console.log('[Sync Debug] Extracted name:', name);
-            console.log('[Sync Debug] Extracted avatar:', avatar);
-
             const response = await fetch(`${API_URL}/auth/sync`, {
                 method: 'POST',
                 headers: {
@@ -112,16 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('[Sync Debug] Profile sync response:', data);
                 setProfile(data.data?.profile || null);
                 hasSyncedRef.current = true;
-                console.log('[Sync Debug] Profile set:', data.data?.profile);
-            } else {
-                const errorText = await response.text();
-                console.error('[Sync Debug] Profile sync failed:', response.status, errorText);
             }
         } catch (error) {
-            console.error('[Sync Debug] Failed to sync profile:', error);
+            // Silent fail in production
         } finally {
             syncingRef.current = false;
         }
@@ -198,8 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Disconnect socket (don't await, just trigger)
         try {
             disconnect();
-        } catch (e) {
-            console.error('Socket disconnect error:', e);
+        } catch {
+            // Silent fail
         }
 
         // Sign out from Supabase with timeout protection
@@ -208,8 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 supabase.auth.signOut(),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
             ]);
-        } catch (e) {
-            console.error('Supabase signOut error:', e);
+        } catch {
+            // Silent fail
         }
     };
 

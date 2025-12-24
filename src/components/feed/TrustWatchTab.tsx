@@ -36,9 +36,14 @@ export function TrustWatchTab() {
     const { data: feedData, isLoading } = useFeed('trust-watch');
     const posts: PostData[] = (feedData?.pages as any[])?.flatMap(p => p?.data?.posts || []) || [];
 
-    // Calculate stats
+    // Calculate stats dynamically
     const suspiciousCount = posts.filter((p: any) => p.trustLevel === 'suspicious').length;
     const fakeCount = posts.filter((p: any) => p.trustLevel === 'likely_fake' || p.trustLevel === 'fake').length;
+
+    // Calculate clean percentage from total analyzed posts
+    const totalFlagged = suspiciousCount + fakeCount;
+    const totalPosts = posts.length || 1; // Avoid division by zero
+    const cleanPercentage = totalPosts > 0 ? Math.round(((totalPosts - totalFlagged) / totalPosts) * 100) : 100;
 
     if (isLoading) {
         return (
@@ -89,7 +94,7 @@ export function TrustWatchTab() {
                     <div className="w-10 h-10 mx-auto rounded-lg bg-emerald-500/20 flex items-center justify-center mb-2">
                         <Shield className="w-5 h-5 text-emerald-400" />
                     </div>
-                    <p className="text-2xl font-black text-white">98%</p>
+                    <p className="text-2xl font-black text-white">{cleanPercentage}%</p>
                     <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Feed Clean</p>
                 </div>
                 <div className="bg-[#0c0c0e]/60 backdrop-blur-xl border border-amber-500/20 rounded-xl p-4 text-center">

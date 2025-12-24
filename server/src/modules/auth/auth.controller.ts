@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Profile } from '../users/Profile.model.js';
+import { User } from '../users/User.model.js';
 import {
     NotFoundError,
 } from '../../shared/middleware/error.middleware.js';
@@ -79,6 +80,25 @@ export const syncProfile = async (
             if (!profile.supabaseId) profile.supabaseId = supabaseId;
 
             await profile.save();
+        }
+
+        // Also sync User record with email for features like PDF report email
+        if (email) {
+            let user = await User.findOne({ supabaseId });
+            if (!user) {
+                console.log('[Sync] Creating new User record:', { supabaseId, email });
+                user = await User.create({
+                    email,
+                    supabaseId,
+                    verified: true,
+                    role: 'user',
+                    status: 'active',
+                });
+            } else if (user.email !== email) {
+                console.log('[Sync] Updating User email:', { supabaseId, oldEmail: user.email, newEmail: email });
+                user.email = email;
+                await user.save();
+            }
         }
 
         res.json({

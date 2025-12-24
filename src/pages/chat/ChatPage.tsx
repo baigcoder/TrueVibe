@@ -125,7 +125,7 @@ const AetherStyles = () => (
 
         :root {
             --premium-bg: #030712;
-            --premium-glass: rgba(13, 17, 28, 0.7);
+            --premium-glass: rgba(13, 17, 28, 0.45);
             --premium-border: rgba(255, 255, 255, 0.04);
             --premium-primary: hsl(231 93% 73%);
             --premium-accent: hsl(171 66% 50%);
@@ -140,7 +140,7 @@ const AetherStyles = () => (
 
         .glass-premium {
             background: var(--premium-glass);
-            backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(24px) saturate(200%);
             border: 1px solid var(--premium-border);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         }
@@ -586,7 +586,7 @@ export default function ChatPage() {
     <div className="relative h-[calc(100vh-80px)] lg:h-screen w-full flex bg-transparent overflow-hidden aether-font lg:p-3 lg:gap-3">
       <AetherStyles />
 
-      <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/[0.03] bg-[#030305]/60 backdrop-blur-3xl shadow-2xl">
+      <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/[0.03] bg-black/10 backdrop-blur-3xl shadow-2xl">
         {/* PRIMARY SIDEBAR - Server / DM selection */}
         <div className="hidden lg:flex w-24 bg-transparent flex-col items-center py-8 gap-6 relative z-20 border-r border-white/[0.03] px-3">
           <motion.button
@@ -1232,7 +1232,7 @@ export default function ChatPage() {
         {/* MAIN CHAT INTERFACE */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative z-10 overflow-hidden">
           {/* Header */}
-          <div className="h-20 lg:h-24 px-6 sm:px-10 lg:px-12 flex items-center justify-between border-b border-white/[0.03] bg-[#030305]/40 backdrop-blur-3xl relative overflow-hidden group shrink-0">
+          <div className="h-16 lg:h-24 px-4 sm:px-10 lg:px-12 flex items-center justify-between border-b border-white/[0.03] bg-transparent backdrop-blur-3xl relative overflow-hidden group shrink-0">
             {/* Header Depth Layer - Organic Gradient */}
             <div className="absolute inset-0 z-0 opacity-[0.03] bg-[radial-gradient(circle_at_50%_0%,var(--premium-primary),transparent)] group-hover:opacity-[0.08] transition-opacity" />
 
@@ -1268,7 +1268,7 @@ export default function ChatPage() {
                 <div className="flex items-center gap-4 lg:gap-6 min-w-0">
                   <div className="relative shrink-0 pr-2">
                     <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Avatar className="w-12 h-12 lg:w-16 lg:h-16 border border-white/[0.08] rounded-2xl shadow-2xl relative z-10 transition-transform group-hover:scale-105">
+                    <Avatar className="w-10 h-10 lg:w-16 lg:h-16 border border-white/[0.08] rounded-2xl shadow-2xl relative z-10 transition-transform group-hover:scale-105">
                       <AvatarImage
                         src={selectedConversation.participants[0]?.avatar}
                         className="object-cover"
@@ -1315,7 +1315,7 @@ export default function ChatPage() {
                           selectedConversation.participants[0]?._id;
                         if (otherId) initiateCall(otherId, "audio");
                       }}
-                      className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
+                      className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn shrink-0"
                     >
                       <Phone className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                     </Button>
@@ -1327,7 +1327,7 @@ export default function ChatPage() {
                           selectedConversation.participants[0]?._id;
                         if (otherId) initiateCall(otherId, "video");
                       }}
-                      className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
+                      className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn shrink-0"
                     >
                       <Video className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                     </Button>
@@ -1341,21 +1341,21 @@ export default function ChatPage() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowMembers(!showMembers)}
                     className={cn(
-                      "w-11 h-11 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border",
+                      "w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border",
                       showMembers
                         ? "bg-primary/10 border-primary text-primary shadow-[0_0_20px_rgba(129,140,248,0.2)]"
                         : "glass-premium text-slate-500",
                     )}
                   >
-                    <Users className="w-5 h-5 transition-transform hover:scale-110" />
+                    <Users className="w-4 h-4 lg:w-5 lg:h-5 transition-transform hover:scale-110" />
                   </motion.button>
                 )}
 
-                <div className="hidden md:flex items-center gap-4">
+                <div className="hidden sm:flex items-center gap-4">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
+                    className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
                   >
                     <Pin className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                   </Button>
@@ -1363,7 +1363,7 @@ export default function ChatPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
+                    className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn"
                   >
                     <MoreVertical className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                   </Button>
@@ -1375,7 +1375,7 @@ export default function ChatPage() {
           {/* Main Area Wrapper */}
           <div className="flex-1 flex flex-row min-h-0 min-w-0 relative overflow-hidden">
             {/* Main Chat Content */}
-            <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#020617] relative overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative overflow-hidden">
               {view === "server" &&
                 selectedChannel?.type === "voice" &&
                 isInRoom &&
@@ -1547,7 +1547,7 @@ export default function ChatPage() {
                                 delay: Math.min(idx * 0.01, 0.2),
                               }}
                               className={cn(
-                                "group relative flex gap-4 transition-all py-3 px-4 sm:px-10 max-w-full",
+                                "group relative flex gap-3 transition-all py-1.5 px-4 sm:px-10 max-w-full",
                                 isMe ? "flex-row-reverse" : "flex-row",
                                 selectedMessageId === msg._id &&
                                 "bg-white/[0.02]",
@@ -1704,8 +1704,8 @@ export default function ChatPage() {
                   </ScrollArea>
 
                   {/* Message Input Area */}
-                  <div className="px-3 sm:px-6 lg:px-8 pb-4 lg:pb-10 shrink-0 relative z-10">
-                    <div className="glass-premium rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-5 relative group focus-within:border-primary/40 transition-all duration-700 overflow-hidden">
+                  <div className="px-2 sm:px-6 lg:px-8 pb-3 lg:pb-10 shrink-0 relative z-10">
+                    <div className="glass-premium rounded-2xl lg:rounded-3xl p-2 sm:p-4 lg:p-5 relative group focus-within:border-primary/40 transition-all duration-700 overflow-hidden">
 
 
                       {replyingTo && (
@@ -1767,7 +1767,7 @@ export default function ChatPage() {
                         className="hidden"
                       />
 
-                      <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 min-h-[48px] lg:min-h-[56px] px-3">
+                      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-h-[44px] lg:min-h-[56px] px-2 sm:px-3">
                         <motion.button
                           whileHover={{ scale: 1.1, rotate: 90 }}
                           whileTap={{ scale: 0.9 }}
@@ -1856,7 +1856,7 @@ export default function ChatPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in relative bg-[#030712] overflow-hidden">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in relative bg-transparent overflow-hidden">
                   {/* Subtle Background Pattern */}
                   <div className="absolute inset-0 bg-grid-pattern opacity-5" />
 
@@ -1905,7 +1905,7 @@ export default function ChatPage() {
             {view === "server" &&
               showMembers &&
               selectedServer?.memberProfiles && (
-                <div className="w-[320px] glass-aether border-l border-white/5 p-10 flex flex-col shrink-0 relative overflow-hidden shadow-2xl bg-[#0a0a0e]/40 backdrop-blur-3xl">
+                <div className="w-[320px] glass-aether border-l border-white/5 p-10 flex flex-col shrink-0 relative overflow-hidden shadow-2xl bg-black/10 backdrop-blur-3xl">
                   <div className="absolute top-0 right-0 w-32 h-64 bg-primary/5 blur-[120px] pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-32 h-64 bg-secondary/5 blur-[120px] pointer-events-none" />
 
@@ -2263,7 +2263,7 @@ export default function ChatPage() {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="lg:hidden fixed left-0 top-0 bottom-0 w-[85vw] max-w-[340px] glass-aether z-50 border-r border-white/5 flex flex-col shadow-[40px_0_80px_rgba(0,0,0,0.9)] bg-[#030303]/90 backdrop-blur-3xl"
+                className="lg:hidden fixed left-0 top-0 bottom-0 w-[85vw] max-w-[340px] glass-aether z-50 border-r border-white/5 flex flex-col shadow-[40px_0_80px_rgba(0,0,0,0.9)] bg-black/40 backdrop-blur-3xl"
               >
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 flex items-center justify-between relative overflow-hidden shrink-0">
@@ -2592,6 +2592,6 @@ export default function ChatPage() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </div >
   );
 }

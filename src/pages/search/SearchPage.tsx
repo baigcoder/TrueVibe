@@ -3,7 +3,7 @@ import { useSearch } from "@/api/hooks";
 import { Input } from "@/components/ui/input";
 import {
     Search, User, FileText, Film, Loader2, ShieldCheck,
-    Heart, MessageCircle, X, Sparkles, TrendingUp, Users, ArrowUpRight, Compass, Video
+    Heart, MessageCircle, X, Sparkles, TrendingUp, Users, ArrowUpRight, Video, Scan, Orbit, Plus
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,16 +30,16 @@ export default function SearchPage() {
         { id: 'all', label: 'All', icon: Search },
         { id: 'users', label: 'People', icon: User },
         { id: 'posts', label: 'Posts', icon: FileText },
-        { id: 'shorts', label: 'Shorts', icon: Film },
+        { id: 'shorts', label: 'Shorts', icon: Plus },
     ];
 
     return (
-        <div className="min-h-full w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+        <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col overflow-hidden">
             {/* Header / Search Hero Section */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative pt-12 pb-16"
+                className="relative pt-2 sm:pt-6 pb-4 sm:pb-8 flex-shrink-0"
             >
                 {/* Immersive Background Effects */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] pointer-events-none -z-10 overflow-hidden">
@@ -63,18 +63,18 @@ export default function SearchPage() {
                     />
                 </div>
 
-                <div className="flex flex-col items-center text-center space-y-4 mb-12">
+                <div className="flex flex-col items-center text-center space-y-1 mb-2 sm:mb-8">
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.1 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-inner"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-inner"
                     >
-                        <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Discover the Vibe</span>
+                        <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Discover the Vibe</span>
                     </motion.div>
 
-                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter italic uppercase">
+                    <h1 className="text-xl sm:text-4xl md:text-6xl font-black text-white tracking-tighter italic uppercase">
                         Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-emerald-400">Everything</span>
                     </h1>
                 </div>
@@ -90,10 +90,10 @@ export default function SearchPage() {
                         isFocused && "opacity-100"
                     )} />
 
-                    <div className="relative bg-[#0c0c0e]/60 backdrop-blur-3xl border border-white/10 rounded-[1.8rem] p-2.5 flex items-center gap-3 shadow-[0_25px_80px_rgba(0,0,0,0.5)] tech-border group">
-                        <div className="pl-4">
+                    <div className="relative bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-xl sm:rounded-[2rem] p-1.5 sm:p-3 flex items-center gap-1.5 sm:gap-4 shadow-2xl transition-all duration-500 hover:border-white/20 group">
+                        <div className="pl-3 sm:pl-4">
                             <Search className={cn(
-                                "w-5 h-5 transition-all duration-500",
+                                "w-4 h-4 sm:w-5 sm:h-5 transition-all duration-500",
                                 isFocused ? "text-primary scale-110 rotate-12" : "text-slate-500"
                             )} />
                         </div>
@@ -102,8 +102,8 @@ export default function SearchPage() {
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search..."
-                            className="flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 text-white font-semibold placeholder:text-slate-600 h-12 sm:h-14 text-base sm:text-lg"
+                            placeholder="Search network..."
+                            className="flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 text-white font-bold placeholder:text-slate-500/50 h-10 sm:h-14 text-sm sm:text-lg italic"
                         />
                         <AnimatePresence>
                             {query && (
@@ -116,17 +116,17 @@ export default function SearchPage() {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => setQuery("")}
-                                        className="h-8 w-8 sm:h-10 sm:w-10 text-slate-500 hover:text-white rounded-full bg-white/5 mr-1"
+                                        className="h-7 w-7 sm:h-10 sm:w-10 text-slate-500 hover:text-white rounded-full bg-white/5 mr-0.5"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" />
                                     </Button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                        <Button className="bg-gradient-to-br from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 text-white font-black uppercase italic tracking-wider rounded-xl sm:rounded-2xl px-4 sm:px-8 h-10 sm:h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 text-xs sm:text-sm">
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                        <Button className="bg-gradient-to-br from-primary via-blue-500 to-secondary hover:brightness-110 text-white font-black uppercase italic tracking-wider rounded-lg sm:rounded-2xl px-3 sm:px-8 h-9 sm:h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 text-[9px] sm:text-sm">
+                            {isLoading ? <Loader2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 animate-spin" /> : (
                                 <div className="flex items-center gap-1 sm:gap-2">
-                                    <span>Sync</span>
+                                    <span className="hidden xs:inline">Sync</span>
                                     <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </div>
                             )}
@@ -135,18 +135,18 @@ export default function SearchPage() {
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex justify-center flex-wrap gap-2.5 mt-12">
+                <div className="flex justify-center flex-wrap gap-1 sm:gap-1.5 mt-3 sm:mt-6">
                     {tabs.map((tab) => (
                         <motion.button
                             key={tab.id}
                             whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.08)" }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setActiveTab(tab.id)}
+                            onClick={() => setActiveTab(tab.id as SearchType)}
                             className={cn(
-                                "px-6 py-3 rounded-2xl flex items-center gap-3 transition-all duration-500 border text-xs font-black uppercase tracking-[0.1em] relative overflow-hidden group/tab",
+                                "px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl sm:rounded-[1.2rem] flex items-center gap-1.5 sm:gap-2 transition-all duration-500 border text-[9px] sm:text-[11px] font-black uppercase tracking-[0.1em] relative overflow-hidden group/tab",
                                 activeTab === tab.id
-                                    ? "bg-white/10 text-white border-white/20 shadow-2xl"
-                                    : "bg-white/[0.02] border-white/5 text-slate-500 hover:text-slate-300"
+                                    ? "bg-white/10 text-white border-primary/40 shadow-[0_0_20px_rgba(129,140,248,0.2)]"
+                                    : "bg-white/[0.03] border-white/5 text-slate-500 hover:text-slate-300"
                             )}
                         >
                             {activeTab === tab.id && (
@@ -165,8 +165,8 @@ export default function SearchPage() {
                 </div>
             </motion.div>
 
-            {/* Results Grid */}
-            <div className="relative min-h-[500px]">
+            {/* Results Grid - Scrollable Area */}
+            <div className="relative flex-1 overflow-y-auto pr-1 pb-10 scroll-smooth custom-scrollbar">
                 <AnimatePresence mode="wait">
                     {!debouncedQuery ? (
                         <motion.div
@@ -174,9 +174,9 @@ export default function SearchPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 1.05 }}
-                            className="flex flex-col items-center justify-center py-24 text-center"
+                            className="flex flex-col items-center justify-center h-full text-center py-8"
                         >
-                            <div className="relative mb-10 group">
+                            <div className="relative mb-4 group">
                                 <motion.div
                                     animate={{
                                         scale: [1, 1.15, 1],
@@ -184,42 +184,60 @@ export default function SearchPage() {
                                         rotate: [0, 5, 0]
                                     }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute inset-0 w-32 h-32 rounded-[2.5rem] bg-primary/30 blur-3xl opacity-50"
+                                    className="absolute inset-0 w-16 h-16 sm:w-28 sm:h-28 rounded-full bg-primary/30 blur-2xl opacity-50 mx-auto"
                                 />
-                                <div className="w-32 h-32 bg-white/[0.03] border border-white/10 rounded-[2.5rem] flex items-center justify-center relative shadow-2xl backdrop-blur-3xl group-hover:scale-105 transition-transform duration-700 tech-border">
-                                    <Compass className="w-14 h-14 text-white/20 group-hover:text-primary/40 transition-colors duration-700" />
+                                <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center relative shadow-2xl backdrop-blur-3xl group-hover:scale-110 group-hover:border-primary/40 transition-all duration-700 overflow-hidden">
+                                    <motion.div
+                                        animate={{
+                                            rotate: 360,
+                                            opacity: [0.1, 0.3, 0.1]
+                                        }}
+                                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                                        className="absolute inset-0 border-[1px] border-dashed border-primary/30 rounded-full scale-150"
+                                    />
+                                    <div className="relative z-10">
+                                        <Scan className="w-6 h-6 sm:w-10 sm:h-10 text-white/10 group-hover:text-primary/50 transition-all duration-700" />
+                                        <motion.div
+                                            animate={{
+                                                scale: [1, 1.2, 1],
+                                                opacity: [0, 1, 0]
+                                            }}
+                                            transition={{ duration: 2, repeat: Infinity }}
+                                            className="absolute inset-0 flex items-center justify-center"
+                                        >
+                                            <Orbit className="w-8 h-8 sm:w-14 sm:h-14 text-primary/20" />
+                                        </motion.div>
+                                    </div>
+                                    {/* Scanning Line */}
+                                    <motion.div
+                                        animate={{ y: [-32, 32] }}
+                                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                                        className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent z-0"
+                                    />
                                 </div>
                             </div>
-                            <h2 className="text-3xl font-black text-white mb-4 tracking-tighter uppercase italic">Ready to Sync?</h2>
-                            <p className="text-slate-500 text-sm max-w-sm mx-auto leading-relaxed font-medium uppercase tracking-wide">
-                                Enter parameters to bridge with people, discover premium vibes, or filter trending shorts.
-                            </p>
-
-                            <div className="mt-12 flex flex-wrap justify-center gap-3 max-w-2xl px-4">
-                                {['#trending', '#photography', '#vibe_check', '#music_sync', '#digital_art', '#future_now'].map((tag) => (
-                                    <Button
-                                        key={tag}
-                                        variant="ghost"
-                                        onClick={() => setQuery(tag.replace('#', ''))}
-                                        className="bg-white/[0.02] border border-white/5 rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all duration-500"
-                                    >
-                                        {tag}
-                                    </Button>
-                                ))}
-                            </div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="space-y-1.5 mt-2"
+                            >
+                                <h2 className="text-base sm:text-2xl font-black text-white italic uppercase tracking-tighter">Initiate Bridge</h2>
+                                <p className="text-[7px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-[0.1em] sm:tracking-[0.25em] max-w-[160px] sm:max-w-[280px] mx-auto leading-relaxed">Scanning network for premium vibes</p>
+                            </motion.div>
                         </motion.div>
                     ) : isLoading ? (
                         <motion.div
                             key="loading"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex flex-col items-center justify-center py-40"
+                            className="flex flex-col items-center justify-center py-20"
                         >
-                            <div className="relative">
+                            <div className="relative scale-75">
                                 <motion.div
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                    className="w-16 h-16 border-t-2 border-r-2 border-primary rounded-full shadow-[0_0_20px_rgba(0,245,255,0.3)]"
+                                    className="w-14 h-14 border-t-2 border-r-2 border-primary rounded-full shadow-[0_0_20px_rgba(129,140,248,0.3)]"
                                 />
                                 <motion.div
                                     animate={{ rotate: -360 }}
@@ -227,7 +245,7 @@ export default function SearchPage() {
                                     className="absolute inset-2 border-b-2 border-l-2 border-blue-400 rounded-full opacity-50"
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em] mt-8 animate-pulse italic">Scanning Network...</p>
+                            <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.4em] mt-6 animate-pulse italic">Scanning...</p>
                         </motion.div>
                     ) : (data?.data?.users?.length || data?.data?.posts?.length || data?.data?.shorts?.length) ? (
                         <motion.div
@@ -265,7 +283,7 @@ export default function SearchPage() {
                                                 <Link
                                                     to="/app/profile/$id"
                                                     params={{ id: item.userId || item._id }}
-                                                    className="group flex items-center gap-4 p-5 bg-[#0c0c0e]/40 backdrop-blur-2xl border border-white/5 rounded-3xl hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-700 relative overflow-hidden"
+                                                    className="group flex items-center gap-4 p-5 bg-white/[0.03] backdrop-blur-2xl border border-white/5 rounded-3xl hover:bg-white/[0.06] hover:border-primary/30 transition-all duration-700 relative overflow-hidden shadow-xl"
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -328,7 +346,7 @@ export default function SearchPage() {
                                             >
                                                 <Link
                                                     to={`/app/feed`}
-                                                    className="block p-7 bg-[#0c0c0e]/40 backdrop-blur-2xl border border-white/5 rounded-3xl hover:bg-white/[0.05] hover:border-blue-500/30 transition-all duration-700 group h-full"
+                                                    className="block p-7 bg-white/[0.03] backdrop-blur-2xl border border-white/5 rounded-3xl hover:bg-white/[0.06] hover:border-blue-500/30 transition-all duration-700 group h-full shadow-xl"
                                                 >
                                                     <div className="flex items-center justify-between mb-6">
                                                         <div className="flex items-center gap-3">

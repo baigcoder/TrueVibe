@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { verifyAccessToken, TokenPayload } from '../../modules/auth/jwt.service.js';
 import { UnauthorizedError, ForbiddenError } from './error.middleware.js';
 import { config } from '../../config/index.js';
+import { loggingConfig } from '../../config/security.config.js';
+import { User } from '../../modules/users/User.model.js';
 
 // Extend Express Request type
 declare global {
@@ -17,7 +19,18 @@ interface SupabasePayload {
     sub: string;
     email?: string;
     role?: string;
+    exp?: number;
 }
+
+// Environment check
+const isProd = config.env === 'production';
+
+// Secure logging - only in development
+const debugLog = (...args: unknown[]) => {
+    if (loggingConfig.enabled) {
+        console.log('[Auth]', ...args);
+    }
+};
 
 // Authentication middleware
 export const authenticate = (
@@ -44,20 +57,37 @@ export const authenticate = (
         try {
             const payload = verifyAccessToken(token);
             req.user = payload;
+            debugLog('Local verification successful');
             return next();
         } catch (localError) {
             // If local verification fails, try Supabase
             const supabaseSecret = config.supabase.jwtSecret;
-            console.log('[Auth Debug] Local verification failed, trying Supabase. Secret configured:', !!supabaseSecret);
+
+            // In production, require Supabase secret - no fallback
+            if (isProd && !supabaseSecret) {
+                throw new UnauthorizedError('Server configuration error');
+            }
 
             try {
-                let payload: any;
+                let payload: SupabasePayload;
+
                 if (supabaseSecret) {
-                    payload = jwt.verify(token, supabaseSecret);
-                    console.log('[Auth Debug] Supabase verification successful');
+                    // Verify with JWT secret
+                    payload = jwt.verify(token, supabaseSecret) as SupabasePayload;
+
+                    // Check token expiry
+                    if (payload.exp && payload.exp * 1000 < Date.now()) {
+                        throw new UnauthorizedError('Token expired');
+                    }
+
+                    debugLog('Supabase verification successful');
                 } else {
-                    console.log('[Auth Debug] No Supabase secret, decoding without verification');
-                    payload = jwt.decode(token);
+                    // Development only: decode without verification
+                    if (isProd) {
+                        throw new UnauthorizedError('Invalid token');
+                    }
+                    debugLog('Development mode - decoding without verification');
+                    payload = jwt.decode(token) as SupabasePayload;
                 }
 
                 if (!payload || !payload.sub) {
@@ -71,8 +101,9 @@ export const authenticate = (
                     role: payload.role || 'user',
                 };
                 return next();
-            } catch (supabaseError: any) {
-                console.error('[Auth Debug] Supabase verification failed:', supabaseError.message);
+            } catch (supabaseError: unknown) {
+                const errorMessage = supabaseError instanceof Error ? supabaseError.message : 'Unknown error';
+                debugLog('Verification failed:', errorMessage);
                 throw new UnauthorizedError('Invalid or expired token');
             }
         }
@@ -110,14 +141,15 @@ export const optionalAuth = (
                 // Try Supabase
                 const supabaseSecret = config.supabase.jwtSecret;
                 try {
-                    let payload: any;
+                    let payload: SupabasePayload | null = null;
                     if (supabaseSecret) {
-                        payload = jwt.verify(token, supabaseSecret);
-                    } else {
-                        payload = jwt.decode(token);
+                        payload = jwt.verify(token, supabaseSecret) as SupabasePayload;
+                    } else if (!isProd) {
+                        // Development only
+                        payload = jwt.decode(token) as SupabasePayload;
                     }
 
-                    if (payload && payload.sub) {
+                    if (payload?.sub) {
                         req.user = {
                             userId: payload.sub,
                             email: payload.email || '',
@@ -153,21 +185,46 @@ export const authorize = (...roles: string[]) => {
     };
 };
 
-// Admin-only middleware
-export const adminOnly = (
+// Admin-only middleware with database verification
+export const adminOnly = async (
     req: Request,
     res: Response,
     next: NextFunction
-): void => {
-    if (!req.user) {
-        next(new UnauthorizedError('Authentication required'));
-        return;
-    }
+): Promise<void> => {
+    try {
+        if (!req.user) {
+            next(new UnauthorizedError('Authentication required'));
+            return;
+        }
 
-    if (req.user.role !== 'admin') {
-        next(new ForbiddenError('Admin access required'));
-        return;
-    }
+        // Verify admin role from database (not just JWT)
+        const user = await User.findOne({
+            $or: [
+                { _id: req.user.userId },
+                { email: req.user.email }
+            ]
+        });
 
-    next();
+        if (!user) {
+            next(new UnauthorizedError('User not found'));
+            return;
+        }
+
+        if (user.role !== 'admin') {
+            debugLog(`Admin access denied for user: ${req.user.userId}`);
+            next(new ForbiddenError('Admin access required'));
+            return;
+        }
+
+        if (user.status !== 'active') {
+            next(new ForbiddenError('Account is not active'));
+            return;
+        }
+
+        debugLog(`Admin access granted for user: ${req.user.userId}`);
+        next();
+    } catch (error) {
+        next(error);
+    }
 };
+

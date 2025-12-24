@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { authApi, usersApi, postsApi, commentsApi, feedApi, chatApi, analyticsApi, mediaApi, shortsApi, storiesApi, notificationApi, searchApi } from './client';
+import { authApi, usersApi, postsApi, commentsApi, feedApi, chatApi, analyticsApi, mediaApi, shortsApi, storiesApi, notificationApi, searchApi, highlightsApi } from './client';
 import { useAuth } from '@/context/AuthContext';
 
 // ============ Auth Hooks ============
@@ -229,6 +229,8 @@ export function useCreatePost() {
             const previousFeeds = queryClient.getQueryData(['feed']);
 
             // Optimistically add the post to the feed
+            // If the post has media, set trustLevel to 'pending' (analyzing)
+            const hasMedia = !!(newPostData as any).mediaIds?.length || !!(newPostData as any).media?.length;
             const tempPost = {
                 _id: 'temp-' + Date.now(),
                 content: newPostData.content,
@@ -236,8 +238,8 @@ export function useCreatePost() {
                 likesCount: 0,
                 commentsCount: 0,
                 isLiked: false,
-                trustLevel: 'authentic',
-                trustScore: 95,
+                trustLevel: hasMedia ? 'pending' : 'authentic',
+                trustScore: hasMedia ? 0 : 95,
                 userId: profile ? {
                     _id: profile._id,
                     name: profile.name,
@@ -620,7 +622,7 @@ export const usePostAnalytics = (postId: string) => {
     return useQuery({
         queryKey: ['posts', 'analytics', postId],
         queryFn: () => postsApi.getPostAnalytics(postId),
-        enabled: !!postId,
+        enabled: !!postId && !postId.startsWith('temp-'),
     });
 };
 
@@ -846,6 +848,152 @@ export function useEditComment() {
         },
         onSettled: (_, __, variables) => {
             queryClient.invalidateQueries({ queryKey: ['comments', variables.postId] });
+        },
+    });
+}
+
+// Get replies to a comment
+export function useReplies(commentId: string) {
+    return useInfiniteQuery({
+        queryKey: ['comments', 'replies', commentId],
+        queryFn: ({ pageParam }) =>
+            commentsApi.getReplies(commentId, pageParam ? { cursor: pageParam } : undefined),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage: any) => lastPage?.data?.cursor || undefined,
+        enabled: !!commentId,
+    });
+}
+
+// Reply to a comment
+export function useReplyToComment() {
+    const queryClient = useQueryClient();
+    const { profile } = useAuth();
+
+    return useMutation({
+        mutationFn: ({ parentId, postId, shortId, content }: {
+            parentId: string;
+            postId?: string;
+            shortId?: string;
+            content: string
+        }) =>
+            commentsApi.create({ parentId, postId, shortId, content }),
+        onMutate: async ({ parentId, postId, shortId, content }) => {
+            // Optimistically add reply
+            const queryKey = ['comments', 'replies', parentId];
+            await queryClient.cancelQueries({ queryKey });
+            const previousReplies = queryClient.getQueryData(queryKey);
+
+            const tempReply = {
+                _id: 'temp-' + Date.now(),
+                content,
+                parentId,
+                createdAt: new Date().toISOString(),
+                likesCount: 0,
+                repliesCount: 0,
+                userId: profile ? {
+                    _id: profile._id,
+                    name: profile.name,
+                    handle: profile.handle,
+                    avatar: profile.avatar,
+                } : undefined,
+            };
+
+            queryClient.setQueryData(queryKey, (old: any) => {
+                if (!old) return { pages: [{ data: { comments: [tempReply] } }], pageParams: [undefined] };
+                const newPages = [...old.pages];
+                if (newPages.length > 0) {
+                    newPages[0] = {
+                        ...newPages[0],
+                        data: {
+                            ...newPages[0].data,
+                            comments: [tempReply, ...(newPages[0].data?.comments || [])],
+                        },
+                    };
+                }
+                return { ...old, pages: newPages };
+            });
+
+            return { previousReplies };
+        },
+        onError: (_, variables, context) => {
+            if (context?.previousReplies) {
+                queryClient.setQueryData(['comments', 'replies', variables.parentId], context.previousReplies);
+            }
+        },
+        onSettled: (_, __, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['comments', 'replies', variables.parentId] });
+            if (variables.postId) {
+                queryClient.invalidateQueries({ queryKey: ['comments', variables.postId] });
+            }
+            if (variables.shortId) {
+                queryClient.invalidateQueries({ queryKey: ['comments', 'short', variables.shortId] });
+            }
+        },
+    });
+}
+
+// Like a comment
+export function useLikeComment() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (commentId: string) => commentsApi.like(commentId),
+        onMutate: async (commentId) => {
+            // Optimistic update - increment likes
+            await queryClient.cancelQueries({ queryKey: ['comments'] });
+
+            // Update in all comment caches
+            queryClient.setQueriesData({ queryKey: ['comments'] }, (old: any) => {
+                if (!old?.pages) return old;
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => ({
+                        ...page,
+                        data: {
+                            ...page.data,
+                            comments: page.data?.comments?.map((c: any) =>
+                                c._id === commentId
+                                    ? { ...c, isLiked: true, likesCount: (c.likesCount || 0) + 1 }
+                                    : c
+                            ) || [],
+                        },
+                    })),
+                };
+            });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['comments'] });
+        },
+    });
+}
+
+// Unlike a comment
+export function useUnlikeComment() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (commentId: string) => commentsApi.unlike(commentId),
+        onMutate: async (commentId) => {
+            await queryClient.cancelQueries({ queryKey: ['comments'] });
+
+            queryClient.setQueriesData({ queryKey: ['comments'] }, (old: any) => {
+                if (!old?.pages) return old;
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => ({
+                        ...page,
+                        data: {
+                            ...page.data,
+                            comments: page.data?.comments?.map((c: any) =>
+                                c._id === commentId
+                                    ? { ...c, isLiked: false, likesCount: Math.max(0, (c.likesCount || 1) - 1) }
+                                    : c
+                            ) || [],
+                        },
+                    })),
+                };
+            });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['comments'] });
         },
     });
 }
@@ -1304,5 +1452,128 @@ export function useSearch(q: string, type: string = 'all', limit = 10) {
         queryKey: ['search', q, type],
         queryFn: () => searchApi.search(q, type, limit),
         enabled: q.length >= 2,
+    });
+}
+
+// ============ Story Highlights Hooks ============
+
+export function useMyHighlights() {
+    return useQuery({
+        queryKey: ['highlights', 'me'],
+        queryFn: highlightsApi.getMy,
+    });
+}
+
+export function useUserHighlights(userId: string) {
+    return useQuery({
+        queryKey: ['highlights', 'user', userId],
+        queryFn: () => highlightsApi.getUser(userId),
+        enabled: !!userId,
+    });
+}
+
+export function useHighlight(id: string) {
+    return useQuery({
+        queryKey: ['highlights', id],
+        queryFn: () => highlightsApi.getById(id),
+        enabled: !!id,
+    });
+}
+
+export function useCreateHighlight() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: { title: string; coverImageUrl?: string }) => highlightsApi.create(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['highlights', 'me'] });
+        },
+    });
+}
+
+export function useUpdateHighlight() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: { title?: string; coverImageUrl?: string } }) =>
+            highlightsApi.update(id, data),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ['highlights', id] });
+            queryClient.invalidateQueries({ queryKey: ['highlights', 'me'] });
+        },
+    });
+}
+
+export function useDeleteHighlight() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => highlightsApi.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['highlights', 'me'] });
+        },
+    });
+}
+
+export function useAddStoryToHighlight() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ highlightId, storyId }: { highlightId: string; storyId: string }) =>
+            highlightsApi.addStory(highlightId, storyId),
+        onSuccess: (_, { highlightId }) => {
+            queryClient.invalidateQueries({ queryKey: ['highlights', highlightId] });
+            queryClient.invalidateQueries({ queryKey: ['highlights', 'me'] });
+        },
+    });
+}
+
+export function useRemoveStoryFromHighlight() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ highlightId, storyIndex }: { highlightId: string; storyIndex: number }) =>
+            highlightsApi.removeStory(highlightId, storyIndex),
+        onSuccess: (_, { highlightId }) => {
+            queryClient.invalidateQueries({ queryKey: ['highlights', highlightId] });
+            queryClient.invalidateQueries({ queryKey: ['highlights', 'me'] });
+        },
+    });
+}
+
+// ============ Gamification Hooks ============
+
+export function useMyGamificationStats() {
+    return useQuery({
+        queryKey: ['gamification', 'me', 'stats'],
+        queryFn: () => import('./client').then(m => m.gamificationApi.getMyStats()),
+    });
+}
+
+export function useMyBadges() {
+    return useQuery({
+        queryKey: ['gamification', 'me', 'badges'],
+        queryFn: () => import('./client').then(m => m.gamificationApi.getMyBadges()),
+    });
+}
+
+export function useUserGamificationStats(userId: string) {
+    return useQuery({
+        queryKey: ['gamification', 'user', userId],
+        queryFn: () => import('./client').then(m => m.gamificationApi.getUserStats(userId)),
+        enabled: !!userId,
+    });
+}
+
+export function useLeaderboard(type: 'xp' | 'streak' = 'xp', limit = 20) {
+    return useQuery({
+        queryKey: ['gamification', 'leaderboard', type, limit],
+        queryFn: () => import('./client').then(m => m.gamificationApi.getLeaderboard(type, limit)),
+    });
+}
+
+export function useRecordActivity() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ action, xpAmount }: { action: string; xpAmount?: number }) =>
+            import('./client').then(m => m.gamificationApi.recordActivity(action, xpAmount)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['gamification', 'me'] });
+        },
     });
 }

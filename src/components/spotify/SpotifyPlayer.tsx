@@ -90,7 +90,7 @@ export const SpotifyPlayer = () => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full bg-[#1DB954]/5 backdrop-blur-3xl border border-[#1DB954]/10 rounded-3xl p-4 relative overflow-hidden"
+                className="w-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] p-5 relative overflow-hidden shadow-2xl"
             >
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-[#1DB954]/10 flex items-center justify-center">
@@ -123,9 +123,9 @@ export const SpotifyPlayer = () => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="w-full backdrop-blur-3xl border border-white/10 rounded-3xl p-3 relative overflow-hidden group shadow-2xl"
+            className="w-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 relative overflow-hidden group shadow-2xl"
             style={{
-                background: `linear-gradient(135deg, ${dominantColor}15 0%, ${dominantColor}05 50%, transparent 100%)`,
+                background: `linear-gradient(135deg, ${dominantColor}15 0%, transparent 100%)`,
             }}
         >
             {/* Animated Glow Overlay with dynamic color */}
@@ -147,7 +147,7 @@ export const SpotifyPlayer = () => {
                     <motion.div
                         animate={isPlaying ? { rotate: 360 } : {}}
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        className="w-14 h-14 rounded-full overflow-hidden border-2 shadow-lg"
+                        className="w-16 h-16 rounded-full overflow-hidden border-2 shadow-lg"
                         style={{ borderColor: `${dominantColor}60` }}
                     >
                         <img
@@ -169,12 +169,12 @@ export const SpotifyPlayer = () => {
                 <div className="flex-1 min-w-0">
                     <div className="flex flex-col">
                         <motion.h4
-                            className="text-[11px] font-black text-white uppercase tracking-tight truncate aether-font italic"
+                            className="text-[14px] font-black text-white uppercase tracking-tight truncate aether-font italic"
                         >
                             {track.name}
                         </motion.h4>
                         <p
-                            className="text-[9px] font-bold uppercase tracking-widest truncate tech-font"
+                            className="text-[11px] font-bold uppercase tracking-widest truncate tech-font"
                             style={{ color: dominantColor }}
                         >
                             {track.artists}

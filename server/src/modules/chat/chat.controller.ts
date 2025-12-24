@@ -32,12 +32,20 @@ export const getConversations = async (
 
         const conversationsWithProfiles = conversations.map((conv) => ({
             ...conv.toJSON(),
-            participants: conv.participants.map((pid) => profileMap.get(pid.toString())),
+            // Filter out the current user from participants so frontend only sees "other" users
+            participants: conv.participants
+                .filter((pid) => pid.toString() !== userId)
+                .map((pid) => profileMap.get(pid.toString())),
         }));
+
+        // Filter out conversations where no other participants exist (self-conversations)
+        const validConversations = conversationsWithProfiles.filter(
+            (conv) => conv.participants.length > 0 || conv.type === 'group'
+        );
 
         res.json({
             success: true,
-            data: { conversations: conversationsWithProfiles },
+            data: { conversations: validConversations },
         });
     } catch (error) {
         next(error);
@@ -56,6 +64,15 @@ export const createConversation = async (
 
         // Include current user in participants
         const allParticipants = [...new Set([userId, ...participantIds])];
+
+        // Prevent self-conversations
+        if (type === 'direct' && allParticipants.length === 1) {
+            res.status(400).json({
+                success: false,
+                error: { message: 'Cannot create a conversation with yourself' },
+            });
+            return;
+        }
 
         // For direct conversations, check if already exists
         if (type === 'direct' && allParticipants.length === 2) {

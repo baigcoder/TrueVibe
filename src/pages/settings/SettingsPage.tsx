@@ -675,26 +675,7 @@ export default function SettingsPage() {
                             </motion.div>
                         )}
 
-                        {/* Spotify Section */}
-                        {activeSection === 'spotify' && (
-                            <motion.div
-                                key="spotify"
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -10 }}
-                                className="space-y-6"
-                            >
-                                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                                    <h3 className="text-white font-semibold flex items-center gap-2 mb-6">
-                                        <Music className="w-4 h-4 text-[#1DB954]" />
-                                        Music Integration
-                                    </h3>
-                                    <div className="flex justify-center">
-                                        <SpotifyConnect />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
+
 
                         {/* Trust Score Section */}
                         {activeSection === 'trust' && (

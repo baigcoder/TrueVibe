@@ -6,12 +6,19 @@ import { initializeSocketIO } from './socket/index.js';
 // Import workers to start BullMQ job processors
 import './jobs/worker.js';
 
-console.log('🔵 Server script initialized. Checking environment...');
-console.log('   NODE_ENV:', process.env.NODE_ENV);
-console.log('   PORT:', process.env.PORT);
+const isProd = process.env.NODE_ENV === 'production';
+
+// Production-safe logging
+function debugLog(...args: unknown[]): void {
+    if (!isProd) console.log(...args);
+}
+
+debugLog('🔵 Server script initialized. Checking environment...');
+debugLog('   NODE_ENV:', process.env.NODE_ENV);
+debugLog('   PORT:', process.env.PORT);
 
 const startServer = async (): Promise<void> => {
-    console.log('🏁 Starting server initialization sequence...');
+    debugLog('🏁 Starting server initialization sequence...');
     try {
         // 1. Create Express app
         const app = createApp();
@@ -27,7 +34,7 @@ const startServer = async (): Promise<void> => {
         const host = '0.0.0.0';
 
         server.listen(port, host, () => {
-            console.log(`
+            debugLog(`
 🚀 TrueVibe Server is LISTENING!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 Environment: ${config.env}
@@ -39,16 +46,16 @@ const startServer = async (): Promise<void> => {
         });
 
         // 5. Connect to databases in the background/after listening
-        console.log('🔌 Connecting to MongoDB...');
+        debugLog('🔌 Connecting to MongoDB...');
         await connectDatabase();
 
-        console.log('✅ All services initialized successfully.');
+        debugLog('✅ All services initialized successfully.');
 
         // Graceful shutdown
         const shutdown = async (signal: string) => {
-            console.log(`\n${signal} received. Shutting down gracefully...`);
+            debugLog(`\n${signal} received. Shutting down gracefully...`);
             server.close(() => {
-                console.log('HTTP server closed.');
+                debugLog('HTTP server closed.');
                 process.exit(0);
             });
         };
@@ -63,3 +70,4 @@ const startServer = async (): Promise<void> => {
 };
 
 startServer();
+

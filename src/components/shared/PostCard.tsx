@@ -1,11 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { TrustBadge } from "./TrustBadge";
 import { AIReportModal } from "./AIReportModal";
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Bookmark,
-    ShieldCheck, Sparkles, Trash2, Edit2, AlertCircle, BarChart3
+    ShieldCheck, Sparkles, Trash2, Edit2, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +14,7 @@ import {
     useLikePost, useUnlikePost, useDeletePost,
     useUpdatePost, useRecordView
 } from "@/api/hooks";
+import { useNavigate } from "@tanstack/react-router";
 import { useAIReport } from "@/hooks/useAIReport";
 import { PostAnalytics } from "./PostAnalytics";
 import { TipButton } from "./TipButton";
@@ -28,7 +30,9 @@ import {
     DialogContent,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect } from "react";
+import { useAIAnalysisUpdate } from "@/context/SocketContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
 import { CommentSection } from "./CommentSection";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -40,7 +44,7 @@ export interface PostData {
     author?: { _id: string; name?: string; handle?: string; avatar?: string; userId?: string };
     content: string;
     image?: string;
-    media?: Array<{ url?: string; type?: string }>;
+    media?: Array<{ url?: string; type?: string; optimizedUrl?: string }>;
     video?: string;
     timestamp?: string;
     createdAt?: string;
@@ -63,6 +67,20 @@ export interface PostData {
         processingTimeMs?: number;
         framesAnalyzed?: number;
         mediaType?: 'image' | 'video';
+        // v5 enhanced fields
+        facesDetected?: number;
+        avgFaceScore?: number;
+        avgFftScore?: number;
+        avgEyeScore?: number;
+        fftBoost?: number;
+        eyeBoost?: number;
+        temporalBoost?: number;
+        analysisDetails?: {
+            faceDetection?: { detected: boolean; confidence: number };
+            audioAnalysis?: { detected: boolean; confidence: number };
+            temporalConsistency?: number;
+            compressionArtifacts?: number;
+        };
     };
 }
 
@@ -72,6 +90,7 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
     const { profile } = useAuth();
+    const navigate = useNavigate();
     const [showComments, setShowComments] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(post.content);
@@ -84,6 +103,7 @@ export function PostCard({ post }: PostCardProps) {
     const deletePost = useDeletePost();
     const updatePost = useUpdatePost();
     const recordView = useRecordView();
+    const queryClient = useQueryClient();
 
     // Handle both userId as string (mock) or object (API)
     const author = typeof post.userId === 'object'
@@ -129,9 +149,10 @@ export function PostCard({ post }: PostCardProps) {
         setEditContent(post.content);
     }, [post.content]);
 
-    // Record view once on mount
+    // Record view once on mount (only for real posts with valid MongoDB ObjectIds)
     useEffect(() => {
-        if (postId) {
+        // Skip if postId is missing or is a temp ID (mock posts)
+        if (postId && !postId.startsWith('temp-') && /^[a-f\d]{24}$/i.test(postId)) {
             recordView.mutate(postId);
         }
     }, [postId]);
@@ -146,6 +167,17 @@ export function PostCard({ post }: PostCardProps) {
             console.error("Failed to update post:", error);
         }
     };
+
+    // Listen for AI analysis completion and refresh the post
+    useAIAnalysisUpdate(useCallback(({ postId: updatePostId }) => {
+        if (updatePostId === post._id || updatePostId === postId) {
+            console.log(`🔔 AI Analysis complete for post: ${updatePostId}, refetching...`);
+            // Force immediate refetch to get updated aiAnalysis data
+            queryClient.invalidateQueries({ queryKey: ['posts', updatePostId], refetchType: 'all' });
+            queryClient.invalidateQueries({ queryKey: ['feed'], refetchType: 'all' });
+            queryClient.invalidateQueries({ queryKey: ['hashtags'], refetchType: 'all' });
+        }
+    }, [post._id, postId, queryClient]));
 
     const handleLike = async () => {
         if (!postId) return;
@@ -192,13 +224,17 @@ export function PostCard({ post }: PostCardProps) {
             : rawTrustLevel as 'authentic' | 'suspicious' | 'fake' | 'pending' | 'likely_fake';
     const trustScore = post.trustScore || (normalizedTrust === 'authentic' ? 95 : normalizedTrust === 'suspicious' ? 60 : 30);
 
-    // Get image from media array or direct property
-    const postImage = post.image || (post.media?.find(m => m.type === 'image')?.url);
-    // Get video from media array or direct property
-    const postVideo = post.video || (post.media?.find(m => m.type === 'video')?.url);
+    // Get image from media array or direct property (prefer optimized for images too)
+    const imageMedia = post.media?.find(m => m.type === 'image');
+    const postImage = post.image || imageMedia?.optimizedUrl || imageMedia?.url;
+    // Get video from media array or direct property - use optimizedUrl for faster playback
+    const videoMedia = post.media?.find(m => m.type === 'video');
+    const postVideo = post.video || videoMedia?.optimizedUrl || videoMedia?.url;
 
-    // AI Report hook - only for post owners with completed analysis
-    const canGenerateReport = isOwner && normalizedTrust !== 'pending';
+    // AI Report hook - available for any post with completed analysis
+    // Check if analysis is complete by looking at aiAnalysis data presence
+    const hasCompletedAnalysis = post.aiAnalysis !== undefined && post.aiAnalysis !== null;
+    const canGenerateReport = hasCompletedAnalysis && normalizedTrust !== 'pending';
     const { report, isLoading: isLoadingReport, isGenerating, error: reportError, generateReport } = useAIReport(
         postId,
         canGenerateReport
@@ -211,6 +247,7 @@ export function PostCard({ post }: PostCardProps) {
                 await generateReport();
             } catch (error) {
                 console.error('Failed to generate report:', error);
+                toast.error("Failed to generate report. Please try again.");
             }
         }
     };
@@ -219,246 +256,319 @@ export function PostCard({ post }: PostCardProps) {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="group/post relative"
         >
-            <Card className="bg-slate-900/80 backdrop-blur-xl border border-white/10 hover:bg-slate-900/90 hover:border-white/20 transition-all duration-500 overflow-hidden shadow-2xl rounded-[1.5rem] sm:rounded-[2rem]">
-                <CardHeader className="flex flex-row items-start gap-3 sm:gap-4 p-4 sm:p-5 pb-3 space-y-0">
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-secondary/20 rounded-full blur-md opacity-50 transition-all group-hover:bg-secondary/40" />
-                        <Avatar className="h-11 w-11 border border-white/10 relative z-10">
-                            <AvatarImage src={userAvatar} alt={userName} />
-                            <AvatarFallback className="bg-slate-900 text-slate-400 font-bold italic text-xs">
+            <Card className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl rounded-[2.5rem] relative">
+                {/* Technical Grid Pattern Overlay */}
+                <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
+
+                {/* Post Glow Accent */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 blur-[100px] pointer-events-none group-hover/post:bg-primary/20 transition-colors duration-1000" />
+
+                <CardHeader className="flex flex-row items-start gap-4 p-6 pb-4 space-y-0 relative z-10">
+                    <div className="relative group/avatar cursor-pointer" onClick={() => navigate({ to: `/app/profile/${postOwnerId}` })}>
+                        {/* Avatar Ring Animation */}
+                        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-primary via-secondary to-accent opacity-0 group-hover/avatar:opacity-100 blur-sm transition-all duration-700 animate-spin-slow" />
+                        <div className="absolute -inset-0.5 rounded-2xl bg-slate-950 z-0" />
+
+                        <Avatar className="h-12 w-12 border border-white/10 rounded-xl relative z-10 transition-transform duration-500 group-hover/avatar:scale-95">
+                            <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
+                            <AvatarFallback className="bg-slate-900 text-primary font-black italic text-sm">
                                 {userName[0]?.toUpperCase() || '?'}
                             </AvatarFallback>
                         </Avatar>
+
+                        {/* Status Signal */}
+                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-lg border-2 border-[#030712] shadow-[0_0_10px_rgba(16,185,129,0.5)] z-20" />
                     </div>
+
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-heading font-black italic uppercase text-sm tracking-[-0.02em] text-white truncate">{userName}</span>
+                                    <span className="font-black italic uppercase text-sm tracking-tight text-white truncate hover:text-primary transition-colors cursor-pointer" onClick={() => navigate({ to: `/app/profile/${postOwnerId}` })}>
+                                        {userName}
+                                    </span>
                                     {normalizedTrust === 'authentic' && (
-                                        <ShieldCheck className="w-3.5 h-3.5 text-secondary shadow-glow-secondary" />
+                                        <div className="p-0.5 bg-secondary/20 rounded-md border border-secondary/30">
+                                            <ShieldCheck className="w-3 h-3 text-secondary drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" />
+                                        </div>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2.5 mt-0.5">
-                                    <span className="font-display font-bold uppercase text-[9px] tracking-[0.1em] text-slate-500 truncate">@{userHandle}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">@{userHandle}</span>
                                     <span className="w-1 h-1 bg-white/10 rounded-full" />
-                                    <span className="font-display font-black uppercase text-[8px] tracking-[0.05em] text-slate-600 truncate">{timestamp}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-600 italic">SYSTEM_SYNC: {timestamp}</span>
                                 </div>
                             </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-white/5 flex-shrink-0 transition-colors">
-                                        <div className="relative">
-                                            {(likePost.isPending || unlikePost.isPending) && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
-                                                </div>
-                                            )}
-                                            <MoreHorizontal className="w-5 h-5" />
-                                        </div>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48 bg-slate-900/90 backdrop-blur-xl border-white/10 glass-premium">
-                                    {isOwner && (
-                                        <DropdownMenuItem
-                                            onClick={() => setIsEditing(true)}
-                                            className="gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-white/5"
+
+                            <div className="flex items-center gap-1">
+                                {isOwner && (
+                                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[8px] font-black text-primary uppercase tracking-[0.2em] mr-2">
+                                        <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                                        OWNER_SIGNAL
+                                    </div>
+                                )}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <motion.button
+                                            whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.05)" }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-white transition-colors"
                                         >
-                                            <Edit2 className="w-3.5 h-3.5" />
-                                            Modify Signal
-                                        </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem className="gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer hover:bg-white/5">
-                                        <Bookmark className="w-3.5 h-3.5" />
-                                        Save Signal
-                                    </DropdownMenuItem>
-                                    {isOwner && (
-                                        <>
-                                            <DropdownMenuSeparator className="bg-white/5" />
+                                            <MoreHorizontal className="w-5 h-5" />
+                                        </motion.button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56 bg-slate-950/90 backdrop-blur-3xl border-white/10 rounded-2xl p-2 shadow-2xl">
+                                        {isOwner && (
                                             <DropdownMenuItem
-                                                onClick={handleDelete}
-                                                className="gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer text-rose-500 hover:bg-rose-500/10 focus:bg-rose-500/10 focus:text-rose-500"
+                                                onClick={() => setIsEditing(true)}
+                                                className="gap-3 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white/5 focus:bg-white/5 transition-colors"
                                             >
-                                                {deletePost.isPending ? (
-                                                    <div className="w-3.5 h-3.5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
-                                                ) : (
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                )}
-                                                Erase Link
+                                                <Edit2 className="w-4 h-4 text-primary" />
+                                                Modify_Signal
                                             </DropdownMenuItem>
-                                        </>
-                                    )}
-                                    {!isOwner && (
-                                        <>
-                                            <DropdownMenuSeparator className="bg-white/5" />
-                                            <DropdownMenuItem className="gap-2 text-xs font-bold uppercase tracking-widest cursor-pointer text-orange-500 hover:bg-orange-500/10 focus:bg-orange-500/10 focus:text-orange-500">
-                                                <AlertCircle className="w-3.5 h-3.5" />
-                                                Flag Vibe
-                                            </DropdownMenuItem>
-                                        </>
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                        )}
+                                        <DropdownMenuItem className="gap-3 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white/5 focus:bg-white/5 transition-colors">
+                                            <Bookmark className="w-4 h-4 text-accent" />
+                                            Archive_Core
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(window.location.origin + `/app/post/${postId}`);
+                                                toast.success("Signal link copied to clipboard");
+                                            }}
+                                            className="gap-3 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white/5 focus:bg-white/5 transition-colors"
+                                        >
+                                            <Share2 className="w-4 h-4 text-secondary" />
+                                            Copy_Protocol
+                                        </DropdownMenuItem>
+
+                                        {((isOwner || (profile as any)?.role === 'admin')) && (
+                                            <>
+                                                <DropdownMenuSeparator className="bg-white/5 my-2" />
+                                                <DropdownMenuItem
+                                                    onClick={handleDelete}
+                                                    className="gap-3 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer text-rose-500 hover:bg-rose-500/10 focus:bg-rose-500/10 focus:text-rose-500 transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    Terminate_Link
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
 
-                <CardContent className="px-5 pb-4 space-y-4">
-                    {/* AI Analysis Badge - show for all non-authentic or when analysis exists */}
-                    {(normalizedTrust !== 'authentic' || post.aiAnalysis) && (
-                        <div className="flex items-center gap-2">
+                <CardContent className="px-6 pb-6 space-y-5 relative z-10">
+                    {/* AI Logic Analysis - Technical Implementation */}
+                    {((postImage || postVideo) || normalizedTrust !== 'authentic' || post.aiAnalysis) && (
+                        <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="relative group/trust"
+                        >
                             <TrustBadge
                                 level={normalizedTrust}
                                 score={Math.round(100 - (post.trustScore ?? (post.aiAnalysis?.fakeScore ? post.aiAnalysis.fakeScore * 100 : 0)))}
                                 analysisDetails={post.aiAnalysis ? {
-                                    fakeScore: post.aiAnalysis.fakeScore,
-                                    realScore: post.aiAnalysis.realScore,
+                                    fakeScore: post.aiAnalysis.fakeScore ?? 0,
+                                    realScore: post.aiAnalysis.realScore ?? 0,
                                     framesAnalyzed: post.aiAnalysis.framesAnalyzed,
                                     processingTime: post.aiAnalysis.processingTimeMs,
                                     mediaType: post.aiAnalysis.mediaType || (postVideo ? 'video' : 'image'),
-                                    classification: post.aiAnalysis.classification
+                                    classification: post.aiAnalysis.classification,
+                                    faceDetection: post.aiAnalysis.analysisDetails?.faceDetection,
+                                    audioAnalysis: post.aiAnalysis.analysisDetails?.audioAnalysis,
+                                    temporalConsistency: post.aiAnalysis.analysisDetails?.temporalConsistency,
+                                    compressionArtifacts: post.aiAnalysis.analysisDetails?.compressionArtifacts,
+                                    facesDetected: post.aiAnalysis.facesDetected,
+                                    avgFaceScore: post.aiAnalysis.avgFaceScore,
+                                    avgFftScore: post.aiAnalysis.avgFftScore,
+                                    avgEyeScore: post.aiAnalysis.avgEyeScore,
+                                    fftBoost: post.aiAnalysis.fftBoost,
+                                    eyeBoost: post.aiAnalysis.eyeBoost,
+                                    temporalBoost: post.aiAnalysis.temporalBoost
                                 } : undefined}
-                                isOwner={isOwner}
                                 onGenerateReport={handleGenerateReport}
                                 isGeneratingReport={isGenerating}
                             />
-                        </div>
+                        </motion.div>
                     )}
 
                     {isEditing ? (
-                        <div className="space-y-3 mt-2">
-                            <Textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                className="min-h-[100px] bg-white/[0.05] border-primary/30 rounded-2xl text-[15px] p-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none font-sans"
-                                autoFocus
-                            />
+                        <div className="space-y-4 pt-2">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-primary/5 blur-xl pointer-events-none" />
+                                <Textarea
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    className="min-h-[120px] bg-white/[0.05] border-white/10 rounded-2xl text-base p-5 focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all resize-none font-medium leading-relaxed"
+                                    autoFocus
+                                />
+                            </div>
                             <div className="flex justify-end gap-3">
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
+                                <motion.button
+                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={() => {
                                         setIsEditing(false);
                                         setEditContent(post.content);
                                     }}
-                                    className="h-9 px-5 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 rounded-xl"
+                                    className="h-11 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all"
                                 >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    size="sm"
+                                    ABORT
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={handleEditSave}
                                     disabled={updatePost.isPending || !editContent.trim()}
-                                    className="h-9 px-5 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-widest rounded-xl"
+                                    className="h-11 px-8 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(129,140,248,0.3)] hover:shadow-primary/50 transition-all disabled:opacity-50"
                                 >
-                                    {updatePost.isPending ? "Broadcasting..." : "Confirm Update"}
-                                </Button>
+                                    {updatePost.isPending ? "SYNCING..." : "DEPLOY_UPDATE"}
+                                </motion.button>
                             </div>
                         </div>
                     ) : (
-                        <p className="text-[15px] leading-relaxed font-sans text-foreground/90 whitespace-pre-wrap">{post.content}</p>
+                        <p className="text-[16px] leading-[1.6] font-medium text-slate-200 whitespace-pre-wrap tracking-tight selection:bg-primary/30">
+                            {post.content}
+                        </p>
                     )}
 
                     {postImage && (
-                        <div className="rounded-2xl overflow-hidden mt-4 bg-muted/20 border border-white/5 group relative">
+                        <motion.div
+                            whileHover={{ scale: 1.01 }}
+                            transition={{ duration: 0.4 }}
+                            className="rounded-[2rem] overflow-hidden mt-2 bg-slate-900 border border-white/10 group/img relative shadow-2xl"
+                        >
                             <img
                                 src={postImage}
                                 alt="Post content"
-                                className="w-full h-auto object-cover max-h-[350px] transition-all duration-700 group-hover:scale-[1.02]"
+                                className="w-full h-auto object-cover max-h-[500px] transition-all duration-1000 group-hover/img:scale-105"
                                 loading="lazy"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent transition-opacity group-hover:opacity-0" />
-                        </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-60 pointer-events-none" />
+
+                            {/* Image Metadata Overlay */}
+                            <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover/img:opacity-100 transition-opacity duration-500">
+                                <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-[8px] font-black text-white/80 uppercase tracking-widest">
+                                    IMG_DATA: VERIFIED
+                                </div>
+                            </div>
+                        </motion.div>
                     )}
 
                     {postVideo && (
-                        <div className="rounded-2xl overflow-hidden mt-4 bg-black border border-white/5 relative">
+                        <div className="rounded-[2rem] overflow-hidden mt-2 bg-black border border-white/10 relative shadow-2xl group/vid">
                             <video
                                 src={postVideo}
                                 controls
                                 playsInline
-                                className="w-full h-auto max-h-[350px]"
+                                className="w-full h-auto max-h-[500px] bg-black"
                             />
+                            {/* Video Technical Label */}
+                            <div className="absolute top-4 right-4 px-2.5 py-1 bg-rose-500/20 backdrop-blur-md rounded-lg border border-rose-500/30 text-[8px] font-black text-rose-400 uppercase tracking-widest opacity-0 group-hover/vid:opacity-100 transition-opacity">
+                                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse inline-block mr-1.5" />
+                                VIDEO_FEED_ACTIVE
+                            </div>
                         </div>
                     )}
 
-                    {/* Trust Score Indicator */}
+                    {/* Vibe Summary - Technical Detail */}
                     {normalizedTrust === 'authentic' && (
-                        <div className="flex items-center gap-2 pt-1">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/5 border border-secondary/20 text-secondary transition-all hover:bg-secondary/10 group/trust">
-                                <Sparkles className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                                <span className="font-heading font-black italic uppercase text-[9px] tracking-[0.2em]">VERIFIED_INDEX: {trustScore}</span>
+                        <div className="flex items-center gap-2 pt-2">
+                            <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 transition-all hover:bg-emerald-500/10 group/vibe">
+                                <Sparkles className="w-4 h-4 group-hover/vibe:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] italic">AUTHENTIC_SCORE: {trustScore}%</span>
                             </div>
                         </div>
                     )}
                 </CardContent>
 
-                <CardFooter className="px-3 sm:px-4 py-3 bg-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="sm"
+                <CardFooter className="px-6 py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-2">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={handleLike}
                             disabled={likePost.isPending || unlikePost.isPending}
                             className={cn(
-                                "gap-2 px-3 h-10 rounded-xl text-slate-500 transition-all duration-300 hover:bg-rose-500/10 hover:text-rose-400 group",
-                                post.isLiked && "text-rose-500 bg-rose-500/5"
+                                "flex items-center gap-2.5 px-4 h-11 rounded-2xl transition-all duration-500 group/btn",
+                                post.isLiked
+                                    ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                                    : "bg-white/5 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 border border-white/5"
                             )}
                         >
-                            <Heart className={cn("w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-110", post.isLiked && "fill-current scale-110")} />
-                            <span className="font-display font-medium text-[11px] uppercase tracking-wider">{likesCount}</span>
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
+                            {likePost.isPending || unlikePost.isPending ? (
+                                <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+                            ) : (
+                                <Heart className={cn("w-4.5 h-4.5 transition-all duration-500 group-hover/btn:scale-110", post.isLiked && "fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]")} />
+                            )}
+                            <span className="text-[11px] font-black tracking-widest">{likesCount}</span>
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setShowComments(!showComments)}
                             className={cn(
-                                "gap-2 px-3 h-10 rounded-xl text-slate-500 transition-all duration-300 hover:bg-primary/10 hover:text-primary group",
-                                showComments && "text-primary bg-primary/5"
+                                "flex items-center gap-2.5 px-4 h-11 rounded-2xl transition-all duration-500 group/btn",
+                                showComments
+                                    ? "bg-primary/15 text-primary border border-primary/30"
+                                    : "bg-white/5 text-slate-400 hover:bg-primary/10 hover:text-primary border border-white/5"
                             )}
                         >
-                            <MessageCircle className={cn("w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-110", showComments && "fill-current scale-110")} />
-                            <span className="font-display font-medium text-[11px] uppercase tracking-wider">{commentsCount}</span>
-                        </Button>
-                        <Button variant="ghost" size="sm" className="gap-2 px-3 h-10 rounded-xl text-slate-500 transition-all duration-300 hover:bg-secondary/10 hover:text-secondary group">
-                            <Share2 className="w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-110" />
-                        </Button>
-                        {isOwner && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowAnalytics(true)}
-                                className="gap-2 px-3 h-10 rounded-xl text-slate-500 transition-all duration-300 hover:bg-primary/10 hover:text-primary group"
-                                title="View Insights"
-                            >
-                                <BarChart3 className="w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-110 shadow-glow-primary" />
-                            </Button>
-                        )}
-                        <TipButton authorName={userName} />
+                            <MessageCircle className={cn("w-4.5 h-4.5 transition-all duration-500 group-hover/btn:scale-110", showComments && "fill-current drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")} />
+                            <span className="text-[11px] font-black tracking-widest">{commentsCount}</span>
+                        </motion.button>
+
+                        <div className="h-4 w-px bg-white/10 mx-1 hidden sm:block" />
+
+                        <div className="hidden sm:flex items-center gap-2">
+                            {isOwner && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05, backgroundColor: "rgba(129,140,248,0.1)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setShowAnalytics(true)}
+                                    className="h-11 w-11 flex items-center justify-center rounded-2xl bg-white/5 text-slate-400 hover:text-primary border border-white/5 transition-all"
+                                    title="View Insights"
+                                >
+                                    <BarChart3 className="w-4.5 h-4.5" />
+                                </motion.button>
+                            )}
+                            <TipButton authorName={userName} />
+                        </div>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
+
+                    <motion.button
+                        whileHover={{ scale: 1.1, color: "#FDE047" }}
+                        whileTap={{ scale: 0.9 }}
                         className={cn(
-                            "h-10 w-10 rounded-xl text-slate-500 transition-all duration-300 hover:bg-white/5 group",
-                            post.isSaved && "text-accent bg-accent/5"
+                            "h-11 w-11 flex items-center justify-center rounded-2xl transition-all",
+                            post.isSaved
+                                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                                : "bg-white/5 text-slate-400 hover:bg-white/10 border border-white/5"
                         )}
                     >
-                        <Bookmark className={cn("w-4.5 h-4.5 transition-transform duration-300 group-hover:scale-110", post.isSaved && "fill-current scale-110")} />
-                    </Button>
+                        <Bookmark className={cn("w-4.5 h-4.5 transition-all", post.isSaved && "fill-current")} />
+                    </motion.button>
                 </CardFooter>
 
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {showComments && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden bg-black/20"
+                            transition={{ duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] }}
+                            className="bg-black/40 border-t border-white/5 relative z-10"
                         >
-                            <div className="p-4 pt-0">
+                            <div className="p-2 sm:p-4">
                                 <CommentSection postId={postId} />
                             </div>
                         </motion.div>
@@ -522,6 +632,7 @@ export function PostCard({ post }: PostCardProps) {
                 isGenerating={isGenerating}
                 onGenerate={generateReport}
                 error={reportError}
+                postId={post._id}
             />
         </motion.div>
     );

@@ -52,9 +52,10 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                 const data = await response.json();
                 const users = data.data?.users || [];
 
-                // Check if any user has this exact handle
+                // Check if any OTHER user has this exact handle (exclude current user)
                 const taken = users.some((u: any) =>
-                    u.handle?.toLowerCase() === debouncedUsername.toLowerCase()
+                    u.handle?.toLowerCase() === debouncedUsername.toLowerCase() &&
+                    u._id !== user?.id // Exclude current user
                 );
                 setIsAvailable(!taken);
             } catch (error) {
@@ -66,13 +67,15 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
         };
 
         checkAvailability();
-    }, [debouncedUsername, isValidFormat]);
+    }, [debouncedUsername, isValidFormat, user?.id]);
 
     const handleSubmit = async () => {
         if (!isAvailable || !isValidFormat) return;
 
         try {
             await updateProfile.mutateAsync({ handle: username });
+            // Store the custom handle to prevent modal from reopening
+            localStorage.setItem('customHandleSet', username);
             toast.success("Username set successfully!");
             onComplete();
         } catch (error: any) {

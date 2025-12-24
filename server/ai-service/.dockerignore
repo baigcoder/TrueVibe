@@ -27,5 +27,5 @@ MANIFEST
 .vscode/
 .idea/
 debug_images/
-models/
+# Note: models/ is NOT ignored - it must be included in Docker build
 AI_models/

@@ -1,10 +1,11 @@
 import rateLimit from 'express-rate-limit';
 import { config } from '../../config/index.js';
+import { rateLimits } from '../../config/security.config.js';
 
 // General API rate limiter
 export const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // Limit each IP to 500 requests per windowMs (increased for development)
+    windowMs: rateLimits.api.windowMs,
+    max: rateLimits.api.max,
     message: {
         success: false,
         error: {
@@ -16,10 +17,10 @@ export const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Auth-specific rate limiter (increased for profile sync)
+// Auth-specific rate limiter
 export const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 auth requests per windowMs (increased for profile sync)
+    windowMs: rateLimits.auth.windowMs,
+    max: rateLimits.auth.max,
     message: {
         success: false,
         error: {
@@ -33,8 +34,8 @@ export const authLimiter = rateLimit({
 
 // Upload rate limiter
 export const uploadLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 50, // Limit each IP to 50 uploads per hour
+    windowMs: rateLimits.upload.windowMs,
+    max: rateLimits.upload.max,
     message: {
         success: false,
         error: {
@@ -45,3 +46,23 @@ export const uploadLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
+
+// AI Analysis rate limiter (resource-intensive operations)
+export const aiLimiter = rateLimit({
+    windowMs: rateLimits.ai.windowMs,
+    max: rateLimits.ai.max,
+    message: {
+        success: false,
+        error: {
+            code: 'AI_RATE_LIMIT_EXCEEDED',
+            message: 'Too many AI analysis requests, please try again later',
+        },
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        // Rate limit by user ID if authenticated, otherwise by IP
+        return req.user?.userId || req.ip || 'unknown';
+    },
+});
+

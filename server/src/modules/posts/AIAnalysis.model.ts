@@ -7,7 +7,7 @@ export interface IAnalysisDetails {
     deepfakeAnalysis?: {
         fakeScore: number;
         realScore: number;
-        classification: 'fake' | 'real';
+        classification: 'fake' | 'real' | 'suspicious';
     };
     faceDetection?: {
         detected: boolean;
@@ -21,6 +21,30 @@ export interface IAnalysisDetails {
     compressionArtifacts?: number;
     modelDetails?: Record<string, unknown>;
     modelVersion?: string;
+    mediaType?: 'image' | 'video';
+    framesAnalyzed?: number;
+    fakeScore?: number;
+    realScore?: number;
+    // Enhanced v5 analysis fields
+    facesDetected?: number;
+    faceScores?: number[];
+    avgFaceScore?: number;
+    avgFftScore?: number;
+    avgEyeScore?: number;
+    fftBoost?: number;
+    eyeBoost?: number;
+    temporalBoost?: number;
+    // Debug frames for PDF report
+    debugFrames?: Array<{
+        index: number;
+        name: string;
+        type: string;
+        weight: number;
+        fake_score: number;
+        real_score: number;
+        status: string;
+        image_base64: string;
+    }>;
 }
 
 export interface IAdminOverride {
@@ -71,6 +95,11 @@ const aiAnalysisSchema = new Schema<IAIAnalysis>(
             default: 'AUTHENTIC',
         },
         analysisDetails: {
+            deepfakeAnalysis: {
+                fakeScore: { type: Number },
+                realScore: { type: Number },
+                classification: { type: String },
+            },
             faceDetection: {
                 detected: { type: Boolean },
                 confidence: { type: Number },
@@ -82,6 +111,29 @@ const aiAnalysisSchema = new Schema<IAIAnalysis>(
             temporalConsistency: { type: Number },
             compressionArtifacts: { type: Number },
             modelDetails: { type: Schema.Types.Mixed },
+            modelVersion: { type: String },
+            mediaType: { type: String },
+            framesAnalyzed: { type: Number },
+            // Enhanced v5 analysis fields
+            facesDetected: { type: Number },
+            faceScores: [{ type: Number }],
+            avgFaceScore: { type: Number },
+            avgFftScore: { type: Number },
+            avgEyeScore: { type: Number },
+            fftBoost: { type: Number },
+            eyeBoost: { type: Number },
+            temporalBoost: { type: Number },
+            // Debug frames for PDF report
+            debugFrames: [{
+                index: { type: Number },
+                name: { type: String },
+                type: { type: String },
+                weight: { type: Number },
+                fake_score: { type: Number },
+                real_score: { type: Number },
+                status: { type: String },
+                image_base64: { type: String },
+            }],
         },
         processingTimeMs: {
             type: Number,

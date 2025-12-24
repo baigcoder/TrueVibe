@@ -57,7 +57,8 @@ export const confirmUpload = async (
         const isVideo = type === 'video';
 
         // Generate optimized and original URLs using helper functions
-        const generatedOriginalUrl = getOriginalUrl(cloudinaryId);
+        // Pass resource type to ensure videos use /video/upload/ path
+        const generatedOriginalUrl = getOriginalUrl(cloudinaryId, isVideo ? 'video' : 'image');
         let generatedOptimizedUrl;
         let generatedThumbnailUrl = thumbnailUrl;
 

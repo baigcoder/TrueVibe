@@ -6,18 +6,9 @@ import {
     ShieldCheck, ArrowUpRight, Zap, Star, Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSuggestedUsers, useFollowUser } from "@/api/hooks";
+import { useSuggestedUsers, useFollowUser, useTrendingHashtags } from "@/api/hooks";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-
-// Mock trending topics (can be replaced with real API later)
-const TRENDING_TOPICS = [
-    { id: 1, tag: "TrueVibe", posts: 12400, trend: "+45%" },
-    { id: 2, tag: "VerifiedContent", posts: 8920, trend: "+32%" },
-    { id: 3, tag: "DigitalArt", posts: 6500, trend: "+28%" },
-    { id: 4, tag: "TechTalk", posts: 5200, trend: "+22%" },
-    { id: 5, tag: "CreatorEconomy", posts: 4100, trend: "+18%" },
-];
 
 const TRENDING_CATEGORIES = [
     { name: "Technology", icon: Zap, color: "from-blue-500 to-primary" },
@@ -27,11 +18,15 @@ const TRENDING_CATEGORIES = [
 ];
 
 export function TrendingTab() {
-    const { data: suggestionsData, isLoading } = useSuggestedUsers(10);
+    const { data: suggestionsData, isLoading: loadingSuggestions } = useSuggestedUsers(10);
+    const { data: hashtagsData, isLoading: loadingHashtags } = useTrendingHashtags(5);
     const followMutation = useFollowUser();
     const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
 
     const trendingCreators = (suggestionsData as any)?.data?.suggestions || [];
+    const trendingHashtags = (hashtagsData as any)?.data?.hashtags || [];
+
+    const isLoading = loadingSuggestions || loadingHashtags;
 
     const handleFollow = async (userId: string) => {
         try {
@@ -121,29 +116,33 @@ export function TrendingTab() {
                     </h3>
                 </div>
                 <div className="space-y-3">
-                    {TRENDING_TOPICS.map((topic, index) => (
-                        <motion.div
-                            key={topic.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + index * 0.05 }}
-                            className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group"
-                        >
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg font-black text-white/30">#{index + 1}</span>
-                                <div>
-                                    <p className="font-bold text-white group-hover:text-primary transition-colors">
-                                        #{topic.tag}
-                                    </p>
-                                    <p className="text-xs text-white/40">{topic.posts.toLocaleString()} posts</p>
+                    {trendingHashtags.length > 0 ? (
+                        trendingHashtags.map((topic: any, index: number) => (
+                            <motion.div
+                                key={topic._id || topic.hashtag || index}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 + index * 0.05 }}
+                                className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg font-black text-white/30">#{index + 1}</span>
+                                    <div>
+                                        <p className="font-bold text-white group-hover:text-primary transition-colors">
+                                            #{topic.hashtag || topic.tag}
+                                        </p>
+                                        <p className="text-xs text-white/40">{(topic.count || topic.posts || 0).toLocaleString()} posts</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 rounded-lg">
-                                <ArrowUpRight className="w-3 h-3 text-primary" />
-                                <span className="text-xs font-bold text-primary">{topic.trend}</span>
-                            </div>
-                        </motion.div>
-                    ))}
+                                <div className="flex items-center gap-1 px-2 py-1 bg-primary/20 rounded-lg">
+                                    <ArrowUpRight className="w-3 h-3 text-primary" />
+                                    <span className="text-xs font-bold text-primary">Trending</span>
+                                </div>
+                            </motion.div>
+                        ))
+                    ) : (
+                        <p className="text-center text-white/40 py-4">No trending topics yet. Start posting!</p>
+                    )}
                 </div>
             </motion.div>
 

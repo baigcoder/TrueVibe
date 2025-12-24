@@ -6,6 +6,13 @@ import { setPresence, getPresence } from '../config/redis.js';
 import { Profile } from '../modules/users/Profile.model.js';
 import { sendCallPushNotification } from '../modules/notifications/notification.service.js';
 
+const isProd = process.env.NODE_ENV === 'production';
+
+// Production-safe logging
+function debugLog(...args: unknown[]): void {
+    if (!isProd) console.log('[Socket]', ...args);
+}
+
 let io: Server | null = null;
 
 // User socket mapping
@@ -72,7 +79,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
 
     io.on('connection', (socket: Socket) => {
         const userId = socket.data.userId;
-        console.log(`User connected: ${userId} (${socket.id})`);
+        debugLog(`User connected: ${userId} (${socket.id})`);
 
         // Track user socket
         if (!userSockets.has(userId)) {
@@ -92,36 +99,36 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
         // Handle room joining
         socket.on('join:room', ({ roomId }) => {
             socket.join(roomId);
-            console.log(`User ${userId} joined room: ${roomId}`);
+            debugLog(`User ${userId} joined room: ${roomId}`);
         });
 
         socket.on('leave:room', ({ roomId }) => {
             socket.leave(roomId);
-            console.log(`User ${userId} left room: ${roomId}`);
+            debugLog(`User ${userId} left room: ${roomId}`);
         });
 
         // Handle server joining
         socket.on('server:join', ({ serverId }) => {
             socket.join(`server:${serverId}`);
             socket.to(`server:${serverId}`).emit('member:online', { userId, serverId });
-            console.log(`User ${userId} joined server: ${serverId}`);
+            debugLog(`User ${userId} joined server: ${serverId}`);
         });
 
         socket.on('server:leave', ({ serverId }) => {
             socket.leave(`server:${serverId}`);
             socket.to(`server:${serverId}`).emit('member:offline', { userId, serverId });
-            console.log(`User ${userId} left server: ${serverId}`);
+            debugLog(`User ${userId} left server: ${serverId}`);
         });
 
         // Handle channel joining
         socket.on('channel:join', ({ channelId }) => {
             socket.join(`channel:${channelId}`);
-            console.log(`User ${userId} joined channel: ${channelId}`);
+            debugLog(`User ${userId} joined channel: ${channelId}`);
         });
 
         socket.on('channel:leave', ({ channelId }) => {
             socket.leave(`channel:${channelId}`);
-            console.log(`User ${userId} left channel: ${channelId}`);
+            debugLog(`User ${userId} left channel: ${channelId}`);
         });
 
         // Typing indicators for channels
@@ -229,7 +236,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
             // Send list of existing participants to the new user
             socket.emit('voiceroom:existing-users', { roomId, users: otherUsers });
 
-            console.log(`User ${userId} joined voice room: ${roomId}`);
+            debugLog(`User ${userId} joined voice room: ${roomId}`);
         });
 
         // Leave a voice room
@@ -243,7 +250,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
                 userId,
             });
 
-            console.log(`User ${userId} left voice room: ${roomId}`);
+            debugLog(`User ${userId} left voice room: ${roomId}`);
         });
 
         // WebRTC offer for room (to specific user)
@@ -344,7 +351,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
 
         // Handle disconnection
         socket.on('disconnect', async () => {
-            console.log(`User disconnected: ${userId} (${socket.id})`);
+            debugLog(`User disconnected: ${userId} (${socket.id})`);
 
             const sockets = userSockets.get(userId);
             if (sockets) {
@@ -362,7 +369,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
         });
     });
 
-    console.log('✅ Socket.IO initialized');
+    debugLog('Socket.IO initialized');
     return io;
 };
 

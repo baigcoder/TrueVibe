@@ -171,88 +171,112 @@ export default function FeedPage() {
                         className="hidden"
                     />
 
-                    {/* Your Vibe / My Story Card */}
+                    {/* Your Vibe / My Story Card - ULTIMATE PREMIUM DESIGN */}
                     <motion.div
                         whileHover={{ y: -8, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => myStoryGroup ? handleStoryClick(myStoryGroup) : storyFileInputRef.current?.click()}
                         className={cn(
-                            "relative w-24 h-36 sm:w-32 sm:h-48 lg:w-36 lg:h-56 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] group/vibe transition-all duration-500",
+                            "relative w-24 h-36 sm:w-32 sm:h-48 lg:w-36 lg:h-56 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] group/vibe transition-all duration-700",
                             myStoryGroup
-                                ? "shadow-[0_0_40px_rgba(var(--primary-rgb),0.15)] ring-1 ring-white/10"
-                                : "border border-white/5 bg-slate-900/50"
+                                ? "shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] ring-1 ring-white/10"
+                                : "border border-white/5 bg-slate-900/50 shadow-xl"
                         )}
                     >
-                        {/* Background Layer */}
+                        {/* Background Layer with Mesh Gradient & Noise */}
                         {myStoryGroup ? (
-                            <div className="absolute inset-0 bg-slate-950">
+                            <div className="absolute inset-0 bg-[#030712]">
                                 {myStoryGroup.stories[0].mediaUrl ? (
-                                    <img
-                                        src={myStoryGroup.stories[0].mediaUrl}
-                                        className="w-full h-full object-cover group-hover/vibe:scale-110 transition-transform duration-1000 opacity-50"
-                                        alt=""
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.opacity = '0';
-                                        }}
-                                    />
+                                    <div className="relative w-full h-full">
+                                        <img
+                                            src={myStoryGroup.stories[0].mediaUrl}
+                                            className="w-full h-full object-cover group-hover/vibe:scale-110 transition-transform duration-1000 opacity-60 mix-blend-luminosity"
+                                            alt=""
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.opacity = '0';
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-black" />
+                                    </div>
                                 ) : (
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/20 to-secondary/20 animate-gradient-xy" />
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-purple-600/20 to-secondary/30 animate-gradient-xy" />
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90" />
+                                {/* Technical Texture Overlay */}
+                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-grid-pattern" />
                             </div>
                         ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-rose-500 animate-gradient-xy opacity-90" />
+                            <div className="absolute inset-0 overflow-hidden">
+                                {/* Mesh Gradient Background */}
+                                <div className="absolute inset-0 bg-[#030712]" />
+                                <div className="absolute -top-[20%] -left-[20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_50%),radial-gradient(circle_at_80%_20%,rgba(244,63,94,0.15),transparent_50%),radial-gradient(circle_at_20%_80%,rgba(168,85,247,0.15),transparent_50%)] animate-pulse" />
+
+                                {/* Animated Gradient Accent */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/80 via-purple-500/80 to-rose-500/80 mix-blend-overlay opacity-90" />
+
+                                {/* Noise & Grid Texture */}
+                                <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-grid-pattern" />
+                            </div>
                         )}
 
                         {/* Content Overlay */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-between p-3 sm:p-4 lg:p-5 py-4 sm:py-5 lg:py-6">
+                        <div className="absolute inset-0 flex flex-col items-center justify-between p-3 sm:p-4 lg:p-5 py-5 sm:py-6 lg:py-8">
                             <div className="flex justify-between w-full items-start">
                                 {myStoryGroup ? (
-                                    <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl bg-primary/20 backdrop-blur-xl border border-primary/30 flex items-center gap-1 sm:gap-1.5 transition-all group-hover/vibe:bg-primary/40">
-                                        <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary animate-pulse" />
-                                        <span className="text-[8px] sm:text-[10px] font-black text-white uppercase tracking-tighter">
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="px-2.5 py-1 rounded-xl bg-white/10 backdrop-blur-2xl border border-white/10 flex items-center gap-1.5 transition-all group-hover/vibe:bg-white/20"
+                                    >
+                                        <Eye className="w-3 h-3 text-primary animate-pulse" />
+                                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">
                                             {myStoryGroup.stories.reduce((acc: number, s: any) => acc + (s.viewers?.length || 0), 0)}
                                         </span>
-                                    </div>
+                                    </motion.div>
                                 ) : <div />}
 
-                                <div
+                                <motion.div
+                                    whileHover={{ scale: 1.1, rotate: 90 }}
+                                    whileTap={{ scale: 0.9 }}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         storyFileInputRef.current?.click();
                                     }}
-                                    className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-primary backdrop-blur-xl flex items-center justify-center border border-white/10 transition-all shadow-xl group/plus"
+                                    className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-2xl flex items-center justify-center border border-white/20 transition-all shadow-2xl group/plus relative"
                                 >
-                                    <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5 text-white transition-transform group-hover/plus:rotate-90" />
-                                </div>
+                                    {/* Inner Glow for Plus Button */}
+                                    <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-md opacity-0 group-hover/plus:opacity-100 transition-opacity" />
+                                    <Plus className="w-5 h-5 text-white relative z-10" />
+                                </motion.div>
                             </div>
 
-                            <div className="flex flex-col items-center gap-2 sm:gap-2.5 lg:gap-3 w-full">
+                            <div className="flex flex-col items-center gap-3 w-full">
                                 <div className={cn(
-                                    "p-0.5 sm:p-1 rounded-xl sm:rounded-[1.5rem] lg:rounded-[1.8rem] transition-all duration-700",
+                                    "p-1 rounded-[1.8rem] lg:rounded-[2rem] transition-all duration-700 relative",
                                     myStoryGroup?.hasUnwatched
-                                        ? "bg-gradient-to-tr from-primary via-purple-500 to-rose-400 animate-gradient-xy shadow-lg shadow-primary/20"
+                                        ? "bg-gradient-to-tr from-primary via-purple-500 to-rose-400 animate-gradient-xy shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)]"
                                         : myStoryGroup
                                             ? "bg-white/20"
                                             : "p-0"
                                 )}>
-                                    <div className="p-0.5 bg-[#0d1117] rounded-xl sm:rounded-[1.4rem] lg:rounded-[1.6rem]">
-                                        <Avatar className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl lg:rounded-[1.4rem] border border-white/5 ring-1 ring-white/5">
+                                    <div className="p-0.5 bg-[#030712] rounded-[1.7rem] lg:rounded-[1.9rem]">
+                                        <Avatar className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-[1.4rem] lg:rounded-[1.6rem] border border-white/10 ring-1 ring-white/5 transition-transform duration-500 group-hover/vibe:scale-105">
                                             <AvatarImage src={profile?.avatar} className="object-cover" />
-                                            <AvatarFallback className="bg-slate-800 text-white font-black text-xs sm:text-sm uppercase">
+                                            <AvatarFallback className="bg-slate-900 text-white font-black text-xs sm:text-sm uppercase italic">
                                                 {profile?.name?.[0]}
                                             </AvatarFallback>
                                         </Avatar>
                                     </div>
                                 </div>
                                 <div className="text-center w-full px-1">
-                                    <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-black text-white uppercase tracking-wider sm:tracking-[0.2em] lg:tracking-[0.25em] drop-shadow-2xl block truncate">
-                                        {myStoryGroup ? 'Your' : 'Add'}
+                                    <span className="text-[10px] sm:text-[11px] lg:text-[12px] font-black text-white uppercase tracking-[0.2em] lg:tracking-[0.25em] drop-shadow-2xl mb-1 block">
+                                        {myStoryGroup ? 'Your Vibe' : 'ADD'}
                                     </span>
                                     {myStoryGroup && (
-                                        <span className="text-[7px] sm:text-[8px] font-black text-primary uppercase tracking-widest mt-0.5 block">
-                                            {myStoryGroup.stories.length} VIBES
-                                        </span>
+                                        <div className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/20 border border-primary/30">
+                                            <span className="text-[8px] font-black text-primary uppercase tracking-widest whitespace-nowrap">
+                                                {myStoryGroup.stories.length} POSTS
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -260,11 +284,11 @@ export default function FeedPage() {
 
                         {/* Status Pulse for My Story */}
                         {myStoryGroup?.hasUnwatched && (
-                            <div className="absolute top-4 right-4 w-2 h-2 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
+                            <div className="absolute top-4 right-4 w-2 h-2 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)] z-20" />
                         )}
                     </motion.div>
 
-                    {/* Community Stories */}
+                    {/* Community Stories - PREMIUM CARDS */}
                     {otherStories.map((storyGroup: any) => (
                         <motion.div
                             key={storyGroup.user._id || storyGroup.user.supabaseId}
@@ -272,66 +296,74 @@ export default function FeedPage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleStoryClick(storyGroup)}
                             className={cn(
-                                "relative w-24 h-36 sm:w-32 sm:h-48 lg:w-36 lg:h-56 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] border border-white/10 group/story shadow-2xl transition-all duration-500",
-                                storyGroup.hasUnwatched ? "ring-2 ring-primary/50" : ""
+                                "relative w-24 h-36 sm:w-32 sm:h-48 lg:w-36 lg:h-56 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl sm:rounded-[2rem] lg:rounded-[2.5rem] border border-white/10 group/story shadow-2xl transition-all duration-700 bg-slate-950",
+                                storyGroup.hasUnwatched ? "ring-2 ring-primary/50 ring-offset-2 ring-offset-[#030712]" : ""
                             )}
                         >
                             {/* Story Preview or Thumbnail */}
-                            <div className="absolute inset-0 bg-slate-900">
+                            <div className="absolute inset-0 overflow-hidden">
                                 {storyGroup.stories[0].mediaType === 'image' ? (
                                     <img
                                         src={storyGroup.stories[0].mediaUrl}
                                         alt=""
-                                        className="w-full h-full object-cover group-hover/story:scale-110 transition-transform duration-1000"
+                                        className="w-full h-full object-cover group-hover/story:scale-110 transition-transform duration-1000 grayscale group-hover/story:grayscale-0"
                                     />
                                 ) : (
                                     <div className="w-full h-full relative">
                                         <video
                                             src={storyGroup.stories[0].mediaUrl}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover grayscale group-hover/story:grayscale-0"
                                         />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                            <Play className="w-8 h-8 text-white/60 group-hover/story:scale-125 transition-transform" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                                            <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover/story:scale-110 transition-transform">
+                                                <Play className="w-5 h-5 text-white/80 ml-0.5" />
+                                            </div>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Overlay Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                            {/* Overlay Gradient Layered */}
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black" />
+                            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover/story:opacity-100 transition-opacity duration-700" />
 
                             {/* User Info Overlay */}
-                            <div className="absolute inset-0 p-5 flex flex-col justify-between">
+                            <div className="absolute inset-0 p-4 sm:p-5 flex flex-col justify-between z-10">
                                 <div className="flex justify-between items-center">
-                                    {storyGroup.hasUnwatched && (
-                                        <div className="px-2 py-0.5 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_10px_rgba(129,140,248,0.3)]">
-                                            <span className="text-[8px] font-black text-primary uppercase tracking-tighter">LIVE</span>
+                                    {storyGroup.hasUnwatched ? (
+                                        <div className="px-2 py-0.5 rounded-lg bg-primary/30 backdrop-blur-2xl border border-primary/40 flex items-center gap-1 shadow-lg shadow-primary/20">
+                                            <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
+                                            <span className="text-[8px] font-black text-white uppercase tracking-tighter">NEW</span>
                                         </div>
-                                    )}
-                                    <div className="w-6 h-6 rounded-lg bg-black/40 backdrop-blur-md flex items-center justify-center opacity-0 group-hover/story:opacity-100 transition-opacity">
-                                        <Heart className="w-3.5 h-3.5 text-white/80" />
+                                    ) : <div />}
+
+                                    <div className="w-7 h-7 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center opacity-0 group-hover/story:opacity-100 transition-all duration-500 hover:bg-rose-500/20 hover:border-rose-500/30">
+                                        <Heart className="w-4 h-4 text-white/80" />
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col items-center gap-2 sm:gap-2.5 lg:gap-3">
+                                <div className="flex flex-col items-center gap-2.5">
                                     <div className={cn(
-                                        "w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-xl sm:rounded-2xl p-0.5 transition-all duration-700 group-hover/story:p-1",
+                                        "w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-[1.2rem] sm:rounded-[1.4rem] p-0.5 transition-all duration-700 group-hover/story:scale-110",
                                         storyGroup.hasUnwatched
-                                            ? "bg-gradient-to-tr from-primary via-purple-500 to-rose-400 animate-gradient-xy shadow-[0_0_15px_rgba(129,140,248,0.4)]"
+                                            ? "bg-gradient-to-tr from-primary via-purple-500 to-rose-400 animate-gradient-xy p-1 shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]"
                                             : "bg-white/20"
                                     )}>
-                                        <Avatar className="w-full h-full rounded-lg sm:rounded-xl border border-black/40">
-                                            <AvatarImage src={storyGroup.user.avatar} className="object-cover" />
-                                            <AvatarFallback className="bg-slate-800 text-white text-[9px] sm:text-[10px] font-black">
-                                                {storyGroup.user.name[0]}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <div className="p-0.5 bg-[#030712] rounded-[1.1rem] sm:rounded-[1.3rem]">
+                                            <Avatar className="w-full h-full rounded-[0.9rem] sm:rounded-[1.1rem]">
+                                                <AvatarImage src={storyGroup.user.avatar} className="object-cover" />
+                                                <AvatarFallback className="bg-slate-800 text-white font-black text-[10px] uppercase italic">
+                                                    {storyGroup.user.name?.[0]}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </div>
                                     </div>
-                                    <div className="text-center w-full px-1">
-                                        <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-wide sm:tracking-widest block truncate drop-shadow-md max-w-[75px] sm:max-w-[90px] mx-auto group-hover:text-primary transition-colors">
-                                            {storyGroup.user.name.split(' ')[0].slice(0, 8)}
+
+                                    <div className="text-center w-full">
+                                        <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-black text-white uppercase tracking-[0.15em] drop-shadow-2xl block truncate px-1 italic">
+                                            {storyGroup.user.name.split(' ')[0]}
                                         </span>
-                                        <span className="text-[7px] sm:text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                                        <span className="text-[7px] sm:text-[8px] font-bold text-white/40 uppercase tracking-tighter mt-0.5 block">
                                             {storyGroup.stories.length} VIBES
                                         </span>
                                     </div>
@@ -342,44 +374,52 @@ export default function FeedPage() {
                 </div>
             </div>
 
-            {/* Feed Tabs - Premium Gen Z Style */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
+            {/* Feed Tabs - ULTIMATE PREMIUM DESIGN */}
+            <div className="mx-2 p-1.5 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] flex items-center gap-1.5 overflow-x-auto scrollbar-hide shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)] sticky top-2 z-40 relative group/navbar">
+                {/* Subtle Technical Grid Overlay */}
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-grid-pattern" />
+
                 {feedTabs.map((tab, index) => (
                     <motion.button
                         key={tab.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={{ delay: index * 0.03 }}
                         onClick={() => setActiveFeed(tab.id as FeedType)}
                         className={cn(
-                            "flex items-center gap-2.5 px-6 py-3.5 rounded-2xl flex-shrink-0 text-[11px] font-black transition-all duration-500 uppercase tracking-[0.15em] relative overflow-hidden group",
+                            "flex items-center gap-2.5 px-6 py-3.5 rounded-[2rem] flex-shrink-0 text-[10px] font-black transition-all duration-500 uppercase tracking-[0.2em] relative overflow-hidden group outline-none",
                             activeFeed === tab.id
-                                ? "bg-gradient-to-r from-primary/15 via-primary/10 to-secondary/10 text-white shadow-[0_0_25px_rgba(129,140,248,0.15)]"
-                                : "bg-[#0d1117] text-slate-500 hover:text-white hover:bg-white/5"
+                                ? "text-white"
+                                : "text-slate-500 hover:text-white"
                         )}
                     >
-                        {/* Gradient Glow Effect on Active */}
+                        {/* Active Background Pill */}
                         {activeFeed === tab.id && (
-                            <>
-                                <div className="absolute -left-2 -top-2 w-16 h-16 bg-primary/20 rounded-full blur-2xl" />
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-secondary to-primary rounded-l-lg" />
-                            </>
+                            <motion.div
+                                layoutId="activeTabPill"
+                                className="absolute inset-0 bg-white/[0.07] border border-white/10 rounded-[1.6rem]"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            >
+                                {/* Inner Glow */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/5" />
+                                {/* Bottom Indicator */}
+                                <div className="absolute bottom-0 inset-x-4 h-[1.5px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+                            </motion.div>
                         )}
 
-                        {/* Shimmer Effect on Hover */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                         <tab.icon className={cn(
-                            "w-4 h-4 relative z-10 transition-all",
+                            "w-3.5 h-3.5 relative z-10 transition-all duration-500",
                             activeFeed === tab.id
-                                ? "text-primary drop-shadow-[0_0_12px_rgba(129,140,248,0.8)] scale-110"
-                                : "text-slate-500 group-hover:text-white"
+                                ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.6)]"
+                                : "text-slate-600 group-hover:text-slate-400"
                         )} />
+
                         <span className={cn(
-                            "relative z-10 transition-all duration-500",
-                            activeFeed === tab.id
-                                ? "bg-gradient-to-r from-white via-primary to-secondary bg-clip-text text-transparent italic font-black"
-                                : ""
+                            "relative z-10 transition-all font-black",
+                            activeFeed === tab.id ? "italic tracking-[0.25em]" : ""
                         )}>
                             {tab.label}
                         </span>
@@ -496,33 +536,36 @@ export default function FeedPage() {
                             </div>
 
                             {/* Preview */}
-                            <div className="aspect-[9/16] max-h-[50vh] bg-black relative">
-                                {storyPreviewUrl && selectedStoryFile && (
-                                    selectedStoryFile.type.startsWith('video/') ? (
-                                        <video
-                                            src={storyPreviewUrl}
-                                            className="w-full h-full object-contain"
-                                            autoPlay
-                                            muted
-                                            loop
-                                        />
-                                    ) : (
-                                        <img
-                                            src={storyPreviewUrl}
-                                            alt="Story preview"
-                                            className="w-full h-full object-contain"
-                                        />
-                                    )
-                                )}
-                                <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg flex items-center gap-1.5">
-                                    {selectedStoryFile?.type.startsWith('video/') ? (
-                                        <Video className="w-3.5 h-3.5 text-primary" />
-                                    ) : (
-                                        <Image className="w-3.5 h-3.5 text-secondary" />
+                            <div className="flex justify-center bg-black/20 p-2">
+                                <div className="aspect-[9/16] w-full max-w-[280px] sm:max-w-sm max-h-[60vh] bg-black rounded-2xl overflow-hidden relative flex items-center justify-center shadow-2xl border border-white/5">
+                                    {storyPreviewUrl && selectedStoryFile && (
+                                        selectedStoryFile.type.startsWith('video/') ? (
+                                            <video
+                                                src={storyPreviewUrl}
+                                                className="w-full h-full object-contain"
+                                                autoPlay
+                                                muted
+                                                loop
+                                                playsInline
+                                            />
+                                        ) : (
+                                            <img
+                                                src={storyPreviewUrl}
+                                                alt="Story preview"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        )
                                     )}
-                                    <span className="text-[10px] font-bold text-white uppercase">
-                                        {selectedStoryFile?.type.startsWith('video/') ? 'Video' : 'Photo'}
-                                    </span>
+                                    <div className="absolute top-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg flex items-center gap-1.5 border border-white/10">
+                                        {selectedStoryFile?.type.startsWith('video/') ? (
+                                            <Video className="w-3.5 h-3.5 text-primary" />
+                                        ) : (
+                                            <Image className="w-3.5 h-3.5 text-secondary" />
+                                        )}
+                                        <span className="text-[10px] font-black text-white uppercase tracking-tight">
+                                            {selectedStoryFile?.type.startsWith('video/') ? 'Video' : 'Photo'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

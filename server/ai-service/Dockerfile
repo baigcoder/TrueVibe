@@ -1,18 +1,23 @@
-# Deepfake Detection Service Dockerfile
+# Deepfake Detection Service - Railway Hobby Optimized
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for OpenCV
 RUN apt-get update && apt-get install -y \
     gcc \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (for caching)
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install PyTorch CPU-only first (smaller footprint)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
@@ -21,13 +26,15 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Environment variables
+# Environment variables for Railway Hobby (8GB RAM)
 ENV MODEL_PATH=/app/models/deepfake-detector-model-v1
 ENV PYTHONUNBUFFERED=1
+ENV LIGHTWEIGHT_MODE=false
+ENV ENV=production
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run with limited workers for memory efficiency
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

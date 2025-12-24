@@ -1,10 +1,9 @@
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle,
-    DialogDescription
+    Dialog, DialogContent
 } from "@/components/ui/dialog";
 import {
     BarChart3, Eye, Heart, MessageCircle,
-    Share2, Bookmark, TrendingUp, Loader2
+    Share2, Bookmark, TrendingUp, Loader2, ShieldCheck, X
 } from "lucide-react";
 import { usePostAnalytics } from "@/api/hooks";
 import { cn } from "@/lib/utils";
@@ -20,16 +19,23 @@ interface PostAnalyticsProps {
 }
 
 export function PostAnalytics({ postId, isOpen, onClose }: PostAnalyticsProps) {
-    const { data: analyticsRes, isLoading } = usePostAnalytics(postId);
+    // Only fetch analytics when the dialog is open - this prevents 403 errors
+    // for posts the user doesn't own since the analytics button is only visible
+    // to the owner, but this component is always rendered
+    const { data: analyticsRes, isLoading } = usePostAnalytics(isOpen ? postId : '');
     const analytics = (analyticsRes as any)?.data?.analytics;
 
-    const stats = [
-        { label: "Total Views", value: analytics?.totalViews || 0, icon: Eye, color: "text-sky-400", bg: "bg-sky-400/10" },
-        { label: "Unique Views", value: analytics?.uniqueViews || 0, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-        { label: "Likes", value: analytics?.likes || 0, icon: Heart, color: "text-rose-400", bg: "bg-rose-400/10" },
-        { label: "Comments", value: analytics?.comments || 0, icon: MessageCircle, color: "text-amber-400", bg: "bg-amber-400/10" },
-        { label: "Shares", value: analytics?.shares || 0, icon: Share2, color: "text-indigo-400", bg: "bg-indigo-400/10" },
-        { label: "Saves", value: analytics?.saves || 0, icon: Bookmark, color: "text-violet-400", bg: "bg-violet-400/10" },
+    // Split stats into primary metrics (2x2) and secondary ones
+    const primaryStats = [
+        { label: "Likes", value: analytics?.likes || 0, icon: Heart, iconColor: "text-rose-400", bg: "bg-rose-500/10" },
+        { label: "Comments", value: analytics?.comments || 0, icon: MessageCircle, iconColor: "text-amber-400", bg: "bg-amber-500/10" },
+        { label: "Shares", value: analytics?.shares || 0, icon: Share2, iconColor: "text-indigo-400", bg: "bg-indigo-500/10" },
+        { label: "Saves", value: analytics?.saves || 0, icon: Bookmark, iconColor: "text-violet-400", bg: "bg-violet-500/10" },
+    ];
+
+    const topStats = [
+        { label: "Total Views", value: analytics?.totalViews || 0, icon: Eye, color: "text-sky-400" },
+        { label: "Unique Views", value: analytics?.uniqueViews || 0, icon: TrendingUp, color: "text-emerald-400" },
     ];
 
     // Mock chart data for visualization
@@ -45,100 +51,144 @@ export function PostAnalytics({ postId, isOpen, onClose }: PostAnalyticsProps) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl bg-slate-950/95 backdrop-blur-3xl border-white/10 p-0 text-white overflow-hidden rounded-[2.5rem] shadow-2xl">
-                <div className="p-8">
-                    <DialogHeader className="mb-8">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-                                <BarChart3 className="w-5 h-5 text-indigo-400" />
-                            </div>
-                            <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">Vibe Insights</DialogTitle>
-                        </div>
-                        <DialogDescription className="text-slate-500 font-medium">Real-time performance data for your vibe.</DialogDescription>
-                    </DialogHeader>
+            <DialogContent className="max-w-[380px] bg-[#030712] border-white/10 p-0 text-white overflow-hidden rounded-[2rem] shadow-2xl safe-area-inset-bottom">
 
+                {/* Slim Header */}
+                <div className="relative h-24 bg-gradient-to-br from-indigo-900/40 to-slate-950 flex items-center px-6 border-b border-white/5">
+                    <div className="absolute top-4 right-4 z-20">
+                        <button
+                            onClick={onClose}
+                            className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors"
+                        >
+                            <X className="w-3.5 h-3.5 text-white/50" />
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
+                            <BarChart3 className="w-5 h-5 text-violet-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black italic uppercase tracking-tighter text-white">Post Insights</h2>
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Real-time Analytics</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 space-y-4">
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4">
-                            <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest italic">Crunching data...</p>
+                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                            <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Syncing Data...</p>
                         </div>
                     ) : (
-                        <div className="space-y-8">
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                {stats.map((stat, i) => (
-                                    <div key={i} className="p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-all">
-                                        <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center mb-4", stat.bg)}>
-                                            <stat.icon className={cn("w-5 h-5", stat.color)} />
+                        <div className="space-y-4">
+
+                            {/* Top View Chips */}
+                            <div className="flex gap-2">
+                                {topStats.map((stat, i) => (
+                                    <div key={i} className="flex-1 bg-white/[0.03] border border-white/5 rounded-xl p-2.5 flex items-center gap-2">
+                                        <stat.icon className={cn("w-3 h-3", stat.color)} />
+                                        <div>
+                                            <p className="text-[7px] font-black text-slate-500 uppercase leading-none mb-0.5">{stat.label}</p>
+                                            <p className="text-xs font-black tabular-nums">{stat.value.toLocaleString()}</p>
                                         </div>
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{stat.label}</p>
-                                        <p className="text-2xl font-black italic tracking-tighter">{stat.value.toLocaleString()}</p>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Main Chart */}
-                            <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">7-Day Engagement Trend</h4>
-                                    <div className="flex gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase">Views</span>
+                            {/* Core Stats 2x2 Grid - MORE COMPACT */}
+                            <div className="grid grid-cols-2 gap-2">
+                                {primaryStats.map((stat, i) => (
+                                    <div key={i} className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3 hover:bg-white/[0.04] transition-colors group">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", stat.bg)}>
+                                                <stat.icon className={cn("w-3.5 h-3.5", stat.iconColor)} />
+                                            </div>
+                                            <span className="text-xs font-black italic text-white/90 tabular-nums">
+                                                {stat.value.toLocaleString()}
+                                            </span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-rose-500" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase">Engagement</span>
+                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Sparkline Trend Chart */}
+                            <div className="bg-slate-900/30 border border-white/5 rounded-2xl p-4">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-[8px] font-black uppercase tracking-widest text-slate-500">7-Day Momentum</h4>
+                                    <div className="flex gap-2.5">
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                            <span className="text-[7px] font-bold text-slate-600 uppercase">Views</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                            <span className="text-[7px] font-bold text-slate-600 uppercase">Eng</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="h-[250px] w-full">
+                                <div className="h-[100px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={chartData}>
                                             <defs>
-                                                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                                                <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
                                                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                                 </linearGradient>
-                                                <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
+                                                <linearGradient id="colorE" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
                                                     <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <Tooltip
-                                                contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-                                                itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                                                content={({ active, payload }) => {
+                                                    if (active && payload && payload.length) {
+                                                        return (
+                                                            <div className="bg-slate-950/90 backdrop-blur-md border border-white/10 p-2 rounded-lg shadow-xl">
+                                                                <p className="text-[8px] font-black text-white/50 uppercase mb-1">{payload[0].payload.name}</p>
+                                                                {payload.map((p, idx) => (
+                                                                    <div key={idx} className="flex justify-between items-center gap-4 py-0.5">
+                                                                        <span className="text-[7px] font-black uppercase text-slate-500">{p.name}</span>
+                                                                        <span className="text-[9px] font-black text-white tabular-nums">{p.value}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                }}
                                             />
-                                            <Area type="monotone" dataKey="views" stroke="#6366f1" fillOpacity={1} fill="url(#colorViews)" strokeWidth={3} />
-                                            <Area type="monotone" dataKey="engagement" stroke="#f43f5e" fillOpacity={1} fill="url(#colorEngagement)" strokeWidth={3} />
+                                            <Area type="monotone" dataKey="views" name="Views" stroke="#6366f1" fill="url(#colorV)" strokeWidth={2} />
+                                            <Area type="monotone" dataKey="engagement" name="Engagement" stroke="#f43f5e" fill="url(#colorE)" strokeWidth={2} />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
 
-                            {/* Summary Section */}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 p-6 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Engagement Rate</p>
-                                        <p className="text-3xl font-black italic tracking-tighter text-emerald-400">{analytics?.engagementRate.toFixed(1) || 0}%</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-emerald-500/50 uppercase tracking-widest">Above Average</p>
-                                        <p className="text-xs font-bold text-emerald-400">+12.5%</p>
+                            {/* Dense Summary Footer */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="p-3 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 flex flex-col">
+                                    <p className="text-[7px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Vibe Index</p>
+                                    <div className="flex items-end justify-between">
+                                        <span className="text-lg font-black italic text-emerald-400 leading-none">
+                                            {analytics?.engagementRate.toFixed(1) || 0}%
+                                        </span>
+                                        <TrendingUp className="w-3 h-3 text-emerald-500/40 mb-0.5" />
                                     </div>
                                 </div>
-                                <div className="flex-1 p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Vibe Score</p>
-                                        <p className="text-3xl font-black italic tracking-tighter text-indigo-400">8.4</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-indigo-500/50 uppercase tracking-widest">Trust Index</p>
-                                        <p className="text-xs font-bold text-indigo-400">High</p>
+                                <div className="p-3 rounded-xl bg-violet-500/[0.03] border border-violet-500/10 flex flex-col">
+                                    <p className="text-[7px] font-black text-violet-400 uppercase tracking-widest mb-0.5">Trust Level</p>
+                                    <div className="flex items-end justify-between">
+                                        <span className="text-lg font-black italic text-violet-400 leading-none">ELITE</span>
+                                        <ShieldCheck className="w-3 h-3 text-violet-500/40 mb-0.5" />
                                     </div>
                                 </div>
                             </div>
+
+                            <p className="text-[7px] text-center text-slate-600 font-mono italic">
+                                SECURED FORENSIC FEED • {new Date().toLocaleTimeString()}
+                            </p>
                         </div>
                     )}
                 </div>

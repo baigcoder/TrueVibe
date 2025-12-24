@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../../shared/middleware/auth.middleware.js';
 import { Notification } from './Notification.model.js';
+import { Profile } from '../users/Profile.model.js';
 
 const router = Router();
 
@@ -22,8 +23,33 @@ router.get('/', authenticate, async (req, res, next) => {
             .sort({ createdAt: -1 })
             .limit(parseInt(limit as string, 10) + 1);
 
-        const hasMore = notifications.length > parseInt(limit as string, 10);
-        const results = hasMore ? notifications.slice(0, -1) : notifications;
+        // Populate sender info for each notification from Profile
+        const notificationsWithSender = await Promise.all(
+            notifications.map(async (notif) => {
+                const notifObj = notif.toObject() as any;
+                if (notifObj.senderId) {
+                    try {
+                        const sender = await Profile.findOne({ supabaseId: notifObj.senderId })
+                            .select('name handle avatar')
+                            .lean();
+                        if (sender) {
+                            notifObj.sender = {
+                                _id: notifObj.senderId,
+                                name: sender.name,
+                                handle: sender.handle,
+                                avatar: sender.avatar
+                            };
+                        }
+                    } catch (e) {
+                        // Sender lookup failed, continue without sender data
+                    }
+                }
+                return notifObj;
+            })
+        );
+
+        const hasMore = notificationsWithSender.length > parseInt(limit as string, 10);
+        const results = hasMore ? notificationsWithSender.slice(0, -1) : notificationsWithSender;
 
         res.json({
             success: true,

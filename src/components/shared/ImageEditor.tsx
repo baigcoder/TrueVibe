@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
     X, Check, RotateCcw, ZoomIn, ZoomOut,
-    Maximize2, Square, RectangleHorizontal
+    Maximize2, Square, RectangleHorizontal,
+    Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -131,56 +133,56 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
         setSelectedAspect(ASPECT_RATIOS[0]);
     };
 
-    return (
+    return createPortal(
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col"
+                className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex flex-col"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <div className="flex items-center justify-between px-4 py-2 sm:py-3 border-b border-white/10 bg-white/[0.02]">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onCancel}
-                        className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
+                        className="text-white/50 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 sm:w-9 sm:h-9"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
-                    <h3 className="text-white font-black uppercase tracking-widest text-sm">Edit Photo</h3>
+                    <h3 className="text-white font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs italic">Edit Fragment</h3>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleReset}
-                        className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
+                        className="text-white/50 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 sm:w-9 sm:h-9"
                     >
-                        <RotateCcw className="w-5 h-5" />
+                        <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </Button>
                 </div>
 
                 {/* Aspect Ratio Pills */}
-                <div className="flex items-center justify-center gap-2 p-3 border-b border-white/5">
+                <div className="flex items-center justify-start sm:justify-center gap-2 px-4 py-2 sm:py-3 border-b border-white/5 bg-black/20 overflow-x-auto no-scrollbar">
                     {ASPECT_RATIOS.map((aspect) => (
                         <button
                             key={aspect.id}
                             onClick={() => setSelectedAspect(aspect)}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                                "px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0",
                                 selectedAspect.id === aspect.id
-                                    ? "bg-primary text-white shadow-lg shadow-primary/30"
-                                    : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                                    ? "bg-primary text-white shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
+                                    : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
                             )}
                         >
-                            <aspect.icon className="w-3 h-3" />
+                            <aspect.icon className="w-2.5 h-2.5 sm:w-3 h-3" />
                             {aspect.label}
                         </button>
                     ))}
                 </div>
 
                 {/* Crop Area */}
-                <div className="flex-1 relative overflow-hidden">
+                <div className="flex-1 min-h-[300px] relative bg-slate-900/40">
                     <div
                         className="absolute inset-0"
                         style={{ filter: selectedFilter.filter }}
@@ -199,11 +201,11 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
                             showGrid={true}
                             style={{
                                 containerStyle: {
-                                    backgroundColor: '#000',
+                                    backgroundColor: 'transparent',
                                 },
                                 cropAreaStyle: {
-                                    border: '2px solid rgba(129, 140, 248, 0.8)',
-                                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)',
+                                    border: '2px solid rgba(var(--primary-rgb), 0.8)',
+                                    boxShadow: '0 0 0 9999px rgba(2, 6, 23, 0.75)',
                                 },
                             }}
                         />
@@ -211,52 +213,59 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
                 </div>
 
                 {/* Zoom Controls */}
-                <div className="flex items-center justify-center gap-4 p-3 border-t border-white/5">
-                    <Button
-                        variant="ghost"
-                        size="icon"
+                <div className="flex items-center justify-center gap-4 px-4 py-2 sm:py-3 bg-black/20 border-t border-white/5">
+                    <button
                         onClick={() => setZoom(Math.max(1, zoom - 0.1))}
-                        className="text-white/60 hover:text-white rounded-xl"
+                        className="text-white/40 hover:text-white transition-colors p-1"
                     >
-                        <ZoomOut className="w-5 h-5" />
-                    </Button>
-                    <input
-                        type="range"
-                        min={1}
-                        max={3}
-                        step={0.1}
-                        value={zoom}
-                        onChange={(e) => setZoom(Number(e.target.value))}
-                        className="w-32 h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg"
-                    />
-                    <Button
-                        variant="ghost"
-                        size="icon"
+                        <ZoomOut className="w-3.5 h-3.5 sm:w-4 h-4" />
+                    </button>
+                    <div className="relative w-28 sm:w-48 h-1 flex items-center">
+                        <div className="absolute inset-0 bg-white/10 rounded-full" />
+                        <div
+                            className="absolute inset-y-0 left-0 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
+                            style={{ width: `${((zoom - 1) / 2) * 100}%` }}
+                        />
+                        <input
+                            type="range"
+                            min={1}
+                            max={3}
+                            step={0.01}
+                            value={zoom}
+                            onChange={(e) => setZoom(Number(e.target.value))}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                            className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 bg-white rounded-full shadow-lg border-2 border-primary pointer-events-none"
+                            style={{ left: `calc(${((zoom - 1) / 2) * 100}% - 6px)` }}
+                        />
+                    </div>
+                    <button
                         onClick={() => setZoom(Math.min(3, zoom + 0.1))}
-                        className="text-white/60 hover:text-white rounded-xl"
+                        className="text-white/40 hover:text-white transition-colors p-1"
                     >
-                        <ZoomIn className="w-5 h-5" />
-                    </Button>
+                        <ZoomIn className="w-3.5 h-3.5 sm:w-4 h-4" />
+                    </button>
                 </div>
 
                 {/* Filter Presets */}
-                <div className="p-4 border-t border-white/10">
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="p-3 sm:p-4 bg-slate-950/50 border-t border-white/10">
+                    <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-1.5 no-scrollbar">
                         {FILTERS.map((filter) => (
                             <button
                                 key={filter.id}
                                 onClick={() => setSelectedFilter(filter)}
                                 className={cn(
-                                    "flex-shrink-0 flex flex-col items-center gap-2 transition-all",
-                                    selectedFilter.id === filter.id && "scale-105"
+                                    "flex-shrink-0 flex flex-col items-center gap-1.5 sm:gap-2.5 transition-all duration-300",
+                                    selectedFilter.id === filter.id ? "scale-105" : "opacity-60 hover:opacity-100"
                                 )}
                             >
                                 <div
                                     className={cn(
-                                        "w-16 h-16 rounded-2xl overflow-hidden border-2 transition-all",
+                                        "w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all duration-300",
                                         selectedFilter.id === filter.id
-                                            ? "border-primary shadow-lg shadow-primary/30"
-                                            : "border-white/10"
+                                            ? "border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.4)]"
+                                            : "border-white/5"
                                     )}
                                 >
                                     <img
@@ -267,8 +276,8 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
                                     />
                                 </div>
                                 <span className={cn(
-                                    "text-[9px] font-black uppercase tracking-widest",
-                                    selectedFilter.id === filter.id ? "text-primary" : "text-white/50"
+                                    "text-[7px] sm:text-[8px] font-black uppercase tracking-[0.2em]",
+                                    selectedFilter.id === filter.id ? "text-primary" : "text-white/30"
                                 )}>
                                     {filter.label}
                                 </span>
@@ -278,34 +287,35 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="flex gap-3 p-4 border-t border-white/10">
+                <div className="flex gap-3 px-4 py-3 sm:px-6 sm:py-5 border-t border-white/10 bg-slate-950/80 safe-area-inset-bottom">
                     <Button
                         variant="outline"
                         onClick={onCancel}
-                        className="flex-1 h-12 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl font-bold uppercase tracking-widest text-xs"
+                        className="flex-1 h-10 sm:h-12 bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] sm:text-[10px]"
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleApply}
                         disabled={isProcessing || !croppedAreaPixels}
-                        className="flex-1 h-12 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg shadow-primary/20"
+                        className="flex-1 h-10 sm:h-12 bg-gradient-to-r from-primary via-purple-600 to-rose-500 hover:opacity-90 text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[9px] sm:text-[10px] shadow-xl shadow-primary/20 border-none px-0"
                     >
                         {isProcessing ? (
-                            <span className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Processing...
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                                <span>Syncing...</span>
+                            </div>
                         ) : (
-                            <span className="flex items-center gap-2">
-                                <Check className="w-4 h-4" />
-                                Apply
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span>Apply Vibe</span>
+                            </div>
                         )}
                     </Button>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
 

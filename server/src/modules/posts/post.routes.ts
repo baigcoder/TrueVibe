@@ -7,7 +7,7 @@ import {
     saveDraft, getDrafts, deleteDraft, publishDraft,
     getScheduledPosts, cancelScheduledPost,
     recordView, getPostAnalytics,
-    generateReport, getReport
+    generateReport, getReport, downloadPDFReport, emailPDFReport
 } from './post.controller.js';
 import { authenticate, optionalAuth } from '../../shared/middleware/auth.middleware.js';
 import { validateBody } from '../../shared/middleware/validate.middleware.js';
@@ -70,6 +70,12 @@ router.post('/:id/generate-report', authenticate, generateReport);
 
 // Get AI report (owner-only)
 router.get('/:id/report', authenticate, getReport);
+
+// Download PDF report with debug images (owner-only)
+router.post('/:id/download-pdf-report', authenticate, downloadPDFReport);
+
+// Email PDF report to admin (owner-only)
+router.post('/:id/email-pdf-report', authenticate, emailPDFReport);
 
 // ============ DRAFTS ============
 // Save draft

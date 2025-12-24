@@ -49,6 +49,14 @@ export const getUserById = async (
             })
             : false;
 
+        // Check if the profile user follows the current user back (for mutual follow / messaging)
+        const isFollowedBy = req.user
+            ? await Follow.exists({
+                followerId: profile.userId,
+                followingId: req.user.userId,
+            })
+            : false;
+
         // Check for pending follow request
         const hasPendingRequest = req.user
             ? await FollowRequest.exists({
@@ -76,6 +84,8 @@ export const getUserById = async (
             data: {
                 profile: profileData,
                 isFollowing: !!isFollowing,
+                isFollowedBy: !!isFollowedBy,
+                canMessage: !!isFollowing && !!isFollowedBy,
                 hasPendingRequest: !!hasPendingRequest,
                 isOwner,
             },

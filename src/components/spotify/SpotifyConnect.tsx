@@ -16,21 +16,21 @@ export const SpotifyConnect = () => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full bg-[#030712]/40 backdrop-blur-xl border border-white/5 rounded-3xl p-5 relative overflow-hidden group shadow-2xl"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] p-5 relative overflow-hidden group shadow-2xl"
         >
             {/* Background Glow */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1DB954]/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-[#1DB954]/20 transition-all duration-700" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1DB954]/5 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-[#1DB954]/15 transition-all duration-700" />
 
-            <div className="flex flex-col items-center text-center gap-4 relative z-10">
+            <div className="flex flex-col items-center text-center gap-3 relative z-10">
                 <div className="relative">
-                    <div className="w-14 h-14 bg-[#1DB954] rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(29,185,84,0.3)] group-hover:shadow-[0_0_40px_rgba(29,185,84,0.5)] transition-all duration-500">
+                    <div className="w-14 h-14 bg-[#1DB954] rounded-[1.2rem] flex items-center justify-center shadow-[0_0_25px_rgba(29,185,84,0.3)] group-hover:shadow-[0_0_35px_rgba(29,185,84,0.45)] transition-all duration-500">
                         <SpotifyIcon className="w-8 h-8 text-black" />
                     </div>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                     <h3 className="text-xl font-black text-white tracking-tight uppercase italic aether-font">
                         {status?.connected ? 'Synced' : 'Spotify'}
                     </h3>
@@ -48,7 +48,7 @@ export const SpotifyConnect = () => {
                                 variant="ghost"
                                 onClick={() => disconnect()}
                                 disabled={isDisconnecting}
-                                className="w-full h-10 rounded-xl border border-white/5 bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 transition-all duration-300 tech-font uppercase tracking-widest text-[9px] font-black"
+                                className="w-full h-9 rounded-xl border border-white/5 bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-500 transition-all duration-300 tech-font uppercase tracking-widest text-[8px] font-black"
                             >
                                 {isDisconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Disconnect'}
                             </Button>
@@ -57,7 +57,7 @@ export const SpotifyConnect = () => {
                         <Button
                             onClick={() => connect()}
                             disabled={isConnecting}
-                            className="w-full h-12 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white border border-white/10 hover:border-[#1DB954]/40 transition-all duration-500 group/btn shadow-xl shadow-black/40 overflow-hidden relative"
+                            className="w-full h-12 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] text-white border border-white/10 hover:border-[#1DB954]/40 transition-all duration-500 group/btn shadow-xl shadow-black/40 overflow-hidden relative"
                         >
                             <div className="absolute inset-0 bg-gradient-to-tr from-[#1DB954]/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                             <div className="flex items-center justify-center gap-2 relative z-10">
@@ -66,7 +66,7 @@ export const SpotifyConnect = () => {
                                 ) : (
                                     <>
                                         <SpotifyIcon className="w-4 h-4 text-[#1DB954]" />
-                                        <span className="text-[10px] font-black uppercase tracking-wide aether-font italic">Connect Spotify</span>
+                                        <span className="text-[9px] font-black uppercase tracking-wide aether-font italic">Connect Spotify</span>
                                     </>
                                 )}
                             </div>
