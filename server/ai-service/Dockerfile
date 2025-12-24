@@ -1,4 +1,4 @@
-# Deepfake Detection Service - Railway Hobby Optimized
+# Deepfake Detection Service - Railway Optimized
 FROM python:3.11-slim
 
 # Set working directory
@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libgl1 \
     libglib2.0-0 \
+    git \
+    git-lfs \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (for caching)
@@ -20,13 +22,19 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 # Install remaining Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install huggingface_hub for model download
+RUN pip install --no-cache-dir huggingface_hub
+
+# Download model from HuggingFace during build
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('prithivMLmods/deepfake-detector-model-v1', local_dir='models/deepfake-detector-model-v1')"
+
 # Copy application code
 COPY . .
 
 # Expose port
 EXPOSE 8000
 
-# Environment variables for Railway Hobby (8GB RAM)
+# Environment variables
 ENV MODEL_PATH=/app/models/deepfake-detector-model-v1
 ENV PYTHONUNBUFFERED=1
 ENV LIGHTWEIGHT_MODE=false
