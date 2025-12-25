@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FollowersModal } from "@/components/modals/FollowersModal";
+import { MediaPreviewModal } from "@/components/modals/MediaPreviewModal";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { toast } from "sonner";
 import { api } from "@/api/client";
@@ -55,6 +56,15 @@ export default function ProfilePage() {
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [isUploadingCover, setIsUploadingCover] = useState(false);
     const coverInputRef = useRef<HTMLInputElement>(null);
+
+    // Media preview state
+    const [previewMedia, setPreviewMedia] = useState<{
+        url: string;
+        type: 'image' | 'video';
+        likesCount?: number;
+        commentsCount?: number;
+    } | null>(null);
+
 
     const isOwnProfile = !id || id === 'me' || id === currentUserProfile?._id;
     // Use userId (Supabase UUID) for fetching posts, not _id (MongoDB ObjectId)
@@ -373,12 +383,21 @@ export default function ProfilePage() {
                             transition={{ delay: 0.2 }}
                             className="relative group"
                         >
-                            <Avatar className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 border-4 sm:border-[6px] md:border-[8px] border-[#020617] rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105">
-                                <AvatarImage src={displayProfile.avatar} className="object-cover" />
-                                <AvatarFallback className="text-2xl sm:text-4xl md:text-5xl bg-gradient-to-br from-primary via-indigo-600 to-primary text-white font-bold italic">
-                                    {displayProfile.name?.[0]?.toUpperCase() || '?'}
-                                </AvatarFallback>
-                            </Avatar>
+                            <div
+                                onClick={() => {
+                                    if (displayProfile.avatar) {
+                                        setPreviewMedia({ url: displayProfile.avatar, type: 'image' });
+                                    }
+                                }}
+                                className={displayProfile.avatar ? "cursor-pointer" : ""}
+                            >
+                                <Avatar className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 border-4 sm:border-[6px] md:border-[8px] border-[#020617] rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105">
+                                    <AvatarImage src={displayProfile.avatar} className="object-cover" />
+                                    <AvatarFallback className="text-2xl sm:text-4xl md:text-5xl bg-gradient-to-br from-primary via-indigo-600 to-primary text-white font-bold italic">
+                                        {displayProfile.name?.[0]?.toUpperCase() || '?'}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </div>
                             {isOwnProfile && (
                                 <button
                                     className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary text-white shadow-xl shadow-primary/40 border border-primary/50 z-10 hover:scale-110 active:scale-95 transition-transform"
@@ -630,7 +649,16 @@ export default function ProfilePage() {
                                                                     whileInView={{ opacity: 1, scale: 1 }}
                                                                     viewport={{ once: true }}
                                                                     transition={{ delay: index * 0.03 }}
-                                                                    onClick={() => toast.info('Post details coming soon!')}
+                                                                    onClick={() => {
+                                                                        if (firstMedia && firstMedia.url) {
+                                                                            setPreviewMedia({
+                                                                                url: firstMedia.url,
+                                                                                type: isVideo ? 'video' : 'image',
+                                                                                likesCount: post.likesCount,
+                                                                                commentsCount: post.commentsCount
+                                                                            });
+                                                                        }
+                                                                    }}
                                                                     className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
                                                                 >
                                                                     {/* Thumbnail */}
@@ -806,7 +834,16 @@ export default function ProfilePage() {
                                                                     whileInView={{ opacity: 1, scale: 1 }}
                                                                     viewport={{ once: true }}
                                                                     transition={{ delay: index * 0.03 }}
-                                                                    onClick={() => toast.info('Post details coming soon!')}
+                                                                    onClick={() => {
+                                                                        if (firstMedia && firstMedia.url) {
+                                                                            setPreviewMedia({
+                                                                                url: firstMedia.url,
+                                                                                type: isVideo ? 'video' : 'image',
+                                                                                likesCount: post.likesCount,
+                                                                                commentsCount: post.commentsCount
+                                                                            });
+                                                                        }
+                                                                    }}
                                                                     className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
                                                                 >
                                                                     {hasMedia ? (
@@ -888,6 +925,14 @@ export default function ProfilePage() {
                 imageFile={coverImageFile}
                 aspectRatio={16 / 5}
                 title="Edit Cover Image"
+            />
+
+            {/* Media Preview Lightbox */}
+            <MediaPreviewModal
+                isOpen={!!previewMedia}
+                onClose={() => setPreviewMedia(null)}
+                media={previewMedia || { url: '', type: 'image' }}
+                showStats={previewMedia?.likesCount !== undefined}
             />
         </>
     );
