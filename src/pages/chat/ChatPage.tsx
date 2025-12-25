@@ -59,7 +59,7 @@ import {
   useSearchUsers,
 } from "@/api/hooks";
 import { useSocket } from "@/context/SocketContext";
-import { useRealtime, useChannel } from "@/context/RealtimeContext";
+import { useRealtime } from "@/context/RealtimeContext";
 import { useCall } from "@/context/CallContext";
 import { useSearch } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
