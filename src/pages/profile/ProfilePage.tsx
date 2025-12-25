@@ -155,8 +155,19 @@ export default function ProfilePage() {
     const userShorts = (shortsData as { data?: { shorts?: any[] } })?.data?.shorts || [];
     const likedPosts: PostData[] = (likedPostsData?.pages as PostsPage[] | undefined)?.flatMap(p => p?.data?.posts || []) || [];
 
-    // Debug profile data
-    console.log('[ProfilePage] Debug:', { userId, isOwnProfile, profileData, apiProfile, profile, hasPendingRequest });
+    // Debug profile and posts data
+    console.log('[ProfilePage] Debug:', {
+        userId,
+        isOwnProfile,
+        profileUserId: profile?.userId,
+        profileId: profile?._id,
+        postsDataExists: !!postsData,
+        postsPages: postsData?.pages,
+        postsCount: posts.length,
+        loadingPosts,
+        shortsCount: userShorts.length,
+        likedPostsCount: likedPosts.length
+    });
 
     const isLoading = isOwnProfile ? (authLoading && !user) : loadingProfile;
 

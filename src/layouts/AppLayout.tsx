@@ -18,6 +18,8 @@ import {
     ChevronRight,
     Loader2
 } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
+import { NavigationLoader } from "@/components/shared/NavigationLoader";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -60,11 +62,11 @@ const navItems = [
     { path: "/app/analytics", icon: BarChart2, label: "Analytics" },
 ];
 
-
-
 export default function AppLayout() {
     const location = useLocation();
     const navigate = useNavigate();
+    const routerState = useRouterState();
+    const isNavigating = routerState.status === 'pending';
     const { profile, user, isLoading } = useAuth();
     const [isNewPostOpen, setIsNewPostOpen] = useState(false);
     const [followedUsers, setFollowedUsers] = useState<Set<string>>(new Set());
@@ -145,9 +147,6 @@ export default function AppLayout() {
     const handleRejectRequest = (requestId: string) => {
         rejectRequestMutation.mutate(requestId);
     };
-
-
-
 
     if (!isLoading && !user) {
         navigate({ to: '/auth/login' });
@@ -309,7 +308,6 @@ export default function AppLayout() {
                             )}
                         </div>
 
-
                         <div className="hidden md:flex flex-1" />
 
                         {!isFeedPage && <div className="flex-1" />}
@@ -386,6 +384,9 @@ export default function AppLayout() {
                     </header>
                 )}
 
+                {/* Navigation Loader */}
+                <NavigationLoader isNavigating={isNavigating} />
+
                 {/* Page Content - Scrollable */}
                 <main className={cn(
                     "flex-1 relative w-full max-w-full",
@@ -394,451 +395,462 @@ export default function AppLayout() {
                             location.pathname === '/app/search' ? "pt-16 pb-[72px] lg:pb-0 overflow-hidden" :
                                 "p-4 lg:p-8 pb-24 lg:pb-8 overflow-y-auto overflow-x-hidden scrollbar-hide"
                 )}>
-                    <Outlet />
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={location.pathname}
+                            initial={{ opacity: 0, y: 10, scale: 0.995 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 1.005 }}
+                            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                            className="w-full h-full"
+                        >
+                            <Outlet />
+                        </motion.div>
+                    </AnimatePresence>
                 </main>
-            </div>
 
-            {/* Right Sidebar - Premium Gen Z Lifestyle Hub */}
-            {isFeedPage && (
-                <aside className="hidden xl:flex flex-col w-[360px] fixed right-0 top-0 bottom-0 z-20 pt-6 pb-6 px-4 space-y-5 overflow-hidden">
-                    {/* Aurora Background Effects & Technical Grid Overlay */}
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                        <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
-                        <motion.div
-                            animate={{
-                                opacity: [0.05, 0.1, 0.05],
-                                scale: [1, 1.1, 1],
-                            }}
-                            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute top-20 -right-32 w-80 h-80 bg-primary/20 blur-[120px] rounded-full"
-                        />
-                        <motion.div
-                            animate={{
-                                opacity: [0.03, 0.08, 0.03],
-                                scale: [1, 1.1, 1],
-                            }}
-                            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                            className="absolute bottom-40 -right-20 w-80 h-80 bg-secondary/15 blur-[150px] rounded-full"
-                        />
-                    </div>
-
-                    {/* Spotify Widget */}
-                    <div className="space-y-3">
-                        {!spotifyStatus?.connected ? (
-                            <SpotifyConnect />
-                        ) : (
-                            <SpotifyPlayer />
-                        )}
-                    </div>
-
-                    {/* Follow Requests - TECHNICAL GLASS REDESIGN */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl transition-all duration-700 hover:border-white/20 relative group/card"
-                    >
-                        {/* Static Technical Accent */}
-                        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
-
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 bg-white/[0.02]">
-                            <div className="flex items-center gap-3">
-                                <Activity className="w-4 h-4 text-secondary drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
-                                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic">Requests</h3>
-                            </div>
-                            {followRequests.length > 0 && (
-                                <div className="px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/30">
-                                    <span className="text-[9px] font-black text-secondary tracking-widest">{followRequests.length}</span>
-                                </div>
-                            )}
+                {/* Right Sidebar - Premium Gen Z Lifestyle Hub */}
+                {isFeedPage && (
+                    <aside className="hidden xl:flex flex-col w-[360px] fixed right-0 top-0 bottom-0 z-20 pt-6 pb-6 px-4 space-y-5 overflow-hidden">
+                        {/* Aurora Background Effects & Technical Grid Overlay */}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
+                            <motion.div
+                                animate={{
+                                    opacity: [0.05, 0.1, 0.05],
+                                    scale: [1, 1.1, 1],
+                                }}
+                                transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute top-20 -right-32 w-80 h-80 bg-primary/20 blur-[120px] rounded-full"
+                            />
+                            <motion.div
+                                animate={{
+                                    opacity: [0.03, 0.08, 0.03],
+                                    scale: [1, 1.1, 1],
+                                }}
+                                transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                                className="absolute bottom-40 -right-20 w-80 h-80 bg-secondary/15 blur-[150px] rounded-full"
+                            />
                         </div>
 
-                        <div className="p-4 space-y-3 max-h-[25vh] overflow-y-auto scrollbar-hide">
-                            {loadingRequests ? (
-                                <div className="flex items-center justify-center py-10">
-                                    <Loader2 className="w-5 h-5 animate-spin text-secondary" />
-                                </div>
-                            ) : followRequests.length > 0 ? (
-                                followRequests.map((request: any, index: number) => (
-                                    <motion.div
-                                        key={request._id}
-                                        initial={{ opacity: 0, x: 10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        className="rounded-2xl p-3 flex items-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-                                    >
-                                        <Avatar
-                                            className="w-10 h-10 border-2 border-white/10 rounded-xl shadow-lg cursor-pointer hover:border-secondary transition-all"
-                                            onClick={() => {
-                                                const requesterId = request.requester?.userId || request.requesterId;
-                                                if (requesterId) navigate({ to: `/app/profile/${requesterId}` });
-                                            }}
-                                        >
-                                            <AvatarImage src={request.requester?.avatar} className="object-cover" />
-                                            <AvatarFallback className="bg-secondary/20 text-secondary font-black text-[10px]">
-                                                {request.requester?.name?.[0] || '?'}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-black text-[10px] text-white uppercase tracking-tight truncate">{request.requester?.name}</p>
-                                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">@{request.requester?.handle}</p>
-                                        </div>
-
-                                        <div className="flex gap-2">
-                                            <motion.button
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => handleAcceptRequest(request._id)}
-                                                className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                                                title="Accept"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </motion.button>
-
-                                            <motion.button
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => handleRejectRequest(request._id)}
-                                                className="w-8 h-8 rounded-xl bg-white/5 text-slate-300 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"
-                                                title="Reject"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </motion.button>
-                                        </div>
-                                    </motion.div>
-                                ))
+                        {/* Spotify Widget */}
+                        <div className="space-y-3">
+                            {!spotifyStatus?.connected ? (
+                                <SpotifyConnect />
                             ) : (
-                                <div className="py-6 text-center">
-                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic">_Static.Empty</p>
-                                </div>
+                                <SpotifyPlayer />
                             )}
                         </div>
-                    </motion.div>
 
-                    {/* Suggested Users - VIBE MATCH DESIGN */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl relative transition-all duration-700 hover:border-white/20 group/suggestions"
-                    >
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-                            <div className="flex items-center gap-3">
-                                <Users className="w-4 h-4 text-primary drop-shadow-[0_0_8px_rgba(129,140,248,0.4)]" />
-                                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic">Vibe_Match</h3>
-                            </div>
-                            <Link to="/app/search">
-                                <motion.button
-                                    whileHover={{ x: 3 }}
-                                    className="flex items-center gap-1.5 text-[8px] font-black text-primary/80 uppercase tracking-widest hover:text-primary transition-colors"
-                                >
-                                    EXPLORE <ChevronRight className="w-3 h-3" />
-                                </motion.button>
-                            </Link>
-                        </div>
+                        {/* Follow Requests - TECHNICAL GLASS REDESIGN */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl transition-all duration-700 hover:border-white/20 relative group/card"
+                        >
+                            {/* Static Technical Accent */}
+                            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
 
-                        {/* Vertical List Area */}
-                        <div className="p-4 space-y-3 max-h-[40vh] overflow-y-auto scrollbar-hide">
-                            {loadingSuggestions ? (
-                                Array(3).fill(0).map((_, i) => (
-                                    <div key={i} className="w-full flex items-center gap-3 p-3 bg-white/5 rounded-2xl animate-pulse">
-                                        <div className="w-10 h-10 rounded-xl bg-white/10 flex-shrink-0" />
-                                        <div className="flex-1 space-y-2">
-                                            <div className="h-2.5 bg-white/10 rounded-full w-24" />
-                                            <div className="h-2 bg-white/10 rounded-full w-16" />
-                                        </div>
+                            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/5 bg-white/[0.02]">
+                                <div className="flex items-center gap-3">
+                                    <Activity className="w-4 h-4 text-secondary drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                                    <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic">Requests</h3>
+                                </div>
+                                {followRequests.length > 0 && (
+                                    <div className="px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/30">
+                                        <span className="text-[9px] font-black text-secondary tracking-widest">{followRequests.length}</span>
                                     </div>
-                                ))
-                            ) : suggestedUsers.length > 0 ? (
-                                suggestedUsers
-                                    .filter((u: any) => {
-                                        const suggestionUserId = u.userId || u._id;
-                                        const currentUserId = profile?.userId || profile?._id || user?.id;
-                                        return suggestionUserId !== currentUserId && u.handle !== profile?.handle;
-                                    })
-                                    .slice(0, 5) // Keep it focused
-                                    .map((suggestedUser: any, index: number) => (
+                                )}
+                            </div>
+
+                            <div className="p-4 space-y-3 max-h-[25vh] overflow-y-auto scrollbar-hide">
+                                {loadingRequests ? (
+                                    <div className="flex items-center justify-center py-10">
+                                        <Loader2 className="w-5 h-5 animate-spin text-secondary" />
+                                    </div>
+                                ) : followRequests.length > 0 ? (
+                                    followRequests.map((request: any, index: number) => (
                                         <motion.div
-                                            key={suggestedUser.userId || suggestedUser._id}
-                                            initial={{ opacity: 0, x: 20 }}
+                                            key={request._id}
+                                            initial={{ opacity: 0, x: 10 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: index * 0.05 }}
-                                            onClick={() => navigate({ to: `/app/profile/${suggestedUser.userId || suggestedUser._id}` })}
-                                            className="w-full flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-primary/40 rounded-3xl transition-all duration-500 cursor-pointer group relative overflow-hidden"
+                                            className="rounded-2xl p-3 flex items-center gap-3 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                                         >
-                                            {/* Profile Aura */}
-                                            <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                            <div className="relative flex-shrink-0">
-                                                <Avatar className="w-11 h-11 border-2 border-white/10 rounded-2xl group-hover:border-primary/50 transition-all shadow-xl">
-                                                    <AvatarImage src={suggestedUser.avatar} className="object-cover" />
-                                                    <AvatarFallback className="bg-primary/20 text-primary font-black text-[12px]">
-                                                        {suggestedUser.name?.[0] || '?'}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                                            </div>
-
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[11px] font-black text-white uppercase tracking-tight truncate group-hover:text-primary transition-colors">
-                                                    {suggestedUser.name}
-                                                </p>
-                                                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest truncate">@{suggestedUser.handle || 'viber'}</p>
-                                            </div>
-
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const id = suggestedUser.userId || suggestedUser._id;
-                                                    if (!followedUsers.has(id as any)) {
-                                                        followMutation.mutate(id);
-                                                        setFollowedUsers(prev => new Set([...prev, id as any]));
-                                                    }
+                                            <Avatar
+                                                className="w-10 h-10 border-2 border-white/10 rounded-xl shadow-lg cursor-pointer hover:border-secondary transition-all"
+                                                onClick={() => {
+                                                    const requesterId = request.requester?.userId || request.requesterId;
+                                                    if (requesterId) navigate({ to: `/app/profile/${requesterId}` });
                                                 }}
-                                                className={cn(
-                                                    "px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all",
-                                                    followedUsers.has((suggestedUser.userId || suggestedUser._id) as any)
-                                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                                        : "bg-primary text-white shadow-lg shadow-primary/20 hover:shadow-primary/40"
-                                                )}
                                             >
-                                                {followedUsers.has((suggestedUser.userId || suggestedUser._id) as any) ? '✓' : 'SYNC'}
-                                            </motion.button>
+                                                <AvatarImage src={request.requester?.avatar} className="object-cover" />
+                                                <AvatarFallback className="bg-secondary/20 text-secondary font-black text-[10px]">
+                                                    {request.requester?.name?.[0] || '?'}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-black text-[10px] text-white uppercase tracking-tight truncate">{request.requester?.name}</p>
+                                                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">@{request.requester?.handle}</p>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => handleAcceptRequest(request._id)}
+                                                    className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                                                    title="Accept"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </motion.button>
+
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => handleRejectRequest(request._id)}
+                                                    className="w-8 h-8 rounded-xl bg-white/5 text-slate-300 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"
+                                                    title="Reject"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </motion.button>
+                                            </div>
                                         </motion.div>
                                     ))
-                            ) : (
-                                <div className="w-full py-10 text-center">
-                                    <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">_Match.Zero</p>
+                                ) : (
+                                    <div className="py-6 text-center">
+                                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic">_Static.Empty</p>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Suggested Users - VIBE MATCH DESIGN */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl relative transition-all duration-700 hover:border-white/20 group/suggestions"
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                                <div className="flex items-center gap-3">
+                                    <Users className="w-4 h-4 text-primary drop-shadow-[0_0_8px_rgba(129,140,248,0.4)]" />
+                                    <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic">Vibe_Match</h3>
                                 </div>
-                            )}
-                        </div>
-                    </motion.div>
+                                <Link to="/app/search">
+                                    <motion.button
+                                        whileHover={{ x: 3 }}
+                                        className="flex items-center gap-1.5 text-[8px] font-black text-primary/80 uppercase tracking-widest hover:text-primary transition-colors"
+                                    >
+                                        EXPLORE <ChevronRight className="w-3 h-3" />
+                                    </motion.button>
+                                </Link>
+                            </div>
 
-                    {/* Footer */}
-                    <div className="px-4 pt-2 space-y-3 flex-shrink-0">
-                        <div className="flex flex-wrap gap-x-5 gap-y-1">
-                            <a href="#" className="text-[10px] font-medium text-slate-500 hover:text-primary transition-all">Privacy</a>
-                            <a href="#" className="text-[10px] font-medium text-slate-500 hover:text-secondary transition-all">Terms</a>
-                            <a href="#" className="text-[10px] font-medium text-slate-500 hover:text-accent transition-all">Help</a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <p className="text-[9px] font-medium text-slate-600">© 2024 TrueVibe</p>
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse" />
-                        </div>
-                    </div>
-                </aside>
-            )}
+                            {/* Vertical List Area */}
+                            <div className="p-4 space-y-3 max-h-[40vh] overflow-y-auto scrollbar-hide">
+                                {loadingSuggestions ? (
+                                    Array(3).fill(0).map((_, i) => (
+                                        <div key={i} className="w-full flex items-center gap-3 p-3 bg-white/5 rounded-2xl animate-pulse">
+                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex-shrink-0" />
+                                            <div className="flex-1 space-y-2">
+                                                <div className="h-2.5 bg-white/10 rounded-full w-24" />
+                                                <div className="h-2 bg-white/10 rounded-full w-16" />
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : suggestedUsers.length > 0 ? (
+                                    suggestedUsers
+                                        .filter((u: any) => {
+                                            const suggestionUserId = u.userId || u._id;
+                                            const currentUserId = profile?.userId || profile?._id || user?.id;
+                                            return suggestionUserId !== currentUserId && u.handle !== profile?.handle;
+                                        })
+                                        .slice(0, 5) // Keep it focused
+                                        .map((suggestedUser: any, index: number) => (
+                                            <motion.div
+                                                key={suggestedUser.userId || suggestedUser._id}
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                onClick={() => navigate({ to: `/app/profile/${suggestedUser.userId || suggestedUser._id}` })}
+                                                className="w-full flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-primary/40 rounded-3xl transition-all duration-500 cursor-pointer group relative overflow-hidden"
+                                            >
+                                                {/* Profile Aura */}
+                                                <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
-            {/* Mobile Nav */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/10 z-50 shadow-2xl glass-panel pb-safe">
-                <div className="h-full flex items-center justify-around px-2 max-w-lg mx-auto">
-                    {/* Mobile nav items: Feed, Shorts, Search, Analytics, Chat, Profile */}
-                    {[
-                        { path: "/app/feed", icon: Home, label: "Feed" },
-                        { path: "/app/shorts", icon: Film, label: "Shorts" },
-                        { path: "/app/search", icon: Search, label: "Search" },
-                        { path: "/app/analytics", icon: BarChart2, label: "Analytics" },
-                        { path: "/app/chat", icon: MessageSquare, label: "Chat" },
-                    ].map((item) => (
-                        <Link key={item.path} to={item.path}>
-                            <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive(item.path) ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}
-                            >
-                                <item.icon className="w-5 h-5" />
+                                                <div className="relative flex-shrink-0">
+                                                    <Avatar className="w-11 h-11 border-2 border-white/10 rounded-2xl group-hover:border-primary/50 transition-all shadow-xl">
+                                                        <AvatarImage src={suggestedUser.avatar} className="object-cover" />
+                                                        <AvatarFallback className="bg-primary/20 text-primary font-black text-[12px]">
+                                                            {suggestedUser.name?.[0] || '?'}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                                                </div>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[11px] font-black text-white uppercase tracking-tight truncate group-hover:text-primary transition-colors">
+                                                        {suggestedUser.name}
+                                                    </p>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest truncate">@{suggestedUser.handle || 'viber'}</p>
+                                                </div>
+
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const id = suggestedUser.userId || suggestedUser._id;
+                                                        if (!followedUsers.has(id as any)) {
+                                                            followMutation.mutate(id);
+                                                            setFollowedUsers(prev => new Set([...prev, id as any]));
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        "px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all",
+                                                        followedUsers.has((suggestedUser.userId || suggestedUser._id) as any)
+                                                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                                            : "bg-primary text-white shadow-lg shadow-primary/20 hover:shadow-primary/40"
+                                                    )}
+                                                >
+                                                    {followedUsers.has((suggestedUser.userId || suggestedUser._id) as any) ? '✓' : 'SYNC'}
+                                                </motion.button>
+                                            </motion.div>
+                                        ))
+                                ) : (
+                                    <div className="w-full py-10 text-center">
+                                        <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">_Match.Zero</p>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Footer */}
+                        <div className="px-4 pt-2 space-y-3 flex-shrink-0">
+                            <div className="flex flex-wrap gap-x-5 gap-y-1">
+                                <a href="#" className="text-[10px] font-medium text-slate-500 hover:text-primary transition-all">Privacy</a>
+                                <a href="#" className="text-[10px] font-medium text-slate-500 hover:text-secondary transition-all">Terms</a>
+                                <a href="#" className="text-[10px] font-medium text-slate-500 hover:text-accent transition-all">Help</a>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-[9px] font-medium text-slate-600">© 2024 TrueVibe</p>
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse" />
+                            </div>
+                        </div>
+                    </aside>
+                )}
+
+                {/* Mobile Nav */}
+                <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-[#0f172a]/95 backdrop-blur-3xl border-t border-white/10 z-50 shadow-2xl glass-panel pb-safe">
+                    <div className="h-full flex items-center justify-around px-2 max-w-lg mx-auto">
+                        {/* Mobile nav items: Feed, Shorts, Search, Analytics, Chat, Profile */}
+                        {[
+                            { path: "/app/feed", icon: Home, label: "Feed" },
+                            { path: "/app/shorts", icon: Film, label: "Shorts" },
+                            { path: "/app/search", icon: Search, label: "Search" },
+                            { path: "/app/analytics", icon: BarChart2, label: "Analytics" },
+                            { path: "/app/chat", icon: MessageSquare, label: "Chat" },
+                        ].map((item) => (
+                            <Link key={item.path} to={item.path}>
+                                <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive(item.path) ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}
+                                >
+                                    <item.icon className="w-5 h-5" />
+                                </Button>
+                            </Link>
+                        ))}
+                        <Link to="/app/profile/me">
+                            <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive("/app/profile") ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}>
+                                <User className="w-5 h-5" />
                             </Button>
                         </Link>
-                    ))}
-                    <Link to="/app/profile/me">
-                        <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-90", isActive("/app/profile") ? "text-primary bg-primary/15" : "text-slate-400 hover:text-white")}>
-                            <User className="w-5 h-5" />
-                        </Button>
-                    </Link>
-                </div>
-            </nav>
-
-            {/* New Post Modal */}
-            <Dialog open={isNewPostOpen} onOpenChange={setIsNewPostOpen}>
-                <DialogContent className="sm:max-w-xl bg-[#0f172a]/95 backdrop-blur-3xl border-white/5 p-0 rounded-3xl overflow-hidden shadow-2xl glass-panel tech-border">
-                    <DialogHeader className="p-6 border-b border-white/5 bg-white/[0.02]">
-                        <DialogTitle className="font-heading font-extrabold text-2xl text-white tracking-tighter uppercase italic">Create Vibe</DialogTitle>
-                    </DialogHeader>
-                    <div className="p-2">
-                        <CreatePost onSuccess={() => setIsNewPostOpen(false)} />
                     </div>
-                </DialogContent>
-            </Dialog>
+                </nav>
 
-            {/* Username Setup Modal for new OAuth users */}
-            <UsernameSetupModal
-                open={showUsernameSetup || !!(needsUsernameSetup && !localStorage.getItem('usernameSetupDismissed'))}
-                onComplete={() => {
-                    setShowUsernameSetup(false);
-                    localStorage.setItem('usernameSetupDismissed', 'true');
-                }}
-            />
+                {/* New Post Modal */}
+                <Dialog open={isNewPostOpen} onOpenChange={setIsNewPostOpen}>
+                    <DialogContent className="sm:max-w-xl bg-[#0f172a]/95 backdrop-blur-3xl border-white/5 p-0 rounded-3xl overflow-hidden shadow-2xl glass-panel tech-border">
+                        <DialogHeader className="p-6 border-b border-white/5 bg-white/[0.02]">
+                            <DialogTitle className="font-heading font-extrabold text-2xl text-white tracking-tighter uppercase italic">Create Vibe</DialogTitle>
+                        </DialogHeader>
+                        <div className="p-2">
+                            <CreatePost onSuccess={() => setIsNewPostOpen(false)} />
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
-            {/* Mobile Profile Drawer - Sliding from Right */}
-            <AnimatePresence>
-                {isProfileDrawerOpen && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsProfileDrawerOpen(false)}
-                            className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] lg:hidden"
-                        />
-                        {/* Drawer Content */}
-                        <motion.div
-                            initial={{ x: '100%', opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: '100%', opacity: 0 }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-                            className="fixed right-0 top-0 bottom-0 w-[300px] bg-[#050505]/95 backdrop-blur-3xl border-l border-white/10 z-[101] shadow-[0_0_50px_rgba(0,0,0,1)] lg:hidden flex flex-col pt-safe px-4 overflow-hidden"
-                        >
-                            {/* Decorative Grid Overlay */}
-                            <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
-                            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
+                {/* Username Setup Modal for new OAuth users */}
+                <UsernameSetupModal
+                    open={showUsernameSetup || !!(needsUsernameSetup && !localStorage.getItem('usernameSetupDismissed'))}
+                    onComplete={() => {
+                        setShowUsernameSetup(false);
+                        localStorage.setItem('usernameSetupDismissed', 'true');
+                    }}
+                />
 
-                            {/* Header */}
-                            <div className="flex items-center justify-between py-6 px-2 relative z-10">
-                                <div>
-                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter aether-font leading-none">Actions</h3>
-                                    <div className="h-0.5 w-8 bg-primary rounded-full mt-1" />
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setIsProfileDrawerOpen(false)}
-                                    className="rounded-xl h-10 w-10 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 active:scale-95 group transition-all"
-                                >
-                                    <X className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
-                                </Button>
-                            </div>
-
-                            {/* Profile Info - High Fidelity */}
+                {/* Mobile Profile Drawer - Sliding from Right */}
+                <AnimatePresence>
+                    {isProfileDrawerOpen && (
+                        <>
+                            {/* Backdrop */}
                             <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="relative z-10 mb-8 px-2"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsProfileDrawerOpen(false)}
+                                className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] lg:hidden"
+                            />
+                            {/* Drawer Content */}
+                            <motion.div
+                                initial={{ x: '100%', opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                exit={{ x: '100%', opacity: 0 }}
+                                transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
+                                className="fixed right-0 top-0 bottom-0 w-[300px] bg-[#050505]/95 backdrop-blur-3xl border-l border-white/10 z-[101] shadow-[0_0_50px_rgba(0,0,0,1)] lg:hidden flex flex-col pt-safe px-4 overflow-hidden"
                             >
-                                <div className="p-5 bg-white/[0.03] rounded-3xl border border-white/10 widget-card group overflow-hidden relative">
-                                    <Link
-                                        to="/app/profile/me"
+                                {/* Decorative Grid Overlay */}
+                                <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
+                                <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
+
+                                {/* Header */}
+                                <div className="flex items-center justify-between py-6 px-2 relative z-10">
+                                    <div>
+                                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter aether-font leading-none">Actions</h3>
+                                        <div className="h-0.5 w-8 bg-primary rounded-full mt-1" />
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => setIsProfileDrawerOpen(false)}
-                                        className="flex flex-col gap-4"
+                                        className="rounded-xl h-10 w-10 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 active:scale-95 group transition-all"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl group-hover:bg-primary/40 transition-colors" />
-                                                <Avatar className="h-16 w-16 border-2 border-white/10 rounded-2xl shadow-2xl relative z-10">
-                                                    <AvatarImage src={profile?.avatar} className="object-cover" />
-                                                    <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black text-xl">
-                                                        {profile?.name?.[0]?.toUpperCase() || '?'}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-lg border-2 border-[#050505] flex items-center justify-center z-20">
-                                                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="font-black text-white uppercase italic truncate text-lg tracking-tight leading-tight">{profile?.name || 'User'}</span>
-                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest tech-font">ID_SYSTEM_00{profile?._id?.slice(-3) || '001'}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Status_Integrity</span>
-                                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">VALIDATED_REAL</span>
-                                            </div>
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
-                                                <ChevronRight className="w-4 h-4" />
-                                            </div>
-                                        </div>
-                                    </Link>
+                                        <X className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
+                                    </Button>
                                 </div>
-                            </motion.div>
 
-                            {/* Menu Items - Staggered */}
-                            <div className="space-y-3 flex-1 overflow-y-auto scrollbar-hide relative z-10 px-1">
-                                {[
-                                    { icon: User, label: "Access Profile", sub: "View identity node", route: "/app/profile/me", color: "text-primary", bg: "bg-primary/10" },
-                                    { icon: Settings, label: "System Settings", sub: "Configure directives", route: "/app/settings", color: "text-secondary", bg: "bg-secondary/10" },
-                                    { icon: Bell, label: "Signal Feed", sub: "Neural notifications", route: "/app/notifications", color: "text-orange-400", bg: "bg-orange-500/10", count: totalUnreadCount }
-                                ].map((item, idx) => (
-                                    <motion.div
-                                        key={item.label}
-                                        initial={{ x: 20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.2 + idx * 0.1 }}
-                                    >
-                                        <Link to={item.route as any} onClick={() => setIsProfileDrawerOpen(false)}>
-                                            <Button variant="ghost" className="w-full justify-start gap-4 h-20 rounded-3xl bg-white/[0.03] border border-white/5 hover:bg-white/10 hover:border-white/10 active:scale-[0.98] transition-all group relative overflow-hidden">
-                                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-500", item.bg)}>
-                                                    <item.icon className={cn("w-6 h-6", item.color)} />
-                                                </div>
-                                                <div className="flex flex-col items-start text-left min-w-0">
-                                                    <span className="font-black text-white uppercase tracking-tight text-sm leading-none mb-1">{item.label}</span>
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate max-w-full opacity-60">{item.sub}</span>
-                                                </div>
-                                                {item.count !== undefined && item.count > 0 && (
-                                                    <div className="absolute right-4 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(129,140,248,0.4)]">
-                                                        <span className="text-[10px] font-black text-white">{item.count > 99 ? '99+' : item.count}</span>
-                                                    </div>
-                                                )}
-                                                <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-20 transition-opacity">
-                                                    <item.icon className="w-12 h-12 text-white" />
-                                                </div>
-                                            </Button>
-                                        </Link>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            {/* Footer / Logout - KILL SWITCH */}
-                            <motion.div
-                                initial={{ y: 50, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.5 }}
-                                className="pb-10 pt-6 relative z-10 px-2"
-                            >
-                                <Button
-                                    onClick={() => {
-                                        setIsProfileDrawerOpen(false);
-                                        handleLogout();
-                                    }}
-                                    className="w-full justify-center gap-4 h-16 rounded-[2rem] bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 active:scale-95 transition-all duration-500 group relative overflow-hidden shadow-2xl shadow-rose-500/5"
+                                {/* Profile Info - High Fidelity */}
+                                <motion.div
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="relative z-10 mb-8 px-2"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                    <div className="relative z-10 flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                                            <LogOut className="w-5 h-5" />
-                                        </div>
-                                        <span className="font-black uppercase text-sm tracking-[0.3em] aether-font italic">Logout</span>
+                                    <div className="p-5 bg-white/[0.03] rounded-3xl border border-white/10 widget-card group overflow-hidden relative">
+                                        <Link
+                                            to="/app/profile/me"
+                                            onClick={() => setIsProfileDrawerOpen(false)}
+                                            className="flex flex-col gap-4"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative">
+                                                    <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl group-hover:bg-primary/40 transition-colors" />
+                                                    <Avatar className="h-16 w-16 border-2 border-white/10 rounded-2xl shadow-2xl relative z-10">
+                                                        <AvatarImage src={profile?.avatar} className="object-cover" />
+                                                        <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white font-black text-xl">
+                                                            {profile?.name?.[0]?.toUpperCase() || '?'}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-lg border-2 border-[#050505] flex items-center justify-center z-20">
+                                                        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="font-black text-white uppercase italic truncate text-lg tracking-tight leading-none tracking-tighter">{profile?.name || 'User'}</span>
+                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest tech-font">ID_SYSTEM_00{profile?._id?.slice(-3) || '001'}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Status_Integrity</span>
+                                                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">VALIDATED_REAL</span>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                        </Link>
                                     </div>
-                                    <div className="absolute top-0 right-0 p-2 opacity-5">
-                                        <X className="w-16 h-16" />
-                                    </div>
-                                </Button>
-                                <div className="mt-8 flex flex-col items-center gap-2">
-                                    <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5">
-                                        <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em]">Version Alpha 1.0.4</p>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="w-1 h-1 bg-primary/40 rounded-full" />
-                                        <span className="w-1 h-1 bg-secondary/40 rounded-full" />
-                                        <span className="w-1 h-1 bg-orange-500/40 rounded-full" />
-                                    </div>
+                                </motion.div>
+
+                                {/* Menu Items - Staggered */}
+                                <div className="space-y-3 flex-1 overflow-y-auto scrollbar-hide relative z-10 px-1">
+                                    {[
+                                        { icon: User, label: "Access Profile", sub: "View identity node", route: "/app/profile/me", color: "text-primary", bg: "bg-primary/10" },
+                                        { icon: Settings, label: "System Settings", sub: "Configure directives", route: "/app/settings", color: "text-secondary", bg: "bg-secondary/10" },
+                                        { icon: Bell, label: "Signal Feed", sub: "Neural notifications", route: "/app/notifications", color: "text-orange-400", bg: "bg-orange-500/10", count: totalUnreadCount }
+                                    ].map((item, idx) => (
+                                        <motion.div
+                                            key={item.label}
+                                            initial={{ x: 20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.2 + idx * 0.1 }}
+                                        >
+                                            <Link to={item.route as any} onClick={() => setIsProfileDrawerOpen(false)}>
+                                                <Button variant="ghost" className="w-full justify-start gap-4 h-20 rounded-3xl bg-white/[0.03] border border-white/5 hover:bg-white/10 hover:border-white/10 active:scale-[0.98] transition-all group relative overflow-hidden">
+                                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-500", item.bg)}>
+                                                        <item.icon className={cn("w-6 h-6", item.color)} />
+                                                    </div>
+                                                    <div className="flex flex-col items-start text-left min-w-0">
+                                                        <span className="font-black text-white uppercase tracking-tight text-sm leading-none mb-1">{item.label}</span>
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate max-w-full opacity-60">{item.sub}</span>
+                                                    </div>
+                                                    {item.count !== undefined && item.count > 0 && (
+                                                        <div className="absolute right-4 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(129,140,248,0.4)]">
+                                                            <span className="text-[10px] font-black text-white">{item.count > 99 ? '99+' : item.count}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-20 transition-opacity">
+                                                        <item.icon className="w-12 h-12 text-white" />
+                                                    </div>
+                                                </Button>
+                                            </Link>
+                                        </motion.div>
+                                    ))}
                                 </div>
+
+                                {/* Footer / Logout - KILL SWITCH */}
+                                <motion.div
+                                    initial={{ y: 50, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="pb-10 pt-6 relative z-10 px-2"
+                                >
+                                    <Button
+                                        onClick={() => {
+                                            setIsProfileDrawerOpen(false);
+                                            handleLogout();
+                                        }}
+                                        className="w-full justify-center gap-4 h-16 rounded-[2rem] bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 active:scale-95 transition-all duration-500 group relative overflow-hidden shadow-2xl shadow-rose-500/5"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <div className="relative z-10 flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                                                <LogOut className="w-5 h-5" />
+                                            </div>
+                                            <span className="font-black uppercase text-sm tracking-[0.3em] aether-font italic">Logout</span>
+                                        </div>
+                                        <div className="absolute top-0 right-0 p-2 opacity-5">
+                                            <X className="w-16 h-16" />
+                                        </div>
+                                    </Button>
+                                    <div className="mt-8 flex flex-col items-center gap-2">
+                                        <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                                            <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em]">Version Alpha 1.0.4</p>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <span className="w-1 h-1 bg-primary/40 rounded-full" />
+                                            <span className="w-1 h-1 bg-secondary/40 rounded-full" />
+                                            <span className="w-1 h-1 bg-orange-500/40 rounded-full" />
+                                        </div>
+                                    </div>
+                                </motion.div>
                             </motion.div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                        </>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     );
 }
