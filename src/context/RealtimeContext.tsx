@@ -103,11 +103,13 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
             },
         });
 
+        // Store immediately so broadcast can find it
+        channelsRef.current.set(channelName, channel);
+
         channel.subscribe((status) => {
             console.log(`[Realtime] Channel ${channelName} status:`, status);
         });
 
-        channelsRef.current.set(channelName, channel);
         return channel;
     }, []);
 
@@ -126,9 +128,10 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
         if (!channel) {
             // Create channel if it doesn't exist
             channel = subscribeToChannel(channelName);
-            // Wait a bit for subscription to be ready
-            await new Promise(resolve => setTimeout(resolve, 100));
         }
+
+        // Wait for subscription to be ready (increased delay)
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         console.log('[Realtime] Broadcasting to', channelName, ':', event, payload);
 
