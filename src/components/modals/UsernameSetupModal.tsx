@@ -95,8 +95,20 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
     }, [open, user?.email]);
 
     return (
-        <Dialog open={open} onOpenChange={(val) => !val && onComplete()}>
-            <DialogContent className="sm:max-w-md bg-[#0f172a]/95 backdrop-blur-3xl border-white/10 shadow-2xl rounded-3xl p-0 overflow-hidden">
+        <Dialog
+            open={open}
+            onOpenChange={(val) => {
+                if (!val) {
+                    // User clicked X or escaped - dismiss the modal
+                    localStorage.setItem('usernameSetupDismissed', 'true');
+                    onComplete();
+                }
+            }}
+        >
+            <DialogContent
+                className="sm:max-w-md bg-[#0f172a]/95 backdrop-blur-3xl border-white/10 shadow-2xl rounded-3xl p-0 overflow-hidden"
+                onInteractOutside={(e) => e.preventDefault()}
+            >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
 
                 <DialogHeader className="p-6 pb-2 relative z-10">
