@@ -20,6 +20,7 @@ const SocketContext = createContext<SocketContextType>({
 
 export function SocketProvider({ children }: { children: ReactNode }) {
     const [isConnected, setIsConnected] = useState(false);
+    const [socket, setSocket] = useState<Socket | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const isConnectingRef = useRef(false);
 
@@ -35,6 +36,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         if (socketRef.current) {
             socketRef.current.disconnect();
             socketRef.current = null;
+            setSocket(null);
         }
 
         const newSocket = io(SOCKET_URL, {
@@ -46,9 +48,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         });
 
         newSocket.on('connect', () => {
-            console.log('Socket connected');
+            console.log('[Socket] Connected successfully');
             setIsConnected(true);
             isConnectingRef.current = false;
+            // Update state to trigger re-renders in consuming components
+            setSocket(newSocket);
         });
 
         newSocket.on('disconnect', () => {
@@ -66,6 +70,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         });
 
         socketRef.current = newSocket;
+        // Set socket immediately so it's available even before connect event
+        setSocket(newSocket);
     }, []);
 
     const disconnect = useCallback(() => {
@@ -73,6 +79,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             socketRef.current.disconnect();
             socketRef.current = null;
         }
+        setSocket(null);
         setIsConnected(false);
         isConnectingRef.current = false;
     }, []);
@@ -87,7 +94,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <SocketContext.Provider value={{ socket: socketRef.current, isConnected, connect, disconnect }}>
+        <SocketContext.Provider value={{ socket, isConnected, connect, disconnect }}>
             {children}
         </SocketContext.Provider>
     );

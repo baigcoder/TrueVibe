@@ -166,10 +166,10 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
         });
 
         // Handle WebRTC signaling
-        socket.on('call:initiate', async ({ targetUserId, type, callerInfo }) => {
+        socket.on('call:initiate', async ({ targetUserId, type, callerInfo, offer }) => {
             const callId = `call_${Date.now()}_${userId}`;
 
-            // Emit to target user if they are connected
+            // Emit to target user if they are connected - include SDP offer for WebRTC handshake
             emitToUser(targetUserId, 'call:incoming', {
                 callId,
                 callerId: userId,
@@ -178,6 +178,7 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
                     id: userId,
                     name: 'Unknown',
                 },
+                offer, // Include the SDP offer so callee can set remote description
             });
 
             // Also send push notification for when browser is minimized/unfocused
@@ -188,20 +189,36 @@ export const initializeSocketIO = (httpServer: HttpServer): Server => {
             }
         });
 
-        socket.on('call:answer', ({ callId, targetUserId, sdp }) => {
-            emitToUser(targetUserId, 'call:accepted', { callId, sdp });
+        socket.on('call:answer', ({ callId, targetUserId, answer }) => {
+            // Route the answer back to the caller
+            // If targetUserId is provided, use it; otherwise extract from callId
+            const callerId = targetUserId || callId.split('_')[2];
+            if (callerId) {
+                emitToUser(callerId, 'call:answer', { callId, answer });
+                debugLog(`Call answer relayed from ${userId} to ${callerId}`);
+            }
         });
 
         socket.on('call:reject', ({ callId, targetUserId }) => {
-            emitToUser(targetUserId, 'call:rejected', { callId });
+            // Route rejection back to the caller
+            const callerId = targetUserId || callId.split('_')[2];
+            if (callerId) {
+                emitToUser(callerId, 'call:rejected', { callId });
+            }
         });
 
         socket.on('call:ice-candidate', ({ callId, targetUserId, candidate }) => {
-            emitToUser(targetUserId, 'call:ice-candidate', { callId, candidate });
+            // ICE candidates must be relayed to the other peer
+            if (targetUserId) {
+                emitToUser(targetUserId, 'call:ice-candidate', { callId, candidate });
+            }
         });
 
         socket.on('call:end', ({ callId, targetUserId }) => {
-            emitToUser(targetUserId, 'call:ended', { callId });
+            // Notify the other party that call has ended
+            if (targetUserId) {
+                emitToUser(targetUserId, 'call:ended', { callId });
+            }
         });
 
         socket.on('call:offer', ({ targetUserId, sdp }) => {

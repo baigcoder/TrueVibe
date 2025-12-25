@@ -264,7 +264,7 @@ export const getTrendingPosts = async (
     }
 };
 
-// Trust watch - suspicious content
+// Trust watch - suspicious content from followed users only
 export const getTrustWatch = async (
     req: Request,
     res: Response,
@@ -272,11 +272,43 @@ export const getTrustWatch = async (
 ): Promise<void> => {
     try {
         const { cursor, limit = '20' } = req.query;
+        const userId = req.user?.userId;
+
+        // Trust Watch requires authentication - only show content from people you follow
+        if (!userId) {
+            res.json({
+                success: true,
+                data: {
+                    posts: [],
+                    cursor: null,
+                    hasMore: false,
+                },
+            });
+            return;
+        }
+
+        // Get list of users the current user follows
+        const follows = await Follow.find({ followerId: userId }).select('followingId').lean();
+        const followedUserIds = follows.map(f => f.followingId);
+
+        // If not following anyone, return empty
+        if (followedUserIds.length === 0) {
+            res.json({
+                success: true,
+                data: {
+                    posts: [],
+                    cursor: null,
+                    hasMore: false,
+                },
+            });
+            return;
+        }
 
         const query: Record<string, unknown> = {
             isDeleted: false,
             visibility: 'public',
-            trustLevel: { $in: ['suspicious', 'likely_fake'] },
+            trustLevel: { $in: ['suspicious', 'likely_fake', 'fake'] },
+            userId: { $in: followedUserIds }, // Only from followed users
         };
 
         if (cursor) {

@@ -339,19 +339,71 @@ export default function ChatPage() {
     view === "server" ? channelMsgsLoading : dmMsgsLoading;
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('[ChatPage] Socket not connected');
+      return;
+    }
+
+    console.log('[ChatPage] Setting up socket event listeners, socket connected:', socket.connected);
+
     servers.forEach((s: Server) =>
       socket.emit("server:join", { serverId: s._id }),
     );
 
     const handleChannelMessage = (data: any) => {
-      if (data.channelId === selectedChannelId)
+      console.log('[ChatPage] Received channel:message', data);
+      if (data.channelId === selectedChannelId) {
         queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+      }
     };
-    const handleDmMessage = () => {
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
+
+    // Handle new DM messages with instant UI update
+    const handleDmMessage = (data: { conversationId: string; message: Message }) => {
+      console.log('[ChatPage] Received message:new event:', data);
+
+      // Optimistically add message to cache for instant UI update
+      queryClient.setQueryData(
+        ["messages", data.conversationId],
+        (oldData: any) => {
+          console.log('[ChatPage] Updating cache for conversation:', data.conversationId, 'oldData:', !!oldData);
+
+          if (!oldData?.pages) {
+            // If no data exists yet, create initial structure
+            return {
+              pages: [{ data: { messages: [data.message], cursor: null, hasMore: false } }],
+              pageParams: [undefined],
+            };
+          }
+
+          // Create a shallow copy of pages
+          const newPages = [...oldData.pages];
+
+          // Add the new message to the first page's messages array
+          if (newPages[0]?.data?.messages) {
+            newPages[0] = {
+              ...newPages[0],
+              data: {
+                ...newPages[0].data,
+                messages: [...newPages[0].data.messages, data.message],
+              },
+            };
+          }
+
+          return { ...oldData, pages: newPages };
+        }
+      );
+
+      // Also update conversations list to show latest message preview
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+
+      // Scroll to bottom for new messages if in this conversation
+      if (data.conversationId === selectedConversationId) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
     };
+
     const handleTyping = (data: any) => {
       if (data.userId !== profile?._id) {
         setTypingUsers((prev) =>
@@ -381,7 +433,7 @@ export default function ChatPage() {
       socket.off("message:reaction:add", handleReaction);
       socket.off("message:reaction:remove", handleReaction);
     };
-  }, [socket, servers, selectedChannelId, profile?._id, queryClient]);
+  }, [socket, servers, selectedChannelId, selectedConversationId, profile?._id, queryClient]);
 
   useEffect(() => {
     if (socket && selectedChannelId) {
@@ -391,6 +443,16 @@ export default function ChatPage() {
       };
     }
   }, [socket, selectedChannelId]);
+
+  // Join conversation room for real-time DM updates
+  useEffect(() => {
+    if (socket && selectedConversationId) {
+      socket.emit("join:room", { roomId: `conversation:${selectedConversationId}` });
+      return () => {
+        socket.emit("leave:room", { roomId: `conversation:${selectedConversationId}` });
+      };
+    }
+  }, [socket, selectedConversationId]);
 
   // Handle search params (userId / conversationId)
   useEffect(() => {

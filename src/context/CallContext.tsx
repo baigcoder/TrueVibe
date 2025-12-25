@@ -21,6 +21,8 @@ interface CallState {
     isVideoOff: boolean;
     isRinging: boolean;
     callerInfo: CallParticipant | null;
+    remoteUserId: string | null;
+    pendingOffer: RTCSessionDescriptionInit | null;
 }
 
 interface CallContextType extends CallState {
@@ -53,6 +55,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         isVideoOff: false,
         isRinging: false,
         callerInfo: null,
+        remoteUserId: null,
+        pendingOffer: null,
     });
 
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -88,14 +92,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // Create peer connection
-    const createPeerConnection = useCallback(() => {
+    const createPeerConnection = useCallback((remoteUserId: string | null) => {
         const pc = new RTCPeerConnection(iceServers);
 
         pc.onicecandidate = (event) => {
-            if (event.candidate && socket) {
+            if (event.candidate && socket && remoteUserId) {
                 socket.emit('call:ice-candidate', {
                     callId: callState.callId,
                     candidate: event.candidate,
+                    targetUserId: remoteUserId,
                 });
             }
         };
@@ -138,6 +143,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
         const callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+        // Create peer connection first to generate offer
+        const pc = createPeerConnection(userId);
+        stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
         setCallState({
             isInCall: true,
             callType: type,
@@ -155,22 +167,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             isVideoOff: type === 'audio',
             isRinging: false,
             callerInfo: null,
+            remoteUserId: userId,
+            pendingOffer: null,
         });
-
-        const pc = createPeerConnection();
-        stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
 
         // Play dial tone for outgoing call
         playDialTone();
 
+        // Send offer with call initiation
         socket.emit('call:initiate', {
             callId,
             targetUserId: userId,
             type,
-            offer,
+            offer: pc.localDescription,
             callerInfo: {
                 id: user?.id,
                 name: profile?.name,
@@ -181,40 +190,56 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     // Accept incoming call
     const acceptCall = useCallback(async () => {
-        if (!callState.callId || !callState.callType || !socket) return;
+        if (!callState.callId || !callState.callType || !socket || !callState.pendingOffer) {
+            console.error('[CallContext] Cannot accept call: missing required data');
+            return;
+        }
 
         const stream = await getUserMedia(callState.callType);
         if (!stream) return;
+
+        // Stop ringtone immediately
+        stopRingtone();
+        closeCallNotification();
+
+        // Create peer connection with remote user ID for ICE candidate routing
+        const pc = createPeerConnection(callState.remoteUserId);
+        stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+        // Set remote description from the offer we received
+        await pc.setRemoteDescription(new RTCSessionDescription(callState.pendingOffer));
+
+        // Apply any pending ICE candidates that arrived before remote description was set
+        pendingIceCandidates.current.forEach((candidate) => {
+            pc.addIceCandidate(candidate).catch(console.error);
+        });
+        pendingIceCandidates.current = [];
+
+        // Create and set local answer
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
 
         setCallState((prev) => ({
             ...prev,
             isInCall: true,
             isRinging: false,
+            pendingOffer: null,
             participants: [
                 { id: user?.id || '', name: profile?.name || 'You', avatar: profile?.avatar, stream },
                 ...(prev.callerInfo ? [prev.callerInfo] : []),
             ],
         }));
 
-        const pc = createPeerConnection();
-        stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-        // Apply any pending ICE candidates
-        pendingIceCandidates.current.forEach((candidate) => {
-            pc.addIceCandidate(candidate);
-        });
-        pendingIceCandidates.current = [];
-
-        // Stop ringtone and play connected sound when accepting call
-        stopRingtone();
+        // Play connected sound
         playConnectedSound();
-        closeCallNotification();
 
+        // Send answer back to caller
         socket.emit('call:answer', {
             callId: callState.callId,
-            answer: await pc.createAnswer(),
+            answer: pc.localDescription,
+            targetUserId: callState.remoteUserId,
         });
-    }, [callState.callId, callState.callType, socket, user, profile, getUserMedia, createPeerConnection, stopRingtone, closeCallNotification]);
+    }, [callState.callId, callState.callType, callState.pendingOffer, callState.remoteUserId, socket, user, profile, getUserMedia, createPeerConnection, stopRingtone, closeCallNotification, playConnectedSound]);
 
     // Reject incoming call
     const rejectCall = useCallback(() => {
@@ -223,7 +248,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         closeCallNotification();
 
         if (socket && callState.callId) {
-            socket.emit('call:reject', { callId: callState.callId });
+            socket.emit('call:reject', {
+                callId: callState.callId,
+                targetUserId: callState.remoteUserId,
+            });
         }
         setCallState({
             isInCall: false,
@@ -235,8 +263,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             isVideoOff: false,
             isRinging: false,
             callerInfo: null,
+            remoteUserId: null,
+            pendingOffer: null,
         });
-    }, [socket, callState.callId, stopRingtone, closeCallNotification]);
+    }, [socket, callState.callId, callState.remoteUserId, stopRingtone, closeCallNotification]);
 
     // End call
     const endCall = useCallback(() => {
@@ -246,7 +276,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         closeCallNotification();
 
         if (socket && callState.callId) {
-            socket.emit('call:end', { callId: callState.callId });
+            socket.emit('call:end', {
+                callId: callState.callId,
+                targetUserId: callState.remoteUserId,
+            });
         }
 
         // Clean up
@@ -265,8 +298,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             isVideoOff: false,
             isRinging: false,
             callerInfo: null,
+            remoteUserId: null,
+            pendingOffer: null,
         });
-    }, [socket, callState.callId, localStream, stopAll, closeCallNotification]);
+    }, [socket, callState.callId, callState.remoteUserId, localStream, stopAll, playEndedSound, closeCallNotification]);
 
     // Toggle mute
     const toggleMute = useCallback(() => {
@@ -293,6 +328,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         if (!socket) return;
 
         socket.on('call:incoming', (data) => {
+            console.log('[CallContext] Incoming call:', data);
+
             // Play ringtone for incoming call
             playRingtone();
 
@@ -311,16 +348,28 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
                 isVideoOff: false,
                 isRinging: true,
                 callerInfo: data.callerInfo,
+                remoteUserId: data.callerId,
+                pendingOffer: data.offer, // Store the SDP offer for later use
             });
         });
 
         socket.on('call:answer', async (data) => {
+            console.log('[CallContext] Call answered, received answer SDP');
+
             // Stop dial tone and play connected sound when call is answered
             stopDialTone();
             playConnectedSound();
 
-            if (peerConnectionRef.current) {
-                await peerConnectionRef.current.setRemoteDescription(data.answer);
+            // Set remote description from the answer
+            if (peerConnectionRef.current && data.answer) {
+                try {
+                    await peerConnectionRef.current.setRemoteDescription(
+                        new RTCSessionDescription(data.answer)
+                    );
+                    console.log('[CallContext] Remote description set successfully');
+                } catch (error) {
+                    console.error('[CallContext] Failed to set remote description:', error);
+                }
             }
         });
 
