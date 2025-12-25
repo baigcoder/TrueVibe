@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
-import { useSocket } from './SocketContext';
 import { useAuth } from './AuthContext';
+import { useRealtime } from './RealtimeContext';
 import { api } from '@/api/client';
 import { toast } from 'sonner';
 
 interface Participant {
     id: string;
-    socketId: string;
+    supabaseId: string;
     name: string;
     avatar?: string;
     stream?: MediaStream;
@@ -81,8 +81,8 @@ const iceServers = {
 };
 
 export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
-    const { socket } = useSocket();
     const { profile } = useAuth();
+    const { subscribeToChannel, unsubscribeFromChannel, broadcast, userId: supabaseUserId } = useRealtime();
 
     const [state, setState] = useState<VoiceRoomState>({
         isInRoom: false,
@@ -106,11 +106,11 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
         raisedHands: [],
     });
 
-
-    // Map of peer connections (userId -> RTCPeerConnection)
+    // Map of peer connections (supabaseId -> RTCPeerConnection)
     const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
     const localStreamRef = useRef<MediaStream | null>(null);
     const screenStreamRef = useRef<MediaStream | null>(null);
+    const roomChannelRef = useRef<any>(null);
 
     // Get user media
     const getUserMedia = useCallback(async (type: 'voice' | 'video') => {
@@ -130,8 +130,15 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    // Broadcast to voice room channel
+    const broadcastToRoom = useCallback(async (event: string, payload: unknown) => {
+        if (state.roomId) {
+            await broadcast(`voiceroom:${state.roomId}`, event, payload);
+        }
+    }, [state.roomId, broadcast]);
+
     // Create a peer connection for a specific user
-    const createPeerConnection = useCallback((targetSocketId: string, targetUserId: string) => {
+    const createPeerConnection = useCallback((targetSupabaseId: string, _targetName?: string) => {
         const pc = new RTCPeerConnection(iceServers);
 
         // Add local stream tracks
@@ -143,22 +150,23 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
 
         // Handle ICE candidates
         pc.onicecandidate = (event) => {
-            if (event.candidate && socket) {
-                socket.emit('voiceroom:ice-candidate', {
-                    roomId: state.roomId,
-                    targetSocketId,
-                    targetUserId,
+            if (event.candidate && state.roomId) {
+                console.log('[VoiceRoom] Sending ICE candidate via Supabase to:', targetSupabaseId);
+                broadcast(`voiceroom:${state.roomId}`, 'ice-candidate', {
+                    targetSupabaseId,
                     candidate: event.candidate,
+                    fromSupabaseId: supabaseUserId,
                 });
             }
         };
 
         // Handle incoming tracks
         pc.ontrack = (event) => {
+            console.log('[VoiceRoom] Received track from:', targetSupabaseId);
             setState(prev => ({
                 ...prev,
                 participants: prev.participants.map(p =>
-                    p.socketId === targetSocketId
+                    p.supabaseId === targetSupabaseId
                         ? { ...p, stream: event.streams[0] }
                         : p
                 ),
@@ -166,31 +174,33 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
         };
 
         pc.onconnectionstatechange = () => {
-            console.log(`Connection state with ${targetUserId}:`, pc.connectionState);
+            console.log(`[VoiceRoom] Connection state with ${targetSupabaseId}:`, pc.connectionState);
         };
 
-        peerConnections.current.set(targetSocketId, pc);
+        peerConnections.current.set(targetSupabaseId, pc);
         return pc;
-    }, [socket, state.roomId]);
+    }, [state.roomId, broadcast, supabaseUserId]);
 
     // Create and send offer to a user
-    const sendOffer = useCallback(async (targetSocketId: string, targetUserId: string) => {
-        const pc = createPeerConnection(targetSocketId, targetUserId);
+    const sendOffer = useCallback(async (targetSupabaseId: string, targetName?: string) => {
+        console.log('[VoiceRoom] Sending offer to:', targetSupabaseId);
+        const pc = createPeerConnection(targetSupabaseId, targetName);
 
         try {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
 
-            socket?.emit('voiceroom:offer', {
-                roomId: state.roomId,
-                targetSocketId,
-                targetUserId,
+            await broadcast(`voiceroom:${state.roomId}`, 'offer', {
+                targetSupabaseId,
                 offer,
+                fromSupabaseId: supabaseUserId,
+                fromName: profile?.name,
+                fromAvatar: profile?.avatar,
             });
         } catch (error) {
             console.error('Failed to create offer:', error);
         }
-    }, [createPeerConnection, socket, state.roomId]);
+    }, [createPeerConnection, broadcast, state.roomId, supabaseUserId, profile]);
 
     // Create room
     const createRoom = useCallback(async (name: string, type: 'voice' | 'video' | 'live' = 'voice', requireApproval: boolean = true): Promise<string | null> => {
@@ -214,14 +224,17 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
                     return null;
                 }
 
-                // Join socket room
-                socket?.emit('voiceroom:join', {
-                    roomId: room.roomId,
-                    userInfo: {
-                        id: profile?._id,
-                        name: profile?.name,
-                        avatar: profile?.avatar,
-                    },
+                // Subscribe to room channel via Supabase
+                const channelName = `voiceroom:${room.roomId}`;
+                console.log('[VoiceRoom] Subscribing to room channel:', channelName);
+                const channel = subscribeToChannel(channelName);
+                roomChannelRef.current = channel;
+
+                // Announce presence
+                await broadcast(channelName, 'user-joined', {
+                    supabaseId: supabaseUserId,
+                    name: profile?.name,
+                    avatar: profile?.avatar,
                 });
 
                 // Copy invite link to clipboard
@@ -255,14 +268,14 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
 
         setState(prev => ({ ...prev, isConnecting: false }));
         return null;
-    }, [getUserMedia, socket, profile]);
+    }, [getUserMedia, subscribeToChannel, broadcast, supabaseUserId, profile]);
 
     // Join room
     const joinRoom = useCallback(async (roomId: string): Promise<boolean> => {
         setState(prev => ({ ...prev, isConnecting: true }));
 
         try {
-            // Join room via API - this will create the room if it's a voice channel
+            // Join room via API
             const response = await api.post<{ success: boolean; data: { room: any } }>(`/voice-rooms/${roomId}/join`);
 
             if (!response.success || !response.data.room) {
@@ -281,14 +294,17 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
                 return false;
             }
 
-            // Join socket room
-            socket?.emit('voiceroom:join', {
-                roomId,
-                userInfo: {
-                    id: profile?._id,
-                    name: profile?.name,
-                    avatar: profile?.avatar,
-                },
+            // Subscribe to room channel via Supabase
+            const channelName = `voiceroom:${roomId}`;
+            console.log('[VoiceRoom] Subscribing to room channel:', channelName);
+            const channel = subscribeToChannel(channelName);
+            roomChannelRef.current = channel;
+
+            // Announce presence and request connections
+            await broadcast(channelName, 'user-joined', {
+                supabaseId: supabaseUserId,
+                name: profile?.name,
+                avatar: profile?.avatar,
             });
 
             setState(prev => ({
@@ -314,10 +330,21 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
 
         setState(prev => ({ ...prev, isConnecting: false }));
         return false;
-    }, [getUserMedia, socket, profile]);
+    }, [getUserMedia, subscribeToChannel, broadcast, supabaseUserId, profile]);
 
     // Leave room
     const leaveRoom = useCallback(() => {
+        // Announce leaving
+        if (state.roomId) {
+            broadcast(`voiceroom:${state.roomId}`, 'user-left', {
+                supabaseId: supabaseUserId,
+            });
+
+            // Unsubscribe from room channel
+            unsubscribeFromChannel(`voiceroom:${state.roomId}`);
+            api.post(`/voice-rooms/${state.roomId}/leave`).catch(console.error);
+        }
+
         // Close all peer connections
         peerConnections.current.forEach(pc => pc.close());
         peerConnections.current.clear();
@@ -325,12 +352,6 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
         // Stop local stream
         localStreamRef.current?.getTracks().forEach(track => track.stop());
         screenStreamRef.current?.getTracks().forEach(track => track.stop());
-
-        // Leave socket room
-        if (state.roomId) {
-            socket?.emit('voiceroom:leave', { roomId: state.roomId });
-            api.post(`/voice-rooms/${state.roomId}/leave`).catch(console.error);
-        }
 
         setState({
             isInRoom: false,
@@ -356,7 +377,8 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
 
         localStreamRef.current = null;
         screenStreamRef.current = null;
-    }, [socket, state.roomId]);
+        roomChannelRef.current = null;
+    }, [state.roomId, broadcast, unsubscribeFromChannel, supabaseUserId]);
 
     // Toggle mute
     const toggleMute = useCallback(() => {
@@ -369,12 +391,12 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
             const isMuted = !audioTracks[0]?.enabled;
             setState(prev => ({ ...prev, isMuted }));
 
-            socket?.emit('voiceroom:mute-change', {
-                roomId: state.roomId,
+            broadcastToRoom('mute-change', {
+                supabaseId: supabaseUserId,
                 isMuted,
             });
         }
-    }, [socket, state.roomId]);
+    }, [broadcastToRoom, supabaseUserId]);
 
     // Toggle video
     const toggleVideo = useCallback(() => {
@@ -387,12 +409,12 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
             const isVideoOff = !videoTracks[0]?.enabled;
             setState(prev => ({ ...prev, isVideoOff }));
 
-            socket?.emit('voiceroom:video-change', {
-                roomId: state.roomId,
+            broadcastToRoom('video-change', {
+                supabaseId: supabaseUserId,
                 isVideoOff,
             });
         }
-    }, [socket, state.roomId]);
+    }, [broadcastToRoom, supabaseUserId]);
 
     // Start screen share
     const startScreenShare = useCallback(async (): Promise<boolean> => {
@@ -414,7 +436,7 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
                 }
             });
 
-            socket?.emit('voiceroom:screen-start', { roomId: state.roomId });
+            broadcastToRoom('screen-start', { supabaseId: supabaseUserId });
 
             // Handle stream end
             videoTrack.onended = () => {
@@ -426,7 +448,7 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
             console.error('Failed to start screen share:', error);
             return false;
         }
-    }, [socket, state.roomId]);
+    }, [broadcastToRoom, supabaseUserId]);
 
     // Stop screen share
     const stopScreenShare = useCallback(() => {
@@ -447,8 +469,8 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
         }
 
         setState(prev => ({ ...prev, screenStream: null, isScreenSharing: false }));
-        socket?.emit('voiceroom:screen-stop', { roomId: state.roomId });
-    }, [socket, state.roomId]);
+        broadcastToRoom('screen-stop', { supabaseId: supabaseUserId });
+    }, [broadcastToRoom, supabaseUserId]);
 
     // Request to join a room (for rooms requiring approval)
     const requestToJoin = useCallback(async (roomId: string): Promise<boolean> => {
@@ -458,7 +480,6 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
             const response = await api.post<{ success: boolean; data: { status: string; message?: string } }>(`/voice-rooms/${roomId}/request`);
 
             if (response.success && response.data.status === 'joined') {
-                // Room doesn't require approval, we're in
                 const roomResponse = await api.get<{ success: boolean; data: { room: any } }>(`/voice-rooms/${roomId}`);
                 if (roomResponse.success && roomResponse.data.room) {
                     const room = roomResponse.data.room;
@@ -474,7 +495,6 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
                 }
             }
 
-            // Waiting for approval
             toast.info('Join request sent. Waiting for admin approval...');
             setState(prev => ({ ...prev, isConnecting: false }));
             return true;
@@ -495,7 +515,6 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
 
             if (response.success) {
                 toast.success('User approved and added to room');
-                // Remove from pending requests
                 setState(prev => ({
                     ...prev,
                     pendingRequests: prev.pendingRequests.filter(r => r.userId !== userId),
@@ -518,7 +537,6 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
 
             if (response.success) {
                 toast.info('Join request rejected');
-                // Remove from pending requests
                 setState(prev => ({
                     ...prev,
                     pendingRequests: prev.pendingRequests.filter(r => r.userId !== userId),
@@ -590,6 +608,8 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
             const response = await api.delete<{ success: boolean }>(`/voice-rooms/${state.roomId}`);
 
             if (response.success) {
+                // Notify all participants
+                await broadcastToRoom('room-deleted', { roomName: state.roomName });
                 toast.success('Room deleted');
                 leaveRoom();
                 return true;
@@ -599,7 +619,7 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
             toast.error(error?.response?.data?.error || 'Failed to delete room');
         }
         return false;
-    }, [state.roomId, state.isAdmin, leaveRoom]);
+    }, [state.roomId, state.isAdmin, state.roomName, broadcastToRoom, leaveRoom]);
 
     // Copy invite link
     const copyInviteLink = useCallback(() => {
@@ -610,254 +630,172 @@ export function VoiceRoomProvider({ children }: { children: React.ReactNode }) {
         }
     }, [state.roomId]);
 
-    // Socket event handlers
+    // Supabase Realtime event handlers for room
     useEffect(() => {
-        if (!socket) return;
+        if (!state.roomId || !roomChannelRef.current) return;
 
-        // Handle existing users when joining a room
-        socket.on('voiceroom:existing-users', async ({ users }) => {
-            for (const user of users) {
-                // Add participant
-                setState(prev => ({
+        const channel = roomChannelRef.current;
+
+        // Handle new user joining
+        channel.on('broadcast', { event: 'user-joined' }, async ({ payload }: { payload: any }) => {
+            console.log('[VoiceRoom] User joined:', payload);
+            const { supabaseId: joinedSupabaseId, name, avatar } = payload;
+
+            // Don't process our own join
+            if (joinedSupabaseId === supabaseUserId) return;
+
+            // Add to participants
+            setState(prev => {
+                if (prev.participants.some(p => p.supabaseId === joinedSupabaseId)) {
+                    return prev;
+                }
+                return {
                     ...prev,
                     participants: [...prev.participants, {
-                        id: user.userId,
-                        socketId: user.socketId,
-                        name: 'Participant',
+                        id: joinedSupabaseId,
+                        supabaseId: joinedSupabaseId,
+                        name: name || 'Participant',
+                        avatar,
                         isMuted: false,
                         isVideoOff: false,
                         isScreenSharing: false,
                     }],
-                }));
+                };
+            });
 
-                // Send offer to each existing user
-                await sendOffer(user.socketId, user.userId);
-            }
-        });
+            toast.success(`${name || 'Someone'} joined the room`);
 
-        // Handle new user joining
-        socket.on('voiceroom:user-joined', ({ userId, userInfo }) => {
-            setState(prev => ({
-                ...prev,
-                participants: [...prev.participants, {
-                    id: userId,
-                    socketId: '',
-                    name: userInfo?.name || 'Participant',
-                    avatar: userInfo?.avatar,
-                    isMuted: false,
-                    isVideoOff: false,
-                    isScreenSharing: false,
-                }],
-            }));
-            toast.success(`${userInfo?.name || 'Someone'} joined the room`);
+            // Send offer to new user
+            await sendOffer(joinedSupabaseId, name);
         });
 
         // Handle user leaving
-        socket.on('voiceroom:user-left', ({ userId }) => {
-            const pc = peerConnections.current.get(userId);
+        channel.on('broadcast', { event: 'user-left' }, ({ payload }: { payload: any }) => {
+            console.log('[VoiceRoom] User left:', payload);
+            const { supabaseId: leftSupabaseId } = payload;
+
+            const pc = peerConnections.current.get(leftSupabaseId);
             if (pc) {
                 pc.close();
-                peerConnections.current.delete(userId);
+                peerConnections.current.delete(leftSupabaseId);
             }
 
             setState(prev => ({
                 ...prev,
-                participants: prev.participants.filter(p => p.id !== userId),
+                participants: prev.participants.filter(p => p.supabaseId !== leftSupabaseId),
             }));
         });
 
         // Handle incoming offer
-        socket.on('voiceroom:offer', async ({ fromUserId, fromSocketId, offer }) => {
-            const pc = createPeerConnection(fromSocketId, fromUserId);
+        channel.on('broadcast', { event: 'offer' }, async ({ payload }: { payload: any }) => {
+            const { fromSupabaseId, targetSupabaseId, offer, fromName, fromAvatar } = payload;
+
+            // Only process if this offer is for us
+            if (targetSupabaseId !== supabaseUserId) return;
+
+            console.log('[VoiceRoom] Received offer from:', fromSupabaseId);
+
+            const pc = createPeerConnection(fromSupabaseId, fromName);
 
             await pc.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
 
-            socket.emit('voiceroom:answer', {
-                roomId: state.roomId,
-                targetSocketId: fromSocketId,
-                targetUserId: fromUserId,
+            await broadcast(`voiceroom:${state.roomId}`, 'answer', {
+                targetSupabaseId: fromSupabaseId,
                 answer,
+                fromSupabaseId: supabaseUserId,
             });
 
-            // Update participant with socket ID
+            // Update participant info
             setState(prev => ({
                 ...prev,
                 participants: prev.participants.map(p =>
-                    p.id === fromUserId ? { ...p, socketId: fromSocketId } : p
+                    p.supabaseId === fromSupabaseId
+                        ? { ...p, name: fromName || p.name, avatar: fromAvatar || p.avatar }
+                        : p
                 ),
             }));
         });
 
         // Handle incoming answer
-        socket.on('voiceroom:answer', async ({ fromSocketId, answer }) => {
-            const pc = peerConnections.current.get(fromSocketId);
+        channel.on('broadcast', { event: 'answer' }, async ({ payload }: { payload: any }) => {
+            const { fromSupabaseId, targetSupabaseId, answer } = payload;
+
+            // Only process if this answer is for us
+            if (targetSupabaseId !== supabaseUserId) return;
+
+            console.log('[VoiceRoom] Received answer from:', fromSupabaseId);
+
+            const pc = peerConnections.current.get(fromSupabaseId);
             if (pc) {
                 await pc.setRemoteDescription(new RTCSessionDescription(answer));
             }
         });
 
         // Handle ICE candidate
-        socket.on('voiceroom:ice-candidate', async ({ fromSocketId, candidate }) => {
-            const pc = peerConnections.current.get(fromSocketId);
+        channel.on('broadcast', { event: 'ice-candidate' }, async ({ payload }: { payload: any }) => {
+            const { fromSupabaseId, targetSupabaseId, candidate } = payload;
+
+            // Only process if this candidate is for us
+            if (targetSupabaseId !== supabaseUserId) return;
+
+            const pc = peerConnections.current.get(fromSupabaseId);
             if (pc && candidate) {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
             }
         });
 
         // Handle mute changes
-        socket.on('voiceroom:user-mute-changed', ({ userId, isMuted }) => {
+        channel.on('broadcast', { event: 'mute-change' }, ({ payload }: { payload: any }) => {
+            const { supabaseId: changedSupabaseId, isMuted } = payload;
             setState(prev => ({
                 ...prev,
                 participants: prev.participants.map(p =>
-                    p.id === userId ? { ...p, isMuted } : p
+                    p.supabaseId === changedSupabaseId ? { ...p, isMuted } : p
                 ),
             }));
         });
 
         // Handle video changes
-        socket.on('voiceroom:user-video-changed', ({ userId, isVideoOff }) => {
+        channel.on('broadcast', { event: 'video-change' }, ({ payload }: { payload: any }) => {
+            const { supabaseId: changedSupabaseId, isVideoOff } = payload;
             setState(prev => ({
                 ...prev,
                 participants: prev.participants.map(p =>
-                    p.id === userId ? { ...p, isVideoOff } : p
+                    p.supabaseId === changedSupabaseId ? { ...p, isVideoOff } : p
                 ),
             }));
         });
 
         // Handle screen share
-        socket.on('voiceroom:screen-started', ({ userId }) => {
+        channel.on('broadcast', { event: 'screen-start' }, ({ payload }: { payload: any }) => {
+            const { supabaseId: sharingSupabaseId } = payload;
             setState(prev => ({
                 ...prev,
                 participants: prev.participants.map(p =>
-                    p.id === userId ? { ...p, isScreenSharing: true } : p
+                    p.supabaseId === sharingSupabaseId ? { ...p, isScreenSharing: true } : p
                 ),
             }));
         });
 
-        socket.on('voiceroom:screen-stopped', ({ userId }) => {
+        channel.on('broadcast', { event: 'screen-stop' }, ({ payload }: { payload: any }) => {
+            const { supabaseId: sharingSupabaseId } = payload;
             setState(prev => ({
                 ...prev,
                 participants: prev.participants.map(p =>
-                    p.id === userId ? { ...p, isScreenSharing: false } : p
+                    p.supabaseId === sharingSupabaseId ? { ...p, isScreenSharing: false } : p
                 ),
             }));
-        });
-
-        // Handle join request (for admins)
-        socket.on('voiceroom:join-request', ({ roomId, user }: { roomId: string; user: { id: string; name: string; avatar?: string } }) => {
-            if (state.roomId === roomId && state.isAdmin) {
-                setState(prev => ({
-                    ...prev,
-                    pendingRequests: [...prev.pendingRequests, {
-                        userId: user.id,
-                        name: user.name,
-                        avatar: user.avatar,
-                        requestedAt: new Date(),
-                    }],
-                }));
-                toast.info(`${user.name} wants to join the room`);
-            }
-        });
-
-        // Handle request approved (for users)
-        socket.on('voiceroom:request-approved', async ({ roomId, roomName }: { roomId: string; roomName: string }) => {
-            toast.success(`You've been approved to join ${roomName}!`);
-            setState(prev => ({ ...prev, waitingForApproval: false }));
-            // Now actually join the room
-            await joinRoom(roomId);
-        });
-
-        // Handle request rejected (for users)
-        socket.on('voiceroom:request-rejected', () => {
-            toast.error('Your join request was rejected');
-            setState(prev => ({ ...prev, waitingForApproval: false, isConnecting: false }));
         });
 
         // Handle room deleted
-        socket.on('voiceroom:room-deleted', ({ roomName }: { roomName: string }) => {
-            toast.info(`Room "${roomName}" was deleted by the admin`);
+        channel.on('broadcast', { event: 'room-deleted' }, ({ payload }: { payload: any }) => {
+            toast.info(`Room "${payload.roomName}" was deleted by the admin`);
             leaveRoom();
         });
 
-        // Handle hand toggled
-        socket.on('voiceroom:hand-toggled', ({ userId, name, isRaised }: { userId: string, name: string, isRaised: boolean }) => {
-            setState(prev => {
-                if (isRaised) {
-                    return {
-                        ...prev,
-                        raisedHands: [...prev.raisedHands, {
-                            userId,
-                            name,
-                            raisedAt: new Date()
-                        }]
-                    };
-                } else {
-                    return {
-                        ...prev,
-                        raisedHands: prev.raisedHands.filter(h => h.userId !== userId)
-                    };
-                }
-            });
-            if (isRaised && state.isAdmin) {
-                toast.info(`${name} raised their hand!`);
-            }
-        });
-
-        // Handle user promoted
-        socket.on('voiceroom:user-promoted', ({ userId }: { userId: string }) => {
-            setState(prev => ({
-                ...prev,
-                speakers: [...prev.speakers, userId],
-                listeners: prev.listeners.filter(l => l !== userId),
-                raisedHands: prev.raisedHands.filter(h => h.userId !== userId)
-            }));
-
-            if (userId === profile?._id) {
-                toast.success('You have been promoted to the stage!');
-                // Automatically unmute when promoted to stage? Or let user decide
-                // For now just notify
-            }
-        });
-
-        // Handle user demoted
-        socket.on('voiceroom:user-demoted', ({ userId }: { userId: string }) => {
-            setState(prev => ({
-                ...prev,
-                speakers: prev.speakers.filter(s => s !== userId),
-                listeners: [...prev.listeners, userId]
-            }));
-
-            if (userId === profile?._id) {
-                toast.info('You have been moved back to the audience');
-                // Ensure muted when moved to audience
-                if (!state.isMuted) {
-                    toggleMute();
-                }
-            }
-        });
-
-        return () => {
-            socket.off('voiceroom:existing-users');
-            socket.off('voiceroom:user-joined');
-            socket.off('voiceroom:user-left');
-            socket.off('voiceroom:offer');
-            socket.off('voiceroom:answer');
-            socket.off('voiceroom:ice-candidate');
-            socket.off('voiceroom:user-mute-changed');
-            socket.off('voiceroom:user-video-changed');
-            socket.off('voiceroom:screen-started');
-            socket.off('voiceroom:screen-stopped');
-            socket.off('voiceroom:join-request');
-            socket.off('voiceroom:request-approved');
-            socket.off('voiceroom:request-rejected');
-            socket.off('voiceroom:room-deleted');
-            socket.off('voiceroom:hand-toggled');
-            socket.off('voiceroom:user-promoted');
-            socket.off('voiceroom:user-demoted');
-        };
-    }, [socket, state.roomId, sendOffer, createPeerConnection, state.isAdmin, joinRoom, leaveRoom]);
+    }, [state.roomId, supabaseUserId, sendOffer, createPeerConnection, broadcast, leaveRoom]);
 
     const value: VoiceRoomContextType = {
         ...state,

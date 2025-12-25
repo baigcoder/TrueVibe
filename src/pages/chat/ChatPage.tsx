@@ -531,6 +531,27 @@ export default function ChatPage() {
     };
   }, [selectedConversationId, subscribeToChannel, unsubscribeFromChannel, queryClient, profile?._id]);
 
+  // Supabase Realtime subscription for server channel messages
+  useEffect(() => {
+    if (!selectedChannelId || view !== "server") return;
+
+    const channelName = `channel:${selectedChannelId}`;
+    console.log('[ChatPage] Subscribing to Supabase server channel:', channelName);
+
+    const channel = subscribeToChannel(channelName);
+
+    // Handle incoming channel messages
+    channel.on('broadcast', { event: 'channel:message' }, ({ payload }) => {
+      console.log('[ChatPage] Received channel message via Supabase:', payload);
+      queryClient.invalidateQueries({ queryKey: ["channelMessages"] });
+    });
+
+    return () => {
+      console.log('[ChatPage] Unsubscribing from Supabase server channel:', channelName);
+      unsubscribeFromChannel(channelName);
+    };
+  }, [selectedChannelId, view, subscribeToChannel, unsubscribeFromChannel, queryClient]);
+
   // Handle search params (userId / conversationId)
   useEffect(() => {
     if (search.conversationId) {
@@ -610,13 +631,28 @@ export default function ChatPage() {
         messageInput.trim() || (uploadedMedia.length > 0 ? "[Media]" : "");
 
       if (view === "server" && selectedServerId && selectedChannelId) {
-        sendChannelMessage.mutate({
-          serverId: selectedServerId,
-          channelId: selectedChannelId,
-          content: messageContent,
-          media: uploadedMedia,
-          replyTo: replyingTo?._id,
-        });
+        sendChannelMessage.mutate(
+          {
+            serverId: selectedServerId,
+            channelId: selectedChannelId,
+            content: messageContent,
+            media: uploadedMedia,
+            replyTo: replyingTo?._id,
+          },
+          {
+            onSuccess: (response: any) => {
+              // Broadcast via Supabase Realtime for instant updates to other channel members
+              const newMessage = response?.data?.message;
+              if (newMessage) {
+                console.log('[ChatPage] Broadcasting channel message via Supabase:', newMessage);
+                broadcast(`channel:${selectedChannelId}`, 'channel:message', {
+                  channelId: selectedChannelId,
+                  message: newMessage,
+                });
+              }
+            },
+          }
+        );
       } else if (selectedConversationId) {
         sendDmMessage.mutate(
           {
