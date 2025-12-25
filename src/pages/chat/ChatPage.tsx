@@ -1484,9 +1484,12 @@ export default function ChatPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        const otherId =
-                          selectedConversation.participants[0]?._id;
-                        if (otherId) initiateCall(otherId, "audio");
+                        // Use supabaseId for Supabase Realtime channel targeting
+                        const otherParticipant = selectedConversation.participants?.find(
+                          (p: any) => p._id !== profile?._id && p.userId !== profile?._id
+                        );
+                        const targetId = otherParticipant?.supabaseId || otherParticipant?.userId || otherParticipant?._id;
+                        if (targetId) initiateCall(targetId, "audio");
                       }}
                       className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn shrink-0"
                     >
@@ -1496,9 +1499,12 @@ export default function ChatPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        const otherId =
-                          selectedConversation.participants[0]?._id;
-                        if (otherId) initiateCall(otherId, "video");
+                        // Use supabaseId for Supabase Realtime channel targeting
+                        const otherParticipant = selectedConversation.participants?.find(
+                          (p: any) => p._id !== profile?._id && p.userId !== profile?._id
+                        );
+                        const targetId = otherParticipant?.supabaseId || otherParticipant?.userId || otherParticipant?._id;
+                        if (targetId) initiateCall(targetId, "video");
                       }}
                       className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn shrink-0"
                     >
