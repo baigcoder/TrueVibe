@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useSocket } from '@/context/SocketContext';
 import { useAuth } from '@/context/AuthContext';
+import { useRealtime } from '@/context/RealtimeContext';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -13,11 +13,11 @@ interface Message {
 }
 
 export function NotificationManager() {
-    const { socket } = useSocket();
     const { profile } = useAuth();
+    const { subscribeToChannel, userId: supabaseUserId } = useRealtime();
 
     useEffect(() => {
-        if (!socket) return;
+        if (!supabaseUserId) return;
 
         // Request browser notification permission
         if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -26,13 +26,19 @@ export function NotificationManager() {
             }
         }
 
-        const handleNewMessage = (data: { conversationId: string; message: Message }) => {
+        // Subscribe to user's personal channel for notifications
+        const channelName = `user:${supabaseUserId}`;
+        const channel = subscribeToChannel(channelName);
+
+        // Handle new message notifications via Supabase
+        channel.on('broadcast', { event: 'notification:message' }, ({ payload }) => {
+            const data = payload as { conversationId: string; message: Message };
             const { conversationId, message } = data;
 
             // Don't notify for our own messages
             if (message.senderId === profile?._id) return;
 
-            // Check if we're already in the conversation page using window.location
+            // Check if we're already in the conversation page
             const searchParams = new URLSearchParams(window.location.search);
             const currentConvId = searchParams.get('conversationId');
             const isAtChatPath = window.location.pathname.includes('/app/chat');
@@ -53,7 +59,6 @@ export function NotificationManager() {
             toast.custom((t) => (
                 <div
                     onClick={() => {
-                        // Use window.location for navigation instead of router hooks
                         window.location.href = `/app/chat?conversationId=${conversationId}`;
                         toast.dismiss(t);
                     }}
@@ -75,13 +80,49 @@ export function NotificationManager() {
                 duration: 5000,
                 position: 'top-right',
             });
-        };
+        });
 
-        socket.on('message:new', handleNewMessage);
-        return () => {
-            socket.off('message:new', handleNewMessage);
-        };
-    }, [socket, profile?._id]);
+        // Handle other notification types (likes, comments, follows, etc.)
+        channel.on('broadcast', { event: 'notification:general' }, ({ payload }) => {
+            const notification = payload as { title: string; body: string; link?: string; icon?: string };
+
+            // Browser notification if hidden
+            if (document.visibilityState === 'hidden' && Notification.permission === 'granted') {
+                new Notification(notification.title, {
+                    body: notification.body,
+                    icon: notification.icon || '/logo.png',
+                });
+            }
+
+            // In-app toast
+            toast.custom((t) => (
+                <div
+                    onClick={() => {
+                        if (notification.link) {
+                            window.location.href = notification.link;
+                        }
+                        toast.dismiss(t);
+                    }}
+                    className="w-[350px] glass-aether border border-primary/20 p-4 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-right-8 duration-300"
+                >
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary text-lg">🔔</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black text-primary uppercase tracking-widest tech-font mb-0.5">NOTIFICATION</p>
+                        <p className="text-sm font-black text-white italic aether-font truncate">{notification.title}</p>
+                        <p className="text-[11px] text-slate-400 truncate tech-font mt-0.5 opacity-80">{notification.body}</p>
+                    </div>
+                </div>
+            ), {
+                duration: 5000,
+                position: 'top-right',
+            });
+        });
+
+        // No need to unsubscribe as user channel is persistent
+        return () => { };
+    }, [supabaseUserId, subscribeToChannel, profile?._id]);
 
     return null;
 }

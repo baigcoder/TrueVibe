@@ -631,9 +631,27 @@ export default function ChatPage() {
               const newMessage = response?.data?.message;
               if (newMessage) {
                 console.log('[ChatPage] Broadcasting message via Supabase:', newMessage);
+
+                // Broadcast to conversation channel for chat updates
                 broadcast(`conversation:${selectedConversationId}`, 'message:new', {
                   conversationId: selectedConversationId,
                   message: newMessage,
+                });
+
+                // Also broadcast to each participant's user channel for notifications
+                const otherParticipants = selectedConversation?.participants?.filter(
+                  (p: any) => p._id !== profile?._id && p.userId !== profile?._id
+                ) || [];
+
+                otherParticipants.forEach((participant: any) => {
+                  const recipientId = participant.userId || participant._id;
+                  if (recipientId) {
+                    console.log('[ChatPage] Broadcasting notification to user:', recipientId);
+                    broadcast(`user:${recipientId}`, 'notification:message', {
+                      conversationId: selectedConversationId,
+                      message: newMessage,
+                    });
+                  }
                 });
               }
             },
