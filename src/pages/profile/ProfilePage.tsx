@@ -57,7 +57,11 @@ export default function ProfilePage() {
     const coverInputRef = useRef<HTMLInputElement>(null);
 
     const isOwnProfile = !id || id === 'me' || id === currentUserProfile?._id;
-    const userId = isOwnProfile ? (currentUserProfile?._id || user?.id) : id;
+    // Use userId (Supabase UUID) for fetching posts, not _id (MongoDB ObjectId)
+    // Posts are stored with userId = Supabase UUID during creation
+    const userId = isOwnProfile
+        ? (currentUserProfile?.userId || currentUserProfile?.supabaseId || user?.id)
+        : id;
 
     const cancelRequestMutation = useCancelFollowRequest();
 
