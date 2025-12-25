@@ -59,6 +59,7 @@ import {
   useSearchUsers,
 } from "@/api/hooks";
 import { useSocket } from "@/context/SocketContext";
+import { useRealtime, useChannel } from "@/context/RealtimeContext";
 import { useCall } from "@/context/CallContext";
 import { useSearch } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -454,6 +455,82 @@ export default function ChatPage() {
     }
   }, [socket, selectedConversationId]);
 
+  // Supabase Realtime subscription for DM messages (replaces Socket.IO)
+  const { subscribeToChannel, unsubscribeFromChannel, broadcast } = useRealtime();
+
+  useEffect(() => {
+    if (!selectedConversationId) return;
+
+    const channelName = `conversation:${selectedConversationId}`;
+    console.log('[ChatPage] Subscribing to Supabase channel:', channelName);
+
+    const channel = subscribeToChannel(channelName);
+
+    // Handle incoming messages via Supabase Broadcast
+    channel.on('broadcast', { event: 'message:new' }, ({ payload }) => {
+      console.log('[ChatPage] Received message via Supabase:', payload);
+
+      const data = payload as { conversationId: string; message: Message };
+
+      // Optimistically add message to cache for instant UI update
+      queryClient.setQueryData(
+        ["messages", data.conversationId],
+        (oldData: any) => {
+          console.log('[ChatPage] Updating cache from Supabase event:', data.conversationId);
+
+          if (!oldData?.pages) {
+            return {
+              pages: [{ data: { messages: [data.message], cursor: null, hasMore: false } }],
+              pageParams: [undefined],
+            };
+          }
+
+          const newPages = [...oldData.pages];
+          if (newPages[0]?.data?.messages) {
+            // Check if message already exists (avoid duplicates)
+            const exists = newPages[0].data.messages.some((m: Message) => m._id === data.message._id);
+            if (!exists) {
+              newPages[0] = {
+                ...newPages[0],
+                data: {
+                  ...newPages[0].data,
+                  messages: [...newPages[0].data.messages, data.message],
+                },
+              };
+            }
+          }
+
+          return { ...oldData, pages: newPages };
+        }
+      );
+
+      // Update conversations list
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+
+      // Scroll to bottom
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    });
+
+    // Handle typing indicators via Supabase
+    channel.on('broadcast', { event: 'typing:update' }, ({ payload }) => {
+      const data = payload as { userId: string; isTyping: boolean };
+      if (data.userId !== profile?._id) {
+        setTypingUsers((prev) =>
+          data.isTyping
+            ? [...new Set([...prev, data.userId])]
+            : prev.filter((id) => id !== data.userId)
+        );
+      }
+    });
+
+    return () => {
+      console.log('[ChatPage] Unsubscribing from Supabase channel:', channelName);
+      unsubscribeFromChannel(channelName);
+    };
+  }, [selectedConversationId, subscribeToChannel, unsubscribeFromChannel, queryClient, profile?._id]);
+
   // Handle search params (userId / conversationId)
   useEffect(() => {
     if (search.conversationId) {
@@ -541,12 +618,27 @@ export default function ChatPage() {
           replyTo: replyingTo?._id,
         });
       } else if (selectedConversationId) {
-        sendDmMessage.mutate({
-          conversationId: selectedConversationId,
-          content: messageContent,
-          media: uploadedMedia,
-          replyTo: replyingTo?._id,
-        });
+        sendDmMessage.mutate(
+          {
+            conversationId: selectedConversationId,
+            content: messageContent,
+            media: uploadedMedia,
+            replyTo: replyingTo?._id,
+          },
+          {
+            onSuccess: (response: any) => {
+              // Broadcast via Supabase Realtime for instant updates to other participants
+              const newMessage = response?.data?.message;
+              if (newMessage) {
+                console.log('[ChatPage] Broadcasting message via Supabase:', newMessage);
+                broadcast(`conversation:${selectedConversationId}`, 'message:new', {
+                  conversationId: selectedConversationId,
+                  message: newMessage,
+                });
+              }
+            },
+          }
+        );
       }
 
       setMessageInput("");
@@ -567,6 +659,7 @@ export default function ChatPage() {
     sendChannelMessage,
     sendDmMessage,
     uploadMedia,
+    broadcast,
   ]);
 
   const removeFile = (index: number) => {

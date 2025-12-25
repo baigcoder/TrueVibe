@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
-import { useSocket } from './SocketContext';
 import { useAuth } from './AuthContext';
 import { useRingtone } from '@/hooks/useRingtone';
 import { useBrowserNotification } from '@/hooks/useBrowserNotification';
+import { useRealtime } from './RealtimeContext';
 
 interface CallParticipant {
     id: string;
@@ -38,8 +38,8 @@ interface CallContextType extends CallState {
 const CallContext = createContext<CallContextType | null>(null);
 
 export function CallProvider({ children }: { children: React.ReactNode }) {
-    const { socket } = useSocket();
     const { user, profile } = useAuth();
+    const { subscribeToChannel, broadcast, userId: supabaseUserId } = useRealtime();
 
     // Ringtone and notification hooks
     const { playRingtone, stopRingtone, playDialTone, stopDialTone, playConnectedSound, playEndedSound, stopAll } = useRingtone();
@@ -63,7 +63,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const pendingIceCandidates = useRef<RTCIceCandidate[]>([]);
 
-    // ICE servers configuration - Added more robust public STUN servers
+    // ICE servers configuration
     const iceServers = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -91,16 +91,39 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    // End call function (defined early for use in createPeerConnection)
+    const endCallCleanup = useCallback(() => {
+        localStream?.getTracks().forEach((track) => track.stop());
+        peerConnectionRef.current?.close();
+        peerConnectionRef.current = null;
+        setLocalStream(null);
+        setCallState({
+            isInCall: false,
+            callType: null,
+            callId: null,
+            caller: null,
+            participants: [],
+            isMuted: false,
+            isVideoOff: false,
+            isRinging: false,
+            callerInfo: null,
+            remoteUserId: null,
+            pendingOffer: null,
+        });
+    }, [localStream]);
+
     // Create peer connection
-    const createPeerConnection = useCallback((remoteUserId: string | null) => {
+    const createPeerConnection = useCallback((remoteUserId: string | null, callId: string | null) => {
         const pc = new RTCPeerConnection(iceServers);
 
         pc.onicecandidate = (event) => {
-            if (event.candidate && socket && remoteUserId) {
-                socket.emit('call:ice-candidate', {
-                    callId: callState.callId,
+            if (event.candidate && remoteUserId) {
+                console.log('[CallContext] Sending ICE candidate via Supabase');
+                // Broadcast ICE candidate to the remote user's channel
+                broadcast(`user:${remoteUserId}`, 'call:ice-candidate', {
+                    callId,
                     candidate: event.candidate,
-                    targetUserId: remoteUserId,
+                    senderId: user?.id,
                 });
             }
         };
@@ -117,13 +140,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         pc.onconnectionstatechange = () => {
             console.log('[CallContext] PC Connection State:', pc.connectionState);
             if (pc.connectionState === 'failed') {
-                // Attempt to restart ICE if possible, or end call
                 console.warn('[CallContext] Connection failed, ending call.');
-                endCall();
+                endCallCleanup();
             } else if (pc.connectionState === 'disconnected') {
-                // Might be temporary
                 setTimeout(() => {
-                    if (pc.connectionState === 'disconnected') endCall();
+                    if (pc.connectionState === 'disconnected') endCallCleanup();
                 }, 5000);
             }
         };
@@ -134,17 +155,17 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
         peerConnectionRef.current = pc;
         return pc;
-    }, [socket, callState.callId, user?.id]);
+    }, [broadcast, user?.id, endCallCleanup]);
 
     // Initiate a call
-    const initiateCall = useCallback(async (userId: string, type: 'audio' | 'video') => {
+    const initiateCall = useCallback(async (targetUserId: string, type: 'audio' | 'video') => {
         const stream = await getUserMedia(type);
-        if (!stream || !socket) return;
+        if (!stream) return;
 
         const callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
         // Create peer connection first to generate offer
-        const pc = createPeerConnection(userId);
+        const pc = createPeerConnection(targetUserId, callId);
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
         const offer = await pc.createOffer();
@@ -161,23 +182,24 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             },
             participants: [
                 { id: user?.id || '', name: profile?.name || 'You', avatar: profile?.avatar, stream },
-                { id: userId, name: 'Calling...', avatar: undefined },
+                { id: targetUserId, name: 'Calling...', avatar: undefined },
             ],
             isMuted: false,
             isVideoOff: type === 'audio',
             isRinging: false,
             callerInfo: null,
-            remoteUserId: userId,
+            remoteUserId: targetUserId,
             pendingOffer: null,
         });
 
         // Play dial tone for outgoing call
         playDialTone();
 
-        // Send offer with call initiation
-        socket.emit('call:initiate', {
+        // Broadcast call initiation to target user's channel via Supabase
+        console.log('[CallContext] Initiating call via Supabase to user:', targetUserId);
+        broadcast(`user:${targetUserId}`, 'call:incoming', {
             callId,
-            targetUserId: userId,
+            callerId: user?.id,
             type,
             offer: pc.localDescription,
             callerInfo: {
@@ -186,11 +208,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
                 avatar: profile?.avatar,
             },
         });
-    }, [socket, user, profile, getUserMedia, createPeerConnection, playDialTone]);
+    }, [user, profile, getUserMedia, createPeerConnection, playDialTone, broadcast]);
 
     // Accept incoming call
     const acceptCall = useCallback(async () => {
-        if (!callState.callId || !callState.callType || !socket || !callState.pendingOffer) {
+        if (!callState.callId || !callState.callType || !callState.pendingOffer) {
             console.error('[CallContext] Cannot accept call: missing required data');
             return;
         }
@@ -203,7 +225,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         closeCallNotification();
 
         // Create peer connection with remote user ID for ICE candidate routing
-        const pc = createPeerConnection(callState.remoteUserId);
+        const pc = createPeerConnection(callState.remoteUserId, callState.callId);
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
         // Set remote description from the offer we received
@@ -233,13 +255,16 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         // Play connected sound
         playConnectedSound();
 
-        // Send answer back to caller
-        socket.emit('call:answer', {
-            callId: callState.callId,
-            answer: pc.localDescription,
-            targetUserId: callState.remoteUserId,
-        });
-    }, [callState.callId, callState.callType, callState.pendingOffer, callState.remoteUserId, socket, user, profile, getUserMedia, createPeerConnection, stopRingtone, closeCallNotification, playConnectedSound]);
+        // Send answer back to caller via Supabase
+        console.log('[CallContext] Sending answer via Supabase to:', callState.remoteUserId);
+        if (callState.remoteUserId) {
+            broadcast(`user:${callState.remoteUserId}`, 'call:answer', {
+                callId: callState.callId,
+                answer: pc.localDescription,
+                answererId: user?.id,
+            });
+        }
+    }, [callState.callId, callState.callType, callState.pendingOffer, callState.remoteUserId, user, profile, getUserMedia, createPeerConnection, stopRingtone, closeCallNotification, playConnectedSound, broadcast]);
 
     // Reject incoming call
     const rejectCall = useCallback(() => {
@@ -247,26 +272,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         stopRingtone();
         closeCallNotification();
 
-        if (socket && callState.callId) {
-            socket.emit('call:reject', {
+        if (callState.callId && callState.remoteUserId) {
+            broadcast(`user:${callState.remoteUserId}`, 'call:rejected', {
                 callId: callState.callId,
-                targetUserId: callState.remoteUserId,
+                rejecterId: user?.id,
             });
         }
-        setCallState({
-            isInCall: false,
-            callType: null,
-            callId: null,
-            caller: null,
-            participants: [],
-            isMuted: false,
-            isVideoOff: false,
-            isRinging: false,
-            callerInfo: null,
-            remoteUserId: null,
-            pendingOffer: null,
-        });
-    }, [socket, callState.callId, callState.remoteUserId, stopRingtone, closeCallNotification]);
+        endCallCleanup();
+    }, [callState.callId, callState.remoteUserId, stopRingtone, closeCallNotification, broadcast, user?.id, endCallCleanup]);
 
     // End call
     const endCall = useCallback(() => {
@@ -275,33 +288,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         playEndedSound();
         closeCallNotification();
 
-        if (socket && callState.callId) {
-            socket.emit('call:end', {
+        if (callState.callId && callState.remoteUserId) {
+            broadcast(`user:${callState.remoteUserId}`, 'call:ended', {
                 callId: callState.callId,
-                targetUserId: callState.remoteUserId,
+                enderId: user?.id,
             });
         }
 
-        // Clean up
-        localStream?.getTracks().forEach((track) => track.stop());
-        peerConnectionRef.current?.close();
-        peerConnectionRef.current = null;
-
-        setLocalStream(null);
-        setCallState({
-            isInCall: false,
-            callType: null,
-            callId: null,
-            caller: null,
-            participants: [],
-            isMuted: false,
-            isVideoOff: false,
-            isRinging: false,
-            callerInfo: null,
-            remoteUserId: null,
-            pendingOffer: null,
-        });
-    }, [socket, callState.callId, callState.remoteUserId, localStream, stopAll, playEndedSound, closeCallNotification]);
+        endCallCleanup();
+    }, [callState.callId, callState.remoteUserId, stopAll, playEndedSound, closeCallNotification, broadcast, user?.id, endCallCleanup]);
 
     // Toggle mute
     const toggleMute = useCallback(() => {
@@ -323,12 +318,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         }
     }, [localStream]);
 
-    // Socket event listeners
+    // Subscribe to user's channel for incoming calls via Supabase Realtime
     useEffect(() => {
-        if (!socket) return;
+        if (!supabaseUserId) return;
 
-        socket.on('call:incoming', (data) => {
-            console.log('[CallContext] Incoming call:', data);
+        const channelName = `user:${supabaseUserId}`;
+        console.log('[CallContext] Subscribing to call events on channel:', channelName);
+
+        const channel = subscribeToChannel(channelName);
+
+        // Incoming call
+        channel.on('broadcast', { event: 'call:incoming' }, ({ payload }) => {
+            console.log('[CallContext] Incoming call via Supabase:', payload);
+            const data = payload as any;
 
             // Play ringtone for incoming call
             playRingtone();
@@ -349,12 +351,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
                 isRinging: true,
                 callerInfo: data.callerInfo,
                 remoteUserId: data.callerId,
-                pendingOffer: data.offer, // Store the SDP offer for later use
+                pendingOffer: data.offer,
             });
         });
 
-        socket.on('call:answer', async (data) => {
-            console.log('[CallContext] Call answered, received answer SDP');
+        // Call answered
+        channel.on('broadcast', { event: 'call:answer' }, async ({ payload }) => {
+            console.log('[CallContext] Call answered via Supabase:', payload);
+            const data = payload as any;
 
             // Stop dial tone and play connected sound when call is answered
             stopDialTone();
@@ -373,7 +377,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             }
         });
 
-        socket.on('call:ice-candidate', async (data) => {
+        // ICE candidate received
+        channel.on('broadcast', { event: 'call:ice-candidate' }, async ({ payload }) => {
+            const data = payload as any;
+            console.log('[CallContext] ICE candidate received via Supabase');
+
             if (peerConnectionRef.current?.remoteDescription) {
                 await peerConnectionRef.current.addIceCandidate(data.candidate);
             } else {
@@ -381,24 +389,26 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             }
         });
 
-        socket.on('call:ended', () => {
+        // Call ended by remote
+        channel.on('broadcast', { event: 'call:ended' }, () => {
+            console.log('[CallContext] Call ended by remote via Supabase');
             stopAll();
             closeCallNotification();
-            endCall();
-        });
-        socket.on('call:rejected', () => {
-            stopDialTone();
-            endCall();
+            endCallCleanup();
         });
 
+        // Call rejected
+        channel.on('broadcast', { event: 'call:rejected' }, () => {
+            console.log('[CallContext] Call rejected via Supabase');
+            stopDialTone();
+            endCallCleanup();
+        });
+
+        // Don't unsubscribe from user channel as it's needed for presence
         return () => {
-            socket.off('call:incoming');
-            socket.off('call:answer');
-            socket.off('call:ice-candidate');
-            socket.off('call:ended');
-            socket.off('call:rejected');
+            // Channel cleanup handled by RealtimeContext
         };
-    }, [socket, endCall]);
+    }, [supabaseUserId, subscribeToChannel, playRingtone, showCallNotification, stopDialTone, playConnectedSound, stopAll, closeCallNotification, endCallCleanup]);
 
     return (
         <CallContext.Provider

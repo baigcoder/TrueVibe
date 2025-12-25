@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { SocketProvider } from "@/context/SocketContext";
+import { RealtimeProvider } from "@/context/RealtimeContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { CallProvider } from "@/context/CallContext";
 import { VoiceRoomProvider } from "@/context/VoiceRoomContext";
@@ -112,15 +113,18 @@ function AppContent() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SocketProvider>
-        <AuthProvider>
-          <CallProvider>
-            <VoiceRoomProvider>
-              <AppContent />
-            </VoiceRoomProvider>
-          </CallProvider>
-        </AuthProvider>
-      </SocketProvider>
+      <RealtimeProvider>
+        <SocketProvider>
+          <AuthProvider>
+            <CallProvider>
+              <VoiceRoomProvider>
+                <AppContent />
+              </VoiceRoomProvider>
+            </CallProvider>
+          </AuthProvider>
+        </SocketProvider>
+      </RealtimeProvider>
     </QueryClientProvider>
   );
 }
+
