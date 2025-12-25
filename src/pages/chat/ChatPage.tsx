@@ -1602,6 +1602,17 @@ export default function ChatPage() {
                   </motion.button>
                 )}
 
+                {/* Help Button - Always visible */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowFeaturesGuide(true)}
+                  className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-slate-500 hover:text-primary hover:border-primary/30"
+                  title="Chat Features Guide"
+                >
+                  <HelpCircle className="w-4 h-4 lg:w-5 lg:h-5" />
+                </motion.button>
+
                 <div className="hidden sm:flex items-center gap-4">
                   <Button
                     variant="ghost"
