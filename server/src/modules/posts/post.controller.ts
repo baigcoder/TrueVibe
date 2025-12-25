@@ -448,11 +448,36 @@ export const getUserPosts = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const { userId } = req.params;
+        const { userId: paramUserId } = req.params;
         const { cursor, limit = '10' } = req.query;
 
+        // First, resolve the actual userId by looking up the profile
+        // The paramUserId could be: MongoDB _id, Supabase userId, or supabaseId
+        let profile = await Profile.findOne({
+            $or: [
+                { _id: mongoose.isValidObjectId(paramUserId) ? paramUserId : null },
+                { userId: paramUserId },
+                { supabaseId: paramUserId }
+            ]
+        });
+
+        if (!profile) {
+            res.json({
+                success: true,
+                data: {
+                    posts: [],
+                    cursor: null,
+                    hasMore: false,
+                },
+            });
+            return;
+        }
+
+        // Use the profile's userId (Supabase UUID) for the query
+        const actualUserId = profile.userId || profile.supabaseId;
+
         const query: Record<string, unknown> = {
-            userId,
+            userId: actualUserId,
             isDeleted: false,
             visibility: 'public',
         };
@@ -468,9 +493,6 @@ export const getUserPosts = async (
 
         const hasMore = posts.length > parseInt(limit as string, 10);
         const results = hasMore ? posts.slice(0, -1) : posts;
-
-        // Get profile
-        const profile = await Profile.findOne({ userId });
 
         // Attach author to posts
         const postsWithAuthor = results.map((post) => ({
