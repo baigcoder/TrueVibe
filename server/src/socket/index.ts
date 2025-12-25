@@ -26,14 +26,25 @@ interface JWTPayload {
 }
 
 export const initializeSocketIO = (httpServer: HttpServer): Server => {
+    // Import CORS config to match main app settings
+    const corsOrigins = [
+        config.frontend.url,
+        process.env.FRONTEND_URL,
+        'http://localhost:5173',
+        'http://localhost:3000',
+    ].filter((url): url is string => !!url);
+
+    debugLog('Initializing Socket.IO with CORS origins:', corsOrigins);
+
     io = new Server(httpServer, {
         cors: {
-            origin: config.frontend.url,
+            origin: corsOrigins,
             methods: ['GET', 'POST'],
             credentials: true,
         },
         pingTimeout: 60000,
         pingInterval: 25000,
+        transports: ['websocket', 'polling'],
     });
 
     // Supabase JWT authentication middleware
