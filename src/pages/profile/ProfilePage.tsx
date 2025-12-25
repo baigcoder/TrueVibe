@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PostCard, type PostData } from "@/components/shared/PostCard";
+import { type PostData } from "@/components/shared/PostCard";
 import {
     MapPin, Link as LinkIcon, Calendar, Loader2, ShieldCheck,
     MessageCircle, Camera, Edit3, Grid3X3, Heart,
@@ -161,16 +161,23 @@ export default function ProfilePage() {
 
     // Debug profile and posts data
     console.log('[ProfilePage] Debug:', {
+        // ID sources
         userId,
         isOwnProfile,
-        profileUserId: profile?.userId,
-        profileId: profile?._id,
+        paramId: id,
+        // Profile fields
+        currentUserProfile_id: currentUserProfile?._id,
+        currentUserProfile_userId: currentUserProfile?.userId,
+        currentUserProfile_supabaseId: currentUserProfile?.supabaseId,
+        supabaseUser_id: user?.id,
+        // API response
         postsDataExists: !!postsData,
         postsPages: postsData?.pages,
+        firstPageData: (postsData?.pages as any)?.[0],
         postsCount: posts.length,
         loadingPosts,
-        shortsCount: userShorts.length,
-        likedPostsCount: likedPosts.length
+        // Full currentUserProfile for inspection
+        fullCurrentUserProfile: currentUserProfile
     });
 
     const isLoading = isOwnProfile ? (authLoading && !user) : loadingProfile;
@@ -594,7 +601,6 @@ export default function ProfilePage() {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -10 }}
-                                                className="space-y-6"
                                             >
                                                 {loadingPosts ? (
                                                     <div className="flex justify-center py-20">
@@ -611,17 +617,74 @@ export default function ProfilePage() {
                                                         </p>
                                                     </div>
                                                 ) : (
-                                                    posts.map((post, index) => (
-                                                        <motion.div
-                                                            key={post._id}
-                                                            initial={{ opacity: 0, scale: 0.98, y: 20 }}
-                                                            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                                                            viewport={{ once: true }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                        >
-                                                            <PostCard post={post} />
-                                                        </motion.div>
-                                                    ))
+                                                    <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                                                        {posts.map((post, index) => {
+                                                            const hasMedia = post.media && post.media.length > 0;
+                                                            const firstMedia = hasMedia ? post.media![0] : null;
+                                                            const isVideo = firstMedia?.type === 'video';
+
+                                                            return (
+                                                                <motion.div
+                                                                    key={post._id}
+                                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                                    whileInView={{ opacity: 1, scale: 1 }}
+                                                                    viewport={{ once: true }}
+                                                                    transition={{ delay: index * 0.03 }}
+                                                                    onClick={() => toast.info('Post details coming soon!')}
+                                                                    className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
+                                                                >
+                                                                    {/* Thumbnail */}
+                                                                    {hasMedia ? (
+                                                                        isVideo ? (
+                                                                            <video
+                                                                                src={firstMedia!.url}
+                                                                                className="w-full h-full object-cover"
+                                                                                muted
+                                                                            />
+                                                                        ) : (
+                                                                            <img
+                                                                                src={firstMedia!.url}
+                                                                                alt=""
+                                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                            />
+                                                                        )
+                                                                    ) : (
+                                                                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-3">
+                                                                            <p className="text-xs text-slate-400 line-clamp-4 text-center">
+                                                                                {post.content?.slice(0, 100) || 'Text post'}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Video indicator */}
+                                                                    {isVideo && (
+                                                                        <div className="absolute top-2 right-2">
+                                                                            <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Multiple media indicator */}
+                                                                    {post.media && post.media.length > 1 && (
+                                                                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-md px-1.5 py-0.5">
+                                                                            <span className="text-[10px] text-white font-bold">+{post.media.length - 1}</span>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Hover overlay with stats */}
+                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                                                                        <div className="flex items-center gap-1.5 text-white">
+                                                                            <Heart className="w-4 h-4 fill-white" />
+                                                                            <span className="text-sm font-bold">{post.likesCount || 0}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 text-white">
+                                                                            <MessageCircle className="w-4 h-4 fill-white" />
+                                                                            <span className="text-sm font-bold">{post.commentsCount || 0}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 )}
                                             </motion.div>
                                         </TabsContent>
@@ -704,7 +767,6 @@ export default function ProfilePage() {
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -10 }}
-                                                className="space-y-6"
                                             >
                                                 {!isOwnProfile ? (
                                                     <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
@@ -731,17 +793,70 @@ export default function ProfilePage() {
                                                         </p>
                                                     </div>
                                                 ) : (
-                                                    likedPosts.map((post, index) => (
-                                                        <motion.div
-                                                            key={post._id}
-                                                            initial={{ opacity: 0, scale: 0.98, y: 20 }}
-                                                            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                                                            viewport={{ once: true }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                        >
-                                                            <PostCard post={post} />
-                                                        </motion.div>
-                                                    ))
+                                                    <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                                                        {likedPosts.map((post, index) => {
+                                                            const hasMedia = post.media && post.media.length > 0;
+                                                            const firstMedia = hasMedia ? post.media![0] : null;
+                                                            const isVideo = firstMedia?.type === 'video';
+
+                                                            return (
+                                                                <motion.div
+                                                                    key={post._id}
+                                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                                    whileInView={{ opacity: 1, scale: 1 }}
+                                                                    viewport={{ once: true }}
+                                                                    transition={{ delay: index * 0.03 }}
+                                                                    onClick={() => toast.info('Post details coming soon!')}
+                                                                    className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
+                                                                >
+                                                                    {hasMedia ? (
+                                                                        isVideo ? (
+                                                                            <video
+                                                                                src={firstMedia!.url}
+                                                                                className="w-full h-full object-cover"
+                                                                                muted
+                                                                            />
+                                                                        ) : (
+                                                                            <img
+                                                                                src={firstMedia!.url}
+                                                                                alt=""
+                                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                            />
+                                                                        )
+                                                                    ) : (
+                                                                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-3">
+                                                                            <p className="text-xs text-slate-400 line-clamp-4 text-center">
+                                                                                {post.content?.slice(0, 100) || 'Text post'}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {isVideo && (
+                                                                        <div className="absolute top-2 right-2">
+                                                                            <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    {post.media && post.media.length > 1 && (
+                                                                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-md px-1.5 py-0.5">
+                                                                            <span className="text-[10px] text-white font-bold">+{post.media.length - 1}</span>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                                                                        <div className="flex items-center gap-1.5 text-white">
+                                                                            <Heart className="w-4 h-4 fill-white" />
+                                                                            <span className="text-sm font-bold">{post.likesCount || 0}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 text-white">
+                                                                            <MessageCircle className="w-4 h-4 fill-white" />
+                                                                            <span className="text-sm font-bold">{post.commentsCount || 0}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 )}
                                             </motion.div>
                                         </TabsContent>
