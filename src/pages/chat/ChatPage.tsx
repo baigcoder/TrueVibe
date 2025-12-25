@@ -35,6 +35,7 @@ import {
   Radio,
   Send,
   ArrowRight,
+  ArrowLeft,
   Lock,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -249,6 +250,7 @@ export default function ChatPage() {
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [hideSidebarDesktop, setHideSidebarDesktop] = useState(false);
 
   // Handle room URL parameter for join by link
   useEffect(() => {
@@ -1001,7 +1003,10 @@ export default function ChatPage() {
         </div>
 
         {/* SECONDARY SIDEBAR - Conversations / Channels list */}
-        <div className="hidden lg:flex w-[320px] xl:w-[360px] bg-transparent flex-col border-r border-white-border z-10 relative">
+        <div className={cn(
+          "hidden lg:flex w-[320px] xl:w-[360px] bg-transparent flex-col border-r border-white-border z-10 relative transition-all duration-300",
+          hideSidebarDesktop && "lg:hidden"
+        )}>
           {view === "dms" ? (
             <div className="flex flex-col h-full bg-transparent">
               <div className="p-8 lg:p-10 border-b border-white/[0.03]">
@@ -1192,6 +1197,10 @@ export default function ChatPage() {
                           onClick={() => {
                             setSelectedConversationId(conv._id);
                             setView("dms");
+                            // Hide sidebar on desktop when selecting a conversation
+                            if (window.innerWidth >= 1024) {
+                              setHideSidebarDesktop(true);
+                            }
                           }}
                           className={cn(
                             "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all relative group overflow-hidden border mb-1",
@@ -1453,6 +1462,19 @@ export default function ChatPage() {
               >
                 <MessageCircle className="w-5 h-5 text-primary" />
               </button>
+
+              {/* Desktop back button - shows when sidebar is hidden */}
+              {hideSidebarDesktop && (
+                <button
+                  onClick={() => {
+                    setHideSidebarDesktop(false);
+                    setSelectedConversationId(null);
+                  }}
+                  className="hidden lg:flex w-11 h-11 rounded-xl glass-premium items-center justify-center shadow-lg shrink-0 hover:bg-primary/10 transition-colors group/back"
+                >
+                  <ArrowLeft className="w-5 h-5 text-primary group-hover/back:scale-110 transition-transform" />
+                </button>
+              )}
 
               {view === "server" && selectedChannel ? (
                 <div className="flex items-center gap-4 lg:gap-8 min-w-0">
