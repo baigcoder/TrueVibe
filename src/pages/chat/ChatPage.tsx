@@ -2516,131 +2516,133 @@ export default function ChatPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowFeaturesGuide(false)}
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+                className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]"
               />
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-2xl max-h-[85vh] overflow-y-auto glass-aether rounded-3xl border border-white/10 p-6 lg:p-8 z-50 shadow-2xl"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-0 z-[101] flex items-center justify-center p-4"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <HelpCircle className="w-5 h-5 text-primary" />
-                    </div>
-                    <h2 className="text-xl lg:text-2xl font-bold text-white premium-font">Chat Features Guide</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowFeaturesGuide(false)}
-                    className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-                  >
-                    <X className="w-4 h-4 text-slate-400" />
-                  </button>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Direct Messages */}
-                  <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                        <MessageCircle className="w-4 h-4 text-blue-400" />
+                <div className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-[#0a0a0f] rounded-2xl border border-white/10 p-5 shadow-2xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <HelpCircle className="w-4 h-4 text-primary" />
                       </div>
-                      <h3 className="text-lg font-bold text-white">💬 Chat with Friends</h3>
+                      <h2 className="text-lg font-bold text-white">Chat Features</h2>
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed">
-                      Send private messages to anyone! You can share photos, videos, and voice notes too.
-                    </p>
+                    <button
+                      onClick={() => setShowFeaturesGuide(false)}
+                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                    >
+                      <X className="w-4 h-4 text-slate-400" />
+                    </button>
                   </div>
 
-                  {/* Voice & Video Calls */}
-                  <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                        <Phone className="w-4 h-4 text-emerald-400" />
+                  <div className="space-y-3">
+                    {/* Direct Messages */}
+                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                          <MessageCircle className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">💬 Chat with Friends</h3>
                       </div>
-                      <h3 className="text-lg font-bold text-white">📞 Voice & Video Calls</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed">
+                        Send private messages to anyone! You can share photos, videos, and voice notes too.
+                      </p>
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed">
-                      Call your friends! Tap the phone icon for voice or camera icon for video. Works just like FaceTime!
-                    </p>
+
+                    {/* Voice & Video Calls */}
+                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                          <Phone className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">📞 Voice & Video Calls</h3>
+                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed">
+                        Call your friends! Tap the phone icon for voice or camera icon for video. Works just like FaceTime!
+                      </p>
+                    </div>
+
+                    {/* Servers */}
+                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                          <Hash className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">🏠 Servers</h3>
+                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed mb-3">
+                        Create your own community! Like Discord servers - make different chat rooms for different topics.
+                        Your friends can join with an invite code.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium">Always There</span>
+                        <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium">Multiple Rooms</span>
+                      </div>
+                    </div>
+
+                    {/* Voice Rooms */}
+                    <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                          <Headphones className="w-4 h-4 text-orange-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">🎧 Voice Rooms</h3>
+                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed mb-3">
+                        Quick group calls! Create a room, share the link, and anyone can join.
+                        Perfect for hanging out or quick group chats. Room disappears when everyone leaves.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium">Quick Setup</span>
+                        <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium">Share Link</span>
+                        <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium">Screen Share</span>
+                      </div>
+                    </div>
+
+                    {/* Difference Section */}
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center">
+                          <Info className="w-4 h-4 text-primary" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">🤔 Server vs Room?</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="p-4 rounded-xl bg-black/20">
+                          <h4 className="font-bold text-purple-400 mb-2">🏠 Servers are...</h4>
+                          <ul className="text-sm text-slate-400 space-y-1.5">
+                            <li>• For communities & groups</li>
+                            <li>• Stays forever</li>
+                            <li>• Multiple chat channels</li>
+                            <li>• Invite friends with code</li>
+                          </ul>
+                        </div>
+                        <div className="p-4 rounded-xl bg-black/20">
+                          <h4 className="font-bold text-orange-400 mb-2">🎧 Rooms are...</h4>
+                          <ul className="text-sm text-slate-400 space-y-1.5">
+                            <li>• For quick hangouts</li>
+                            <li>• Disappears when empty</li>
+                            <li>• Voice & video focus</li>
+                            <li>• Share link to join</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Servers */}
-                  <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                        <Hash className="w-4 h-4 text-purple-400" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">🏠 Servers</h3>
-                    </div>
-                    <p className="text-sm text-slate-400 leading-relaxed mb-3">
-                      Create your own community! Like Discord servers - make different chat rooms for different topics.
-                      Your friends can join with an invite code.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium">Always There</span>
-                      <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium">Multiple Rooms</span>
-                    </div>
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={() => setShowFeaturesGuide(false)}
+                      className="px-5 py-2 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary font-bold transition-colors text-sm"
+                    >
+                      Got it!
+                    </button>
                   </div>
-
-                  {/* Voice Rooms */}
-                  <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                        <Headphones className="w-4 h-4 text-orange-400" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">🎧 Voice Rooms</h3>
-                    </div>
-                    <p className="text-sm text-slate-400 leading-relaxed mb-3">
-                      Quick group calls! Create a room, share the link, and anyone can join.
-                      Perfect for hanging out or quick group chats. Room disappears when everyone leaves.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium">Quick Setup</span>
-                      <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium">Share Link</span>
-                      <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium">Screen Share</span>
-                    </div>
-                  </div>
-
-                  {/* Difference Section */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center">
-                        <Info className="w-4 h-4 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white">🤔 Server vs Room?</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div className="p-4 rounded-xl bg-black/20">
-                        <h4 className="font-bold text-purple-400 mb-2">🏠 Servers are...</h4>
-                        <ul className="text-sm text-slate-400 space-y-1.5">
-                          <li>• For communities & groups</li>
-                          <li>• Stays forever</li>
-                          <li>• Multiple chat channels</li>
-                          <li>• Invite friends with code</li>
-                        </ul>
-                      </div>
-                      <div className="p-4 rounded-xl bg-black/20">
-                        <h4 className="font-bold text-orange-400 mb-2">🎧 Rooms are...</h4>
-                        <ul className="text-sm text-slate-400 space-y-1.5">
-                          <li>• For quick hangouts</li>
-                          <li>• Disappears when empty</li>
-                          <li>• Voice & video focus</li>
-                          <li>• Share link to join</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={() => setShowFeaturesGuide(false)}
-                    className="px-6 py-3 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary font-bold transition-colors"
-                  >
-                    Got it!
-                  </button>
                 </div>
               </motion.div>
             </>
