@@ -1328,8 +1328,8 @@ export const getReport = async (
         const isAdmin = currentUser.role === 'admin';
 
         // The author OR an admin can view reports
-        // Compare MongoDB _id (post.userId) with current user's MongoDB _id
-        if (post.userId.toString() !== currentUser._id.toString() && !isAdmin) {
+        // Compare Supabase IDs: post.userId is the Supabase UUID of the author
+        if (post.userId.toString() !== currentUser.supabaseId && !isAdmin) {
             throw new ForbiddenError('Only the post owner or an admin can view AI reports');
         }
 
