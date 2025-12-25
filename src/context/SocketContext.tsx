@@ -2,7 +2,14 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import type { ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+// Derive socket URL from API URL - remove /api/v1 suffix if present
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const SOCKET_URL = API_URL.replace('/api/v1', '').replace('/api', '');
+
+// Log socket URL for debugging in production
+console.log('[Socket] Environment:', import.meta.env.MODE);
+console.log('[Socket] API URL:', API_URL);
+console.log('[Socket] Socket URL:', SOCKET_URL);
 
 interface SocketContextType {
     socket: Socket | null;
@@ -27,9 +34,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     const connect = useCallback((token: string) => {
         // Prevent multiple connection attempts
         if (isConnectingRef.current || socketRef.current?.connected) {
+            console.log('[Socket] Already connected or connecting, skipping');
             return;
         }
 
+        console.log('[Socket] Initiating connection to:', SOCKET_URL);
         isConnectingRef.current = true;
 
         // Disconnect existing socket if any
@@ -43,12 +52,13 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             auth: { token },
             transports: ['websocket', 'polling'],
             reconnection: true,
-            reconnectionAttempts: 3,
+            reconnectionAttempts: 5,
             reconnectionDelay: 1000,
+            timeout: 20000,
         });
 
         newSocket.on('connect', () => {
-            console.log('[Socket] Connected successfully');
+            console.log('[Socket] Connected successfully, socket ID:', newSocket.id);
             setIsConnected(true);
             isConnectingRef.current = false;
             // Update state to trigger re-renders in consuming components
