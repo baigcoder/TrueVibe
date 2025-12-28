@@ -12,6 +12,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useCreatePost, useUploadUrl, useConfirmUpload, useSaveDraft, useDeleteDraft } from "@/api/hooks";
 import { cn } from "@/lib/utils";
 import { ImageEditor } from "./ImageEditor";
+import { VideoEditor } from "./VideoEditor";
+import type { VideoEditSettings } from "./VideoEditor";
 import { PollCreator } from "./Poll";
 import { format } from "date-fns";
 import { DraftsManager } from "./DraftsManager";
@@ -50,6 +52,8 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
     const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
+    const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null);
+    const [videoEditSettings, setVideoEditSettings] = useState<VideoEditSettings | null>(null);
     const [showPollCreator, setShowPollCreator] = useState(false);
     const [pollData, setPollData] = useState<{ options: { text: string }[]; expiresIn: number; allowMultiple: boolean } | null>(null);
     const [showScheduler, setShowScheduler] = useState(false);
@@ -849,11 +853,14 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                                                 e.currentTarget.dispatchEvent(new Event('durationLoaded'));
                                                             }}
                                                         />
-                                                        {/* Video type badge */}
-                                                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-violet-500/90 backdrop-blur-sm">
-                                                            <Video className="w-3 h-3 text-white" />
-                                                            <span className="text-[9px] font-bold text-white uppercase tracking-wider">Video</span>
-                                                        </div>
+                                                        {/* Video Edit Button */}
+                                                        <button
+                                                            onClick={() => setEditingVideoIndex(index)}
+                                                            className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-violet-500/90 backdrop-blur-xl flex items-center gap-1.5 sm:gap-2 shadow-lg hover:bg-violet-500 hover:scale-105 active:scale-95 transition-all text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-white/20 z-10"
+                                                        >
+                                                            <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                                            <span>Edit</span>
+                                                        </button>
                                                         {/* File info badges */}
                                                         <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 flex items-center justify-between">
                                                             <span className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-[10px] font-bold text-white/90 flex items-center gap-1.5">
@@ -1411,6 +1418,21 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         imageUrl={filePreviews[editingImageIndex].url}
                         onApply={handleEditApply}
                         onCancel={() => setEditingImageIndex(null)}
+                    />
+                )
+            }
+
+            {/* Video Editor Modal */}
+            {
+                editingVideoIndex !== null && filePreviews[editingVideoIndex]?.type === 'video' && (
+                    <VideoEditor
+                        videoUrl={filePreviews[editingVideoIndex].url}
+                        onApply={(settings) => {
+                            setVideoEditSettings(settings);
+                            setEditingVideoIndex(null);
+                            console.log('✅ Video edit settings applied:', settings);
+                        }}
+                        onCancel={() => setEditingVideoIndex(null)}
                     />
                 )
             }
