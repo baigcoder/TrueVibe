@@ -371,7 +371,7 @@ export function AIReportModal({
                                         }}
                                         className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 items-start"
                                     >
-                                        {report.report.detectionBreakdown.map((item, i) => (
+                                        {(report.report.detectionBreakdown || []).map((item, i) => (
                                             <MetricCard
                                                 key={i}
                                                 item={item}
@@ -405,7 +405,7 @@ export function AIReportModal({
                                                     className="overflow-hidden border-t border-white/5"
                                                 >
                                                     <div className="p-3 sm:p-4 space-y-2">
-                                                        {report.report.technicalDetails.map((detail, i) => (
+                                                        {(report.report.technicalDetails || []).map((detail, i) => (
                                                             <div key={i} className="flex justify-between items-center px-1">
                                                                 <span className="text-[10px] sm:text-xs text-slate-500 uppercase font-black">{detail.metric}</span>
                                                                 <span className="text-[10px] sm:text-xs font-mono text-white font-black">{detail.value}</span>
@@ -424,7 +424,7 @@ export function AIReportModal({
                                             <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-violet-400/70">Expert Security Tips</span>
                                         </div>
                                         <ul className="space-y-2 sm:space-y-3">
-                                            {report.report.recommendations.slice(0, 3).map((rec, i) => (
+                                            {(report.report.recommendations || []).slice(0, 3).map((rec, i) => (
                                                 <li key={i} className="flex items-start gap-3 text-[11px] sm:text-sm text-slate-400 leading-relaxed font-bold">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-2 shrink-0 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
                                                     {rec}
