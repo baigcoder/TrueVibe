@@ -258,6 +258,7 @@ export const chatApi = {
     sendMessage: (id: string, data: { content: string; media?: unknown[]; replyTo?: string }) =>
         api.post(`/chat/conversations/${id}/messages`, data),
     markAsRead: (id: string) => api.put(`/chat/conversations/${id}/read`),
+    deleteConversation: (id: string) => api.delete(`/chat/conversations/${id}`),
 
     // Servers (Discord-like)
     getServers: () => api.get('/chat/servers'),

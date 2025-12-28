@@ -2,6 +2,7 @@ import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
 import { cn } from "@/lib/utils"
+import { cacheImageUrl, getCachedImageUrl } from "@/lib/imageCache"
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -18,16 +19,74 @@ const Avatar = React.forwardRef<
 ))
 Avatar.displayName = AvatarPrimitive.Root.displayName
 
+interface AvatarImageProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> {
+  src?: string;
+}
+
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    {...props}
-  />
-))
+  AvatarImageProps
+>(({ className, src, ...props }, ref) => {
+  const [imgSrc, setImgSrc] = React.useState<string | undefined>(undefined);
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!src) {
+      setImgSrc(undefined);
+      setHasError(false);
+      return;
+    }
+
+    const cached = getCachedImageUrl(src);
+
+    if (!cached.shouldLoad) {
+      // Use cached result
+      if (cached.url) {
+        setImgSrc(cached.url);
+        setHasError(false);
+      } else {
+        setImgSrc(undefined);
+        setHasError(true);
+      }
+      return;
+    }
+
+    // Reset state for new URL
+    setImgSrc(src);
+    setHasError(false);
+  }, [src]);
+
+  const handleError = React.useCallback(() => {
+    if (src) {
+      cacheImageUrl(src, false);
+    }
+    setHasError(true);
+    setImgSrc(undefined);
+  }, [src]);
+
+  const handleLoad = React.useCallback(() => {
+    if (src) {
+      cacheImageUrl(src, true);
+    }
+  }, [src]);
+
+  // If there's an error or no src, don't render the image (fallback will show)
+  if (hasError || !imgSrc) {
+    return null;
+  }
+
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      className={cn("aspect-square h-full w-full object-cover", className)}
+      src={imgSrc}
+      onError={handleError}
+      onLoad={handleLoad}
+      loading="lazy"
+      {...props}
+    />
+  );
+})
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = React.forwardRef<

@@ -41,6 +41,7 @@ import {
   Info,
   Hash,
   Headphones,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
@@ -62,6 +63,7 @@ import {
   useRemoveReaction,
   useCreateConversation,
   useSearchUsers,
+  useDeleteConversation,
 } from "@/api/hooks";
 import { useSocket } from "@/context/SocketContext";
 import { useRealtime } from "@/context/RealtimeContext";
@@ -318,6 +320,7 @@ export default function ChatPage() {
   const addReaction = useAddReaction();
   const removeReaction = useRemoveReaction();
   const createConversation = useCreateConversation();
+  const deleteConversation = useDeleteConversation();
   const { initiateCall } = useCall();
   const { data: searchUsersData, isLoading: searchLoading } =
     useSearchUsers(searchQuery);
@@ -798,6 +801,56 @@ export default function ChatPage() {
       minute: "2-digit",
     });
 
+  const handleDeleteConversation = useCallback((conversationId: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent selecting the conversation
+
+    toast.custom((t) => (
+      <div className="bg-slate-900/95 backdrop-blur-lg border border-white/10 rounded-2xl p-5 shadow-2xl max-w-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+            <Trash2 className="w-5 h-5 text-red-400" />
+          </div>
+          <div>
+            <p className="text-white font-semibold text-sm">Delete Conversation</p>
+            <p className="text-slate-400 text-xs">With {name}</p>
+          </div>
+        </div>
+        <p className="text-slate-300 text-sm mb-4">
+          This will permanently delete all messages. This action cannot be undone.
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t);
+            }}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t);
+              deleteConversation.mutate(conversationId, {
+                onSuccess: () => {
+                  toast.success("Conversation deleted");
+                  if (selectedConversationId === conversationId) {
+                    setSelectedConversationId(null);
+                  }
+                },
+                onError: (error: any) => {
+                  toast.error(error?.message || "Failed to delete conversation");
+                },
+              });
+            }}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-colors border border-red-500/30"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
+  }, [deleteConversation, selectedConversationId]);
+
   return (
     <div className="relative h-[calc(100vh-80px)] lg:h-screen w-full flex bg-transparent overflow-hidden aether-font lg:p-3 lg:gap-3">
       <AetherStyles />
@@ -1259,7 +1312,7 @@ export default function ChatPage() {
                                 {name}
                               </p>
                               {conv.lastMessage && (
-                                <span className="text-[10px] text-slate-500">
+                                <span className="text-[10px] text-slate-500 group-hover:hidden">
                                   {new Date(conv.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               )}
@@ -1270,6 +1323,15 @@ export default function ChatPage() {
                               </p>
                             )}
                           </div>
+
+                          {/* Delete button - always visible on mobile, hover on desktop */}
+                          <button
+                            onClick={(e) => handleDeleteConversation(conv._id, name || 'this chat', e)}
+                            className="flex lg:hidden lg:group-hover:flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all shrink-0"
+                            title="Delete conversation"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </motion.button>
                       );
                     }).filter(Boolean)
@@ -1630,6 +1692,25 @@ export default function ChatPage() {
                     <MoreVertical className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110" />
                   </Button>
                 </div>
+
+                {/* Delete Conversation Button - Mobile visible */}
+                {selectedConversationId && selectedConversation && view === "dms" && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={(e) => handleDeleteConversation(
+                      selectedConversationId,
+                      selectedConversation.type === "group"
+                        ? selectedConversation.groupName
+                        : selectedConversation.participants[0]?.name || 'this chat',
+                      e
+                    )}
+                    className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-red-400 hover:bg-red-500/10 hover:border-red-500/30"
+                    title="Delete conversation"
+                  >
+                    <Trash2 className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </motion.button>
+                )}
               </div>
             </div>
           </div>
@@ -2755,13 +2836,8 @@ export default function ChatPage() {
                               : other?.name;
                           const isActive = selectedConversationId === conv._id;
                           return (
-                            <button
+                            <div
                               key={conv._id}
-                              onClick={() => {
-                                setSelectedConversationId(conv._id);
-                                setView("dms");
-                                setShowMobileSidebar(false);
-                              }}
                               className={cn(
                                 "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all border group",
                                 isActive
@@ -2769,36 +2845,55 @@ export default function ChatPage() {
                                   : "border-transparent hover:bg-white/[0.03]",
                               )}
                             >
-                              <div className="relative">
-                                <Avatar className="w-11 h-11 rounded-xl border border-white/10 group-hover:border-primary/40 transition-all">
-                                  <AvatarImage
-                                    src={other?.avatar}
-                                    className="object-cover"
-                                  />
-                                  <AvatarFallback className="glass-aether text-[10px] font-black">
-                                    {name?.charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#030303] p-0.5">
-                                  <div className="w-full h-full rounded-full bg-primary" />
+                              <button
+                                onClick={() => {
+                                  setSelectedConversationId(conv._id);
+                                  setView("dms");
+                                  setShowMobileSidebar(false);
+                                }}
+                                className="flex items-center gap-4 flex-1 min-w-0"
+                              >
+                                <div className="relative shrink-0">
+                                  <Avatar className="w-11 h-11 rounded-xl border border-white/10 group-hover:border-primary/40 transition-all">
+                                    <AvatarImage
+                                      src={other?.avatar}
+                                      className="object-cover"
+                                    />
+                                    <AvatarFallback className="glass-aether text-[10px] font-black">
+                                      {name?.charAt(0)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#030303] p-0.5">
+                                    <div className="w-full h-full rounded-full bg-primary" />
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex-1 text-left min-w-0">
-                                <p
-                                  className={cn(
-                                    "text-xs font-black uppercase italic tracking-tight aether-font truncate",
-                                    isActive ? "text-primary" : "text-white",
-                                  )}
-                                >
-                                  {name}
-                                </p>
-                                {conv.lastMessage && (
-                                  <p className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">
-                                    {conv.lastMessage.content}
+                                <div className="flex-1 text-left min-w-0">
+                                  <p
+                                    className={cn(
+                                      "text-xs font-black uppercase italic tracking-tight aether-font truncate",
+                                      isActive ? "text-primary" : "text-white",
+                                    )}
+                                  >
+                                    {name}
                                   </p>
-                                )}
-                              </div>
-                            </button>
+                                  {conv.lastMessage && (
+                                    <p className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">
+                                      {conv.lastMessage.content}
+                                    </p>
+                                  )}
+                                </div>
+                              </button>
+                              {/* Delete button for mobile */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteConversation(conv._id, name || 'this chat', e);
+                                }}
+                                className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all shrink-0 border border-red-500/20"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           );
                         })
                       )}

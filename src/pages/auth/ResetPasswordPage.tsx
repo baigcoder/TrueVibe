@@ -92,16 +92,16 @@ export default function ResetPasswordPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center relative z-10"
                 >
-                    <div className="glass-premium bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-12 backdrop-blur-3xl shadow-2xl">
+                    <div className="glass-premium bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-12 backdrop-blur-3xl shadow-2xl">
                         <div className="w-20 h-20 mx-auto mb-8 rounded-[2rem] bg-rose-500/10 flex items-center justify-center border border-rose-500/20 shadow-lg shadow-rose-500/10">
                             <Lock className="w-10 h-10 text-rose-500" />
                         </div>
-                        <h2 className="font-heading text-3xl font-extrabold mb-4 text-white uppercase italic tracking-tighter drop-shadow-glow">Access_Denied</h2>
-                        <p className="text-slate-500 font-medium mb-10 max-w-xs leading-relaxed">
+                        <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-4 text-white uppercase italic tracking-tighter drop-shadow-glow">Access_Denied</h2>
+                        <p className="text-slate-500 font-medium mb-8 sm:mb-10 max-w-xs leading-relaxed text-sm sm:text-base">
                             This security token is invalid or has expired. Request a new sequence.
                         </p>
                         <Link to={"/auth/forgot-password" as any}>
-                            <Button className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-heading font-extrabold uppercase italic tracking-tighter text-lg transition-all shadow-xl shadow-primary/20">
+                            <Button className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-primary hover:bg-primary/90 text-white font-heading font-extrabold uppercase italic tracking-tighter text-base sm:text-lg transition-all shadow-xl shadow-primary/20">
                                 Request New Link
                             </Button>
                         </Link>
@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full max-w-md relative z-10"
             >
-                <div className="glass-premium bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-10 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
+                <div className="glass-premium bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] p-5 sm:p-10 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
                     {/* Interior Glow */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px] pointer-events-none group-hover:bg-primary/20 transition-all duration-700" />
 
@@ -133,25 +133,25 @@ export default function ResetPasswordPage() {
                             >
                                 <CheckCircle className="w-10 h-10 text-emerald-500" />
                             </motion.div>
-                            <h2 className="font-heading text-3xl font-extrabold mb-4 text-white uppercase italic tracking-tighter drop-shadow-glow">Vault_Updated</h2>
+                            <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-4 text-white uppercase italic tracking-tighter drop-shadow-glow">Vault_Updated</h2>
                             <p className="text-slate-400 font-medium mb-2 leading-relaxed">
                                 Security parameters successfully redefined.
                             </p>
-                            <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+                            <p className="text-slate-600 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] animate-pulse">
                                 Re-routing to central node...
                             </p>
                         </div>
                     ) : (
                         <>
-                            <div className="text-center mb-10 relative z-10">
+                            <div className="text-center mb-6 sm:mb-10 relative z-10">
                                 <Link to="/" className="inline-flex items-center gap-3 mb-8 group/logo">
                                     <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-glow-primary group-hover/logo:rotate-12 transition-transform duration-500">
                                         V
                                     </div>
                                     <span className="font-heading font-black text-2xl text-white italic tracking-[-0.05em] uppercase">TRUEVIBE</span>
                                 </Link>
-                                <h2 className="font-heading text-4xl font-extrabold mb-2 text-white uppercase italic tracking-tighter drop-shadow-glow">Update_Hash</h2>
-                                <p className="text-slate-500 font-medium tracking-wide">
+                                <h2 className="font-heading text-2xl sm:text-4xl font-extrabold mb-2 text-white uppercase italic tracking-tighter drop-shadow-glow">Update_Hash</h2>
+                                <p className="text-slate-500 font-medium tracking-wide text-sm sm:text-base">
                                     Define your new cryptographic key.
                                 </p>
                             </div>
@@ -168,7 +168,7 @@ export default function ResetPasswordPage() {
                                 )}
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">New Private Hash</Label>
+                                    <Label htmlFor="password" className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] text-slate-500 ml-1">New Private Hash</Label>
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 transition-colors group-focus-within:text-primary" />
                                         <Input
@@ -192,7 +192,7 @@ export default function ResetPasswordPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Confirm Hash</Label>
+                                    <Label htmlFor="confirmPassword" className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] text-slate-500 ml-1">Confirm Hash</Label>
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 transition-colors group-focus-within:text-primary" />
                                         <Input
@@ -216,7 +216,7 @@ export default function ResetPasswordPage() {
 
                                 <Button
                                     type="submit"
-                                    className="w-full h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-white font-heading font-extrabold uppercase italic tracking-tighter text-lg hover:from-primary/90 hover:to-primary hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 border border-primary/20"
+                                    className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-white font-heading font-extrabold uppercase italic tracking-tighter text-base sm:text-lg hover:from-primary/90 hover:to-primary hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 border border-primary/20"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (

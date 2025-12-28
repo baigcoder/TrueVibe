@@ -351,11 +351,12 @@ export default function LandingPage() {
                                 VERIFIED. SECURE. AUTHENTIC.
                             </p>
 
-                            <Link to="/auth/signup">
+                            <Link to="/auth/signup" className="block w-full sm:w-auto">
                                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                    <Button size="lg" className="h-16 px-12 text-[11px] rounded-2xl bg-white text-black font-heading font-black italic shadow-2xl hover:bg-slate-100 transition-all flex items-center gap-4 group">
-                                        ESTABLISH_CONNECTION
-                                        <Sparkles className="w-5 h-5 text-primary group-hover:rotate-45 transition-transform" />
+                                    <Button size="lg" className="w-full sm:w-auto h-12 sm:h-16 px-6 sm:px-12 text-[9px] sm:text-[11px] rounded-xl sm:rounded-2xl bg-white text-black font-heading font-black italic shadow-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 sm:gap-4 group">
+                                        <span className="sm:hidden">JOIN_NOW</span>
+                                        <span className="hidden sm:inline">ESTABLISH_CONNECTION</span>
+                                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary group-hover:rotate-45 transition-transform" />
                                     </Button>
                                 </motion.div>
                             </Link>
@@ -365,9 +366,9 @@ export default function LandingPage() {
             </section>
 
             {/* Industrial Footer */}
-            <footer className="py-32 px-8 border-t border-white/5 bg-[#010413]">
+            <footer className="py-16 sm:py-32 px-4 sm:px-8 border-t border-white/5 bg-[#010413]">
                 <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-start justify-between gap-20 mb-20">
+                    <div className="flex flex-col md:flex-row items-start justify-between gap-10 sm:gap-20 mb-12 sm:mb-20">
                         <div className="max-w-xs">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-glow-primary">
@@ -375,13 +376,13 @@ export default function LandingPage() {
                                 </div>
                                 <span className="font-heading font-black text-2xl italic uppercase tracking-tighter text-white">TRUEVIBE</span>
                             </div>
-                            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-[0.3em] leading-loose">
+                            <p className="text-slate-600 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.3em] leading-loose">
                                 DECENTRALIZED COGNITIVE EXCHANGE. <br />
                                 SECURED_BY_AETHER_v4 // 2025
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-16 md:gap-24">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-16 md:gap-24">
                             <div>
                                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-6">MODULES</h4>
                                 <ul className="space-y-4">
@@ -409,15 +410,15 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    <div className="pt-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-8">
+                    <div className="pt-8 sm:pt-12 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-400">NODES_NOMINAL_v4.2.1</span>
+                                <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.5em] text-slate-400">NODES_NOMINAL_v4.2.1</span>
                             </div>
                         </div>
-                        <div className="text-[9px] font-black text-slate-700 uppercase tracking-[0.5em]">
-                            © TRUEVIBE_LABS_INDUSTRIES // ALL_RIGHTS_ENCRYPTED
+                        <div className="text-[7px] sm:text-[9px] font-black text-slate-700 uppercase tracking-[0.15em] sm:tracking-[0.5em] text-center break-words">
+                            © TRUEVIBE_LABS // ALL_RIGHTS_ENCRYPTED
                         </div>
                     </div>
                 </div>
@@ -465,7 +466,7 @@ function FeatureCard({
                     </div>
                     <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em]">{tag}</span>
                 </div>
-                <h3 className="font-heading text-lg sm:text-xl md:text-2xl font-black italic uppercase tracking-tighter mb-4 leading-tight text-white break-words hyphens-auto">
+                <h3 className="font-heading text-base sm:text-xl md:text-2xl font-black italic uppercase tracking-tighter mb-4 leading-tight text-white break-all sm:break-words">
                     {title}
                 </h3>
                 <p className="font-bold uppercase tracking-[0.2em] text-[10px] leading-relaxed text-slate-500 max-w-xs">

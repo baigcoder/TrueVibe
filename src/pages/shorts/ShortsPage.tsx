@@ -486,12 +486,12 @@ export default function ShortsPage() {
 
     if (isLoading && apiShorts.length === 0) {
         return (
-            <div className="h-screen flex flex-col items-center justify-center bg-slate-950">
+            <div className="h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-950 overflow-hidden px-4">
                 <div className="relative">
-                    <div className="w-24 h-24 rounded-full border-t-2 border-primary animate-spin" />
-                    <Cpu className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]" />
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-t-2 border-primary animate-spin" />
+                    <Cpu className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]" />
                 </div>
-                <p className="mt-10 font-heading font-black text-slate-500 uppercase tracking-[0.5em] text-[10px] animate-pulse">Initializing Virtual Network...</p>
+                <p className="mt-8 sm:mt-10 font-heading font-black text-slate-500 uppercase tracking-[0.3em] sm:tracking-[0.5em] text-[8px] sm:text-[10px] animate-pulse text-center">Initializing Virtual Network...</p>
             </div>
         );
     }

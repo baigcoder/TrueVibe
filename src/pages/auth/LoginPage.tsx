@@ -97,8 +97,8 @@ export default function LoginPage() {
                                 </div>
                                 <span className="font-heading font-black text-xl italic uppercase tracking-tighter text-white group-hover/logo:text-primary transition-colors">TRUEVIBE</span>
                             </Link>
-                            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter mb-2 leading-none">Access_Nodes</h2>
-                            <p className="text-slate-600 text-[8px] font-black uppercase tracking-[0.4em]">SYNCING_IDENTITY_PROTOCOL</p>
+                            <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter mb-2 leading-none">Sign In</h2>
+                            <p className="text-slate-600 text-[8px] font-black uppercase tracking-[0.4em]">WELCOME_BACK</p>
                         </div>
 
                         {/* Google Sign In */}
@@ -121,13 +121,13 @@ export default function LoginPage() {
                                             <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" opacity="0.6" />
                                         </svg>
                                     )}
-                                    <span className="text-[9px] font-bold uppercase tracking-[0.2em]">CONTINUE_WITH_GOOGLE</span>
+                                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em]">CONTINUE WITH GOOGLE</span>
                                 </div>
                             </Button>
 
                             <div className="flex items-center gap-3 px-1">
                                 <div className="h-px flex-1 bg-white/5" />
-                                <span className="text-[7px] font-black text-slate-700 uppercase tracking-[0.4em]">OR_USE_ACCESS_ID</span>
+                                <span className="text-[6px] sm:text-[7px] font-black text-slate-700 uppercase tracking-[0.2em] sm:tracking-[0.4em]">OR USE EMAIL</span>
                                 <div className="h-px flex-1 bg-white/5" />
                             </div>
                         </div>
@@ -145,7 +145,7 @@ export default function LoginPage() {
                             )}
 
                             <div className="space-y-1.5">
-                                <Label className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">UPLINK_IDENTITY</Label>
+                                <Label className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.3em] ml-1">EMAIL</Label>
                                 <div className="relative group/input">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within/input:text-primary transition-colors" />
                                     <Input
@@ -160,7 +160,7 @@ export default function LoginPage() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">ENCRYPTION_HASH</Label>
+                                <Label className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.3em] ml-1">PASSWORD</Label>
                                 <div className="relative group/input">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within/input:text-primary transition-colors" />
                                     <Input
@@ -189,9 +189,9 @@ export default function LoginPage() {
                                         onCheckedChange={(checked) => setRememberMe(checked === true)}
                                         className="w-4 h-4 rounded-md border-white/10 data-[state=checked]:bg-primary"
                                     />
-                                    <Label htmlFor="remember" className="text-[8px] font-black text-slate-600 uppercase tracking-widest cursor-pointer hover:text-slate-400">PERSISTENT</Label>
+                                    <Label htmlFor="remember" className="text-[7px] sm:text-[8px] font-black text-slate-600 uppercase tracking-[0.1em] sm:tracking-widest cursor-pointer hover:text-slate-400">REMEMBER ME</Label>
                                 </div>
-                                <Link to={"/auth/forgot-password" as any} className="text-[8px] font-black text-primary/60 uppercase tracking-widest hover:text-primary">RECOVERY</Link>
+                                <Link to={"/auth/forgot-password" as any} className="text-[7px] sm:text-[8px] font-black text-primary/60 uppercase tracking-[0.1em] sm:tracking-widest hover:text-primary">FORGOT?</Link>
                             </div>
 
                             <Button
@@ -204,7 +204,7 @@ export default function LoginPage() {
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <>
-                                            ESTABLISH_UPLINK
+                                            SIGN IN
                                             <ArrowRight className="w-4 h-4 group-hover/submit:translate-x-1 transition-transform" />
                                         </>
                                     )}
@@ -213,21 +213,21 @@ export default function LoginPage() {
                         </form>
 
                         <div className="mt-8 text-center">
-                            <p className="text-slate-700 text-[8px] font-black uppercase tracking-[0.2em]">
-                                NO_IDENTITY?{" "}
-                                <Link to="/auth/signup" className="text-secondary/70 hover:text-secondary font-black transition-colors underline-offset-4 hover:underline">INITIALIZE_UNIT</Link>
+                            <p className="text-slate-700 text-[7px] sm:text-[8px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em]">
+                                NEW HERE?{" "}
+                                <Link to="/auth/signup" className="text-secondary/70 hover:text-secondary font-black transition-colors underline-offset-4 hover:underline">CREATE ACCOUNT</Link>
                             </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Technical Info */}
-                <div className="mt-6 flex items-center justify-between px-6 opacity-40">
+                <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 opacity-40">
                     <div className="flex items-center gap-2">
                         <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[7px] font-black text-slate-600 uppercase tracking-[0.4em]">SECURE_UPLINK_READY</span>
+                        <span className="text-[6px] sm:text-[7px] font-black text-slate-600 uppercase tracking-[0.2em] sm:tracking-[0.4em]">SECURE CONNECTION</span>
                     </div>
-                    <span className="text-[7px] font-black text-slate-700 uppercase tracking-[0.4em]">STABLE_v1.0.42</span>
+                    <span className="text-[6px] sm:text-[7px] font-black text-slate-700 uppercase tracking-[0.2em] sm:tracking-[0.4em]">STABLE_v1.0.42</span>
                 </div>
             </motion.div>
         </div>

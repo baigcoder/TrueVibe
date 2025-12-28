@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useProfile, useUserPosts, useUserLikedPosts, useFollowUser, useUnfollowUser, useUserShorts, useCancelFollowRequest } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FollowersModal } from "@/components/modals/FollowersModal";
 import { MediaPreviewModal } from "@/components/modals/MediaPreviewModal";
@@ -614,290 +614,285 @@ export default function ProfilePage() {
                                         </TabsTrigger>
                                     </TabsList>
 
-                                    <AnimatePresence mode="wait">
-                                        <TabsContent value="posts" key="posts" className="mt-0 outline-none">
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                            >
-                                                {loadingPosts ? (
-                                                    <div className="flex justify-center py-20">
-                                                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                    <TabsContent value="posts" className="mt-0 outline-none">
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                        >
+                                            {loadingPosts ? (
+                                                <div className="flex justify-center py-20">
+                                                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                                </div>
+                                            ) : posts.length === 0 ? (
+                                                <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                    <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                        <Grid3X3 className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
                                                     </div>
-                                                ) : posts.length === 0 ? (
-                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
-                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                            <Grid3X3 className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
-                                                        </div>
-                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No posts yet</h3>
-                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
-                                                            {isOwnProfile ? "Share your first post with the community!" : "This user hasn't shared anything yet."}
-                                                        </p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                                                        {posts.map((post, index) => {
-                                                            const hasMedia = post.media && post.media.length > 0;
-                                                            const firstMedia = hasMedia ? post.media![0] : null;
-                                                            const isVideo = firstMedia?.type === 'video';
+                                                    <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No posts yet</h3>
+                                                    <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                        {isOwnProfile ? "Share your first post with the community!" : "This user hasn't shared anything yet."}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                                                    {posts.map((post, index) => {
+                                                        const hasMedia = post.media && post.media.length > 0;
+                                                        const firstMedia = hasMedia ? post.media![0] : null;
+                                                        const isVideo = firstMedia?.type === 'video';
 
-                                                            return (
-                                                                <motion.div
-                                                                    key={post._id}
-                                                                    initial={{ opacity: 0, scale: 0.9 }}
-                                                                    whileInView={{ opacity: 1, scale: 1 }}
-                                                                    viewport={{ once: true }}
-                                                                    transition={{ delay: index * 0.03 }}
-                                                                    onClick={() => {
-                                                                        if (firstMedia && firstMedia.url) {
-                                                                            setPreviewMedia({
-                                                                                url: firstMedia.url,
-                                                                                type: isVideo ? 'video' : 'image',
-                                                                                likesCount: post.likesCount,
-                                                                                commentsCount: post.commentsCount
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
-                                                                >
-                                                                    {/* Thumbnail */}
-                                                                    {hasMedia ? (
-                                                                        isVideo ? (
-                                                                            <video
-                                                                                src={firstMedia!.url}
-                                                                                className="w-full h-full object-cover"
-                                                                                muted
-                                                                            />
-                                                                        ) : (
-                                                                            <img
-                                                                                src={firstMedia!.url}
-                                                                                alt=""
-                                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                                            />
-                                                                        )
-                                                                    ) : (
-                                                                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-3">
-                                                                            <p className="text-xs text-slate-400 line-clamp-4 text-center">
-                                                                                {post.content?.slice(0, 100) || 'Text post'}
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Video indicator */}
-                                                                    {isVideo && (
-                                                                        <div className="absolute top-2 right-2">
-                                                                            <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Multiple media indicator */}
-                                                                    {post.media && post.media.length > 1 && (
-                                                                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-md px-1.5 py-0.5">
-                                                                            <span className="text-[10px] text-white font-bold">+{post.media.length - 1}</span>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Hover overlay with stats */}
-                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
-                                                                        <div className="flex items-center gap-1.5 text-white">
-                                                                            <Heart className="w-4 h-4 fill-white" />
-                                                                            <span className="text-sm font-bold">{post.likesCount || 0}</span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1.5 text-white">
-                                                                            <MessageCircle className="w-4 h-4 fill-white" />
-                                                                            <span className="text-sm font-bold">{post.commentsCount || 0}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </motion.div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </motion.div>
-                                        </TabsContent>
-
-                                        <TabsContent value="shorts" key="shorts" className="mt-0 outline-none">
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                            >
-                                                {loadingShorts ? (
-                                                    <div className="flex justify-center py-20">
-                                                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                                                    </div>
-                                                ) : userShorts.length === 0 ? (
-                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
-                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                            <Video className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
-                                                        </div>
-                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No shorts</h3>
-                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
-                                                            {isOwnProfile ? "Post your first short to get started!" : "No video shorts available here."}
-                                                        </p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-                                                        {userShorts.map((short: any, index: number) => (
+                                                        return (
                                                             <motion.div
-                                                                key={short._id}
-                                                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                                                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                                                                key={post._id}
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                whileInView={{ opacity: 1, scale: 1 }}
                                                                 viewport={{ once: true }}
-                                                                transition={{ delay: index * 0.05 }}
-                                                                onClick={() => navigate({ to: '/app/shorts', search: { id: short._id } })}
-                                                                className="aspect-[9/16] relative rounded-[2.5rem] overflow-hidden bg-slate-900 border border-white/10 cursor-pointer group shadow-2xl"
+                                                                transition={{ delay: index * 0.03 }}
+                                                                onClick={() => {
+                                                                    if (firstMedia && firstMedia.url) {
+                                                                        setPreviewMedia({
+                                                                            url: firstMedia.url,
+                                                                            type: isVideo ? 'video' : 'image',
+                                                                            likesCount: post.likesCount,
+                                                                            commentsCount: post.commentsCount
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
                                                             >
-                                                                {short.thumbnailUrl ? (
-                                                                    <img
-                                                                        src={short.thumbnailUrl}
-                                                                        alt={short.caption}
-                                                                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                                                    />
+                                                                {/* Thumbnail */}
+                                                                {hasMedia ? (
+                                                                    isVideo ? (
+                                                                        <video
+                                                                            src={firstMedia!.url}
+                                                                            className="w-full h-full object-cover"
+                                                                            muted
+                                                                        />
+                                                                    ) : (
+                                                                        <img
+                                                                            src={firstMedia!.url}
+                                                                            alt=""
+                                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                        />
+                                                                    )
                                                                 ) : (
-                                                                    <div className="w-full h-full bg-gradient-to-br from-[#0f172a] to-[#020617] flex items-center justify-center">
-                                                                        <Video className="w-10 h-10 text-primary/10" />
+                                                                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-3">
+                                                                        <p className="text-xs text-slate-400 line-clamp-4 text-center">
+                                                                            {post.content?.slice(0, 100) || 'Text post'}
+                                                                        </p>
                                                                     </div>
                                                                 )}
 
-                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-70 group-hover:opacity-60 transition-opacity" />
-
-                                                                <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between z-20">
-                                                                    <div className="flex items-center gap-2 bg-black/50 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/10">
-                                                                        <Play className="w-3.5 h-3.5 text-white fill-white" />
-                                                                        <span className="text-[11px] font-bold text-white tabular-nums">
-                                                                            {short.viewsCount > 1000 ? (short.viewsCount / 1000).toFixed(1) + 'K' : short.viewsCount}
-                                                                        </span>
+                                                                {/* Video indicator */}
+                                                                {isVideo && (
+                                                                    <div className="absolute top-2 right-2">
+                                                                        <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
                                                                     </div>
-                                                                    <div className="flex items-center gap-2 bg-black/50 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/10">
-                                                                        <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-                                                                        <span className="text-[11px] font-bold text-white tabular-nums">
-                                                                            {short.likesCount > 1000 ? (short.likesCount / 1000).toFixed(1) + 'K' : short.likesCount}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
+                                                                )}
 
-                                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
-                                                                    <div className="w-16 h-16 rounded-full bg-primary/20 backdrop-blur-2xl border border-primary/40 flex items-center justify-center scale-75 group-hover:scale-100 transition-transform">
-                                                                        <Play className="w-7 h-7 text-white fill-white ml-1.5" />
+                                                                {/* Multiple media indicator */}
+                                                                {post.media && post.media.length > 1 && (
+                                                                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-md px-1.5 py-0.5">
+                                                                        <span className="text-[10px] text-white font-bold">+{post.media.length - 1}</span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Hover overlay with stats */}
+                                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                                                                    <div className="flex items-center gap-1.5 text-white">
+                                                                        <Heart className="w-4 h-4 fill-white" />
+                                                                        <span className="text-sm font-bold">{post.likesCount || 0}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 text-white">
+                                                                        <MessageCircle className="w-4 h-4 fill-white" />
+                                                                        <span className="text-sm font-bold">{post.commentsCount || 0}</span>
                                                                     </div>
                                                                 </div>
                                                             </motion.div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </motion.div>
-                                        </TabsContent>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    </TabsContent>
 
-                                        <TabsContent value="likes" key="likes" className="mt-0 outline-none">
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                            >
-                                                {!isOwnProfile ? (
-                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
-                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                            <Heart className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
-                                                        </div>
-                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">Privacy Protected</h3>
-                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
-                                                            This user's liked posts are private.
-                                                        </p>
+                                    <TabsContent value="shorts" className="mt-0 outline-none">
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                        >
+                                            {loadingShorts ? (
+                                                <div className="flex justify-center py-20">
+                                                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                                </div>
+                                            ) : userShorts.length === 0 ? (
+                                                <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                    <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                        <Video className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
                                                     </div>
-                                                ) : loadingLikedPosts ? (
-                                                    <div className="flex justify-center py-20">
-                                                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                                                    </div>
-                                                ) : likedPosts.length === 0 ? (
-                                                    <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
-                                                        <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
-                                                            <Heart className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
-                                                        </div>
-                                                        <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No liked posts yet</h3>
-                                                        <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
-                                                            Posts you like will appear here!
-                                                        </p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                                                        {likedPosts.map((post, index) => {
-                                                            const hasMedia = post.media && post.media.length > 0;
-                                                            const firstMedia = hasMedia ? post.media![0] : null;
-                                                            const isVideo = firstMedia?.type === 'video';
+                                                    <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No shorts</h3>
+                                                    <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                        {isOwnProfile ? "Post your first short to get started!" : "No video shorts available here."}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                                                    {userShorts.map((short: any, index: number) => (
+                                                        <motion.div
+                                                            key={short._id}
+                                                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                                            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                                                            viewport={{ once: true }}
+                                                            transition={{ delay: index * 0.05 }}
+                                                            onClick={() => navigate({ to: '/app/shorts', search: { id: short._id } })}
+                                                            className="aspect-[9/16] relative rounded-[2.5rem] overflow-hidden bg-slate-900 border border-white/10 cursor-pointer group shadow-2xl"
+                                                        >
+                                                            {short.thumbnailUrl ? (
+                                                                <img
+                                                                    src={short.thumbnailUrl}
+                                                                    alt={short.caption}
+                                                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-gradient-to-br from-[#0f172a] to-[#020617] flex items-center justify-center">
+                                                                    <Video className="w-10 h-10 text-primary/10" />
+                                                                </div>
+                                                            )}
 
-                                                            return (
-                                                                <motion.div
-                                                                    key={post._id}
-                                                                    initial={{ opacity: 0, scale: 0.9 }}
-                                                                    whileInView={{ opacity: 1, scale: 1 }}
-                                                                    viewport={{ once: true }}
-                                                                    transition={{ delay: index * 0.03 }}
-                                                                    onClick={() => {
-                                                                        if (firstMedia && firstMedia.url) {
-                                                                            setPreviewMedia({
-                                                                                url: firstMedia.url,
-                                                                                type: isVideo ? 'video' : 'image',
-                                                                                likesCount: post.likesCount,
-                                                                                commentsCount: post.commentsCount
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
-                                                                >
-                                                                    {hasMedia ? (
-                                                                        isVideo ? (
-                                                                            <video
-                                                                                src={firstMedia!.url}
-                                                                                className="w-full h-full object-cover"
-                                                                                muted
-                                                                            />
-                                                                        ) : (
-                                                                            <img
-                                                                                src={firstMedia!.url}
-                                                                                alt=""
-                                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                                            />
-                                                                        )
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-70 group-hover:opacity-60 transition-opacity" />
+
+                                                            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between z-20">
+                                                                <div className="flex items-center gap-2 bg-black/50 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/10">
+                                                                    <Play className="w-3.5 h-3.5 text-white fill-white" />
+                                                                    <span className="text-[11px] font-bold text-white tabular-nums">
+                                                                        {short.viewsCount > 1000 ? (short.viewsCount / 1000).toFixed(1) + 'K' : short.viewsCount}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 bg-black/50 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-white/10">
+                                                                    <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                                                                    <span className="text-[11px] font-bold text-white tabular-nums">
+                                                                        {short.likesCount > 1000 ? (short.likesCount / 1000).toFixed(1) + 'K' : short.likesCount}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                                                <div className="w-16 h-16 rounded-full bg-primary/20 backdrop-blur-2xl border border-primary/40 flex items-center justify-center scale-75 group-hover:scale-100 transition-transform">
+                                                                    <Play className="w-7 h-7 text-white fill-white ml-1.5" />
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    </TabsContent>
+
+                                    <TabsContent value="likes" className="mt-0 outline-none">
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                        >
+                                            {!isOwnProfile ? (
+                                                <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                    <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                        <Heart className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
+                                                    </div>
+                                                    <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">Privacy Protected</h3>
+                                                    <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                        This user's liked posts are private.
+                                                    </p>
+                                                </div>
+                                            ) : loadingLikedPosts ? (
+                                                <div className="flex justify-center py-20">
+                                                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                                </div>
+                                            ) : likedPosts.length === 0 ? (
+                                                <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-10 sm:p-24 text-center">
+                                                    <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2rem] bg-white/5 flex items-center justify-center border border-white/10">
+                                                        <Heart className="w-7 h-7 sm:w-10 sm:h-10 text-slate-600" />
+                                                    </div>
+                                                    <h3 className="font-bold text-lg sm:text-2xl text-white mb-2 sm:mb-3 tracking-tight">No liked posts yet</h3>
+                                                    <p className="text-slate-400 text-xs sm:text-sm max-w-[280px] mx-auto leading-relaxed">
+                                                        Posts you like will appear here!
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                                                    {likedPosts.map((post, index) => {
+                                                        const hasMedia = post.media && post.media.length > 0;
+                                                        const firstMedia = hasMedia ? post.media![0] : null;
+                                                        const isVideo = firstMedia?.type === 'video';
+
+                                                        return (
+                                                            <motion.div
+                                                                key={post._id}
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                whileInView={{ opacity: 1, scale: 1 }}
+                                                                viewport={{ once: true }}
+                                                                transition={{ delay: index * 0.03 }}
+                                                                onClick={() => {
+                                                                    if (firstMedia && firstMedia.url) {
+                                                                        setPreviewMedia({
+                                                                            url: firstMedia.url,
+                                                                            type: isVideo ? 'video' : 'image',
+                                                                            likesCount: post.likesCount,
+                                                                            commentsCount: post.commentsCount
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="aspect-square relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 border border-white/5 cursor-pointer group"
+                                                            >
+                                                                {hasMedia ? (
+                                                                    isVideo ? (
+                                                                        <video
+                                                                            src={firstMedia!.url}
+                                                                            className="w-full h-full object-cover"
+                                                                            muted
+                                                                        />
                                                                     ) : (
-                                                                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-3">
-                                                                            <p className="text-xs text-slate-400 line-clamp-4 text-center">
-                                                                                {post.content?.slice(0, 100) || 'Text post'}
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {isVideo && (
-                                                                        <div className="absolute top-2 right-2">
-                                                                            <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
-                                                                        </div>
-                                                                    )}
-
-                                                                    {post.media && post.media.length > 1 && (
-                                                                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-md px-1.5 py-0.5">
-                                                                            <span className="text-[10px] text-white font-bold">+{post.media.length - 1}</span>
-                                                                        </div>
-                                                                    )}
-
-                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
-                                                                        <div className="flex items-center gap-1.5 text-white">
-                                                                            <Heart className="w-4 h-4 fill-white" />
-                                                                            <span className="text-sm font-bold">{post.likesCount || 0}</span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1.5 text-white">
-                                                                            <MessageCircle className="w-4 h-4 fill-white" />
-                                                                            <span className="text-sm font-bold">{post.commentsCount || 0}</span>
-                                                                        </div>
+                                                                        <img
+                                                                            src={firstMedia!.url}
+                                                                            alt=""
+                                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                        />
+                                                                    )
+                                                                ) : (
+                                                                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-3">
+                                                                        <p className="text-xs text-slate-400 line-clamp-4 text-center">
+                                                                            {post.content?.slice(0, 100) || 'Text post'}
+                                                                        </p>
                                                                     </div>
-                                                                </motion.div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </motion.div>
-                                        </TabsContent>
-                                    </AnimatePresence>
+                                                                )}
+
+                                                                {isVideo && (
+                                                                    <div className="absolute top-2 right-2">
+                                                                        <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
+                                                                    </div>
+                                                                )}
+
+                                                                {post.media && post.media.length > 1 && (
+                                                                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-md px-1.5 py-0.5">
+                                                                        <span className="text-[10px] text-white font-bold">+{post.media.length - 1}</span>
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                                                                    <div className="flex items-center gap-1.5 text-white">
+                                                                        <Heart className="w-4 h-4 fill-white" />
+                                                                        <span className="text-sm font-bold">{post.likesCount || 0}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 text-white">
+                                                                        <MessageCircle className="w-4 h-4 fill-white" />
+                                                                        <span className="text-sm font-bold">{post.commentsCount || 0}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    </TabsContent>
                                 </Tabs>
                             )}
                         </div>

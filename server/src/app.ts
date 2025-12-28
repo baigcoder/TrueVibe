@@ -1,6 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { config } from './config/index.js';
 import { corsConfig, securityHeaders, loggingConfig } from './config/security.config.js';
@@ -65,6 +66,19 @@ export const createApp = (): Application => {
         res.setHeader('X-XSS-Protection', securityHeaders.xssProtection);
         next();
     });
+
+    // Response compression for better performance
+    app.use(compression({
+        level: 6, // Balance between compression ratio and CPU usage
+        threshold: 1024, // Only compress responses > 1KB
+        filter: (req, res) => {
+            // Don't compress server-sent events
+            if (req.headers['accept'] === 'text/event-stream') {
+                return false;
+            }
+            return compression.filter(req, res);
+        },
+    }));
 
     // CORS - strict origin validation
     app.use(cors({

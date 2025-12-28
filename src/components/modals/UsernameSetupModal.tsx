@@ -21,6 +21,7 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
     const [username, setUsername] = useState("");
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
     const [isChecking, setIsChecking] = useState(false);
+    const [isDismissed, setIsDismissed] = useState(false);
 
     const debouncedUsername = useDebounce(username, 500);
     const updateProfile = useUpdateProfile();
@@ -77,10 +78,18 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
             // Store the custom handle to prevent modal from reopening
             localStorage.setItem('customHandleSet', username);
             toast.success("Username set successfully!");
+            setIsDismissed(true);
             onComplete();
         } catch (error: any) {
             toast.error(error.message || "Failed to set username");
         }
+    };
+
+    const handleClose = () => {
+        // User clicked X or escaped - dismiss the modal
+        localStorage.setItem('usernameSetupDismissed', 'true');
+        setIsDismissed(true);
+        onComplete();
     };
 
     // Pre-populate with suggested username from email
@@ -94,14 +103,15 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
         }
     }, [open, user?.email]);
 
+    // Don't show if locally dismissed
+    const shouldShow = open && !isDismissed;
+
     return (
         <Dialog
-            open={open}
+            open={shouldShow}
             onOpenChange={(val) => {
                 if (!val) {
-                    // User clicked X or escaped - dismiss the modal
-                    localStorage.setItem('usernameSetupDismissed', 'true');
-                    onComplete();
+                    handleClose();
                 }
             }}
         >

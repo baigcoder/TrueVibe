@@ -819,60 +819,105 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
 
                         <AnimatePresence>
                             {filePreviews.length > 0 && (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 sm:mt-6 grid gap-3 sm:gap-4 justify-center items-center", filePreviews.length === 1 ? "grid-cols-1 max-w-[400px] mx-auto" : "grid-cols-2")}>
-                                    {filePreviews.map((preview, index) => (
-                                        <div key={index} className="relative aspect-video w-full rounded-2xl sm:rounded-3xl overflow-hidden group/img border border-white/10 bg-black/40 shadow-2xl">
-                                            {preview.type === 'video' ? (
-                                                <div className="relative w-full h-full bg-black">
-                                                    <video
-                                                        src={preview.url}
-                                                        className="w-full h-full object-contain"
-                                                        autoPlay
-                                                        loop
-                                                        playsInline
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <img src={preview.url} alt="" className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700" />
-                                            )}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 sm:mt-6 grid gap-3 sm:gap-4 justify-center items-center", filePreviews.length === 1 ? "grid-cols-1 max-w-[500px] mx-auto" : "grid-cols-2")}>
+                                    {filePreviews.map((preview, index) => {
+                                        const file = selectedFiles[index];
+                                        const fileSize = file ? (file.size < 1024 * 1024
+                                            ? `${(file.size / 1024).toFixed(0)} KB`
+                                            : `${(file.size / (1024 * 1024)).toFixed(1)} MB`) : '';
+                                        const fileName = file?.name?.split('.').pop()?.toUpperCase() || '';
 
-                                            {/* Upload Progress Overlay */}
-                                            {isUploading && preview.type === 'video' && (
-                                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
-                                                    <div className="relative w-16 h-16 mb-3">
-                                                        <svg className="w-full h-full -rotate-90" style={{ animationDuration: '2s' }}>
-                                                            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                                                            <circle cx="32" cy="32" r="28" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeDasharray="176" strokeDashoffset={`${176 * (1 - uploadProgress / 100)}`} className="transition-all duration-300" />
-                                                        </svg>
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <span className="text-xs font-bold text-white">{uploadProgress}%</span>
+                                        return (
+                                            <div key={index} className="relative aspect-video w-full rounded-2xl sm:rounded-3xl overflow-hidden group/img border border-white/10 bg-black/40 shadow-2xl">
+                                                {preview.type === 'video' ? (
+                                                    <div className="relative w-full h-full bg-black">
+                                                        <video
+                                                            src={preview.url}
+                                                            className="w-full h-full object-contain"
+                                                            autoPlay
+                                                            loop
+                                                            muted
+                                                            playsInline
+                                                            onLoadedMetadata={(e) => {
+                                                                // Store duration in dataset for display
+                                                                const video = e.currentTarget;
+                                                                const duration = video.duration;
+                                                                const mins = Math.floor(duration / 60);
+                                                                const secs = Math.floor(duration % 60);
+                                                                video.dataset.duration = `${mins}:${secs.toString().padStart(2, '0')}`;
+                                                                // Trigger re-render to show badge
+                                                                e.currentTarget.dispatchEvent(new Event('durationLoaded'));
+                                                            }}
+                                                        />
+                                                        {/* Video type badge */}
+                                                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-violet-500/90 backdrop-blur-sm">
+                                                            <Video className="w-3 h-3 text-white" />
+                                                            <span className="text-[9px] font-bold text-white uppercase tracking-wider">Video</span>
+                                                        </div>
+                                                        {/* File info badges */}
+                                                        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 flex items-center justify-between">
+                                                            <span className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-[10px] font-bold text-white/90 flex items-center gap-1.5">
+                                                                <Clock className="w-3 h-3" />
+                                                                <span id={`duration-${index}`}>--:--</span>
+                                                            </span>
+                                                            <span className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-[10px] font-medium text-white/70">
+                                                                {fileSize}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <span className="text-xs font-bold text-white/80 uppercase tracking-widest">
-                                                        Uploading...
-                                                    </span>
-                                                </div>
-                                            )}
+                                                ) : (
+                                                    <>
+                                                        <img src={preview.url} alt="" className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700" />
+                                                        {/* Image file info badges */}
+                                                        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 flex items-center justify-between opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                                            <span className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-[10px] font-bold text-white uppercase">
+                                                                {fileName}
+                                                            </span>
+                                                            <span className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-[10px] font-medium text-white/70">
+                                                                {fileSize}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity pointer-events-none" />
 
-                                            {/* Edit Button - Only for images */}
-                                            {
-                                                preview.type === 'image' && (
-                                                    <button
-                                                        onClick={() => setEditingImageIndex(index)}
-                                                        className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-primary/90 backdrop-blur-xl flex items-center gap-1.5 sm:gap-2 shadow-lg hover:bg-primary hover:scale-105 active:scale-95 transition-all text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-white/20 z-10"
-                                                    >
-                                                        <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                                                        <span>Edit</span>
-                                                    </button>
-                                                )
-                                            }
+                                                {/* Upload Progress Overlay */}
+                                                {isUploading && preview.type === 'video' && (
+                                                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+                                                        <div className="relative w-16 h-16 mb-3">
+                                                            <svg className="w-full h-full -rotate-90" style={{ animationDuration: '2s' }}>
+                                                                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                                                                <circle cx="32" cy="32" r="28" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeDasharray="176" strokeDashoffset={`${176 * (1 - uploadProgress / 100)}`} className="transition-all duration-300" />
+                                                            </svg>
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <span className="text-xs font-bold text-white">{uploadProgress}%</span>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-white/80 uppercase tracking-widest">
+                                                            Uploading...
+                                                        </span>
+                                                    </div>
+                                                )}
 
-                                            <button onClick={() => removeFile(index)} className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-black/60 backdrop-blur-xl flex items-center justify-center hover:bg-rose-500 transition-all border border-white/10 z-10 shadow-lg">
-                                                <X className="w-4 h-4 text-white" />
-                                            </button>
-                                        </div >
-                                    ))
+                                                {/* Edit Button - Only for images */}
+                                                {
+                                                    preview.type === 'image' && (
+                                                        <button
+                                                            onClick={() => setEditingImageIndex(index)}
+                                                            className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-primary/90 backdrop-blur-xl flex items-center gap-1.5 sm:gap-2 shadow-lg hover:bg-primary hover:scale-105 active:scale-95 transition-all text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-white/20 z-10"
+                                                        >
+                                                            <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                                            <span>Edit</span>
+                                                        </button>
+                                                    )
+                                                }
+
+                                                <button onClick={() => removeFile(index)} className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-black/60 backdrop-blur-xl flex items-center justify-center hover:bg-rose-500 transition-all border border-white/10 z-10 shadow-lg">
+                                                    <X className="w-4 h-4 text-white" />
+                                                </button>
+                                            </div >
+                                        );
+                                    })
                                     }
                                 </motion.div >
                             )}

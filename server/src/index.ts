@@ -13,6 +13,54 @@ function debugLog(...args: unknown[]): void {
     if (!isProd) console.log(...args);
 }
 
+// Validate required environment variables
+function validateEnvVars(): void {
+    const requiredVars = [
+        'MONGODB_URI',
+        'SUPABASE_JWT_SECRET',
+    ];
+
+    const optionalButRecommended = [
+        'CLOUDINARY_URL',
+        'CLOUDINARY_CLOUD_NAME',
+        'AI_SERVICE_URL',
+    ];
+
+    const missing: string[] = [];
+    const missingRecommended: string[] = [];
+
+    for (const envVar of requiredVars) {
+        if (!process.env[envVar]) {
+            missing.push(envVar);
+        }
+    }
+
+    for (const envVar of optionalButRecommended) {
+        if (!process.env[envVar]) {
+            missingRecommended.push(envVar);
+        }
+    }
+
+    if (missing.length > 0) {
+        console.error('❌ Missing required environment variables:');
+        missing.forEach(v => console.error(`   - ${v}`));
+        if (isProd) {
+            console.error('Cannot start server in production without required env vars.');
+            process.exit(1);
+        } else {
+            console.warn('⚠️ Running in development mode with missing env vars.');
+        }
+    }
+
+    if (missingRecommended.length > 0 && !isProd) {
+        debugLog('⚠️ Missing recommended environment variables:');
+        missingRecommended.forEach(v => debugLog(`   - ${v}`));
+    }
+}
+
+// Run validation
+validateEnvVars();
+
 debugLog('🔵 Server script initialized. Checking environment...');
 debugLog('   NODE_ENV:', process.env.NODE_ENV);
 debugLog('   PORT:', process.env.PORT);

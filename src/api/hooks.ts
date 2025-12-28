@@ -1050,6 +1050,46 @@ export function useCreateConversation() {
     });
 }
 
+export function useDeleteConversation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (conversationId: string) => chatApi.deleteConversation(conversationId),
+        onMutate: async (conversationId) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ['conversations'] });
+
+            // Snapshot the previous value
+            const previousConversations = queryClient.getQueryData(['conversations']);
+
+            // Optimistically remove the conversation from cache
+            queryClient.setQueryData(['conversations'], (old: any) => {
+                if (!old?.data?.conversations) return old;
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        conversations: old.data.conversations.filter(
+                            (c: any) => c._id !== conversationId
+                        ),
+                    },
+                };
+            });
+
+            return { previousConversations };
+        },
+        onError: (_, __, context) => {
+            // Rollback on error
+            if (context?.previousConversations) {
+                queryClient.setQueryData(['conversations'], context.previousConversations);
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            queryClient.invalidateQueries({ queryKey: ['messages'] });
+        },
+    });
+}
+
 // ============ Server Hooks (Discord-like) ============
 
 export function useServers() {

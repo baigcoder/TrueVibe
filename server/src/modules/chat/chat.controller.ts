@@ -435,3 +435,47 @@ export const deleteMessage = async (
         next(error);
     }
 };
+
+// Delete conversation and all its messages
+export const deleteConversation = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        // Verify access
+        const conversation = await Conversation.findById(id);
+        if (!conversation) {
+            throw new NotFoundError('Conversation');
+        }
+        if (!conversation.participants.some((p) => p.toString() === userId)) {
+            throw new ForbiddenError('Not a participant in this conversation');
+        }
+
+        // Delete all messages in this conversation
+        await Message.deleteMany({ conversationId: id });
+
+        // Delete the conversation itself
+        await Conversation.findByIdAndDelete(id);
+
+        // Notify other participants about deletion
+        for (const participantId of conversation.participants) {
+            const pId = participantId.toString();
+            if (pId !== userId) {
+                emitToUser(pId, 'conversation:deleted', {
+                    conversationId: id,
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Conversation deleted successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+};

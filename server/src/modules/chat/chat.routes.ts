@@ -19,6 +19,7 @@ router.post('/conversations/:id/messages', validate(schemas.sendMessageSchema), 
 router.put('/conversations/:id/read', chatController.markAsRead);
 router.put('/conversations/:id/messages/:messageId', chatController.updateMessage);
 router.delete('/conversations/:id/messages/:messageId', chatController.deleteMessage);
+router.delete('/conversations/:id', chatController.deleteConversation);
 
 // ============== SERVERS (Discord-like) ==============
 router.get('/servers', serverController.getServers);

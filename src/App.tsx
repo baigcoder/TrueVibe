@@ -11,6 +11,7 @@ import { VoiceRoomPanel } from "@/components/chat/VoiceRoomPanel";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
 import { NotificationManager } from "@/components/NotificationManager";
+import ErrorBoundary from "@/components/shared/ErrorBoundary";
 // Import logger to silence console in production
 import "@/lib/logger";
 
@@ -112,19 +113,20 @@ function AppContent() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RealtimeProvider>
-        <SocketProvider>
-          <AuthProvider>
-            <CallProvider>
-              <VoiceRoomProvider>
-                <AppContent />
-              </VoiceRoomProvider>
-            </CallProvider>
-          </AuthProvider>
-        </SocketProvider>
-      </RealtimeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <RealtimeProvider>
+          <SocketProvider>
+            <AuthProvider>
+              <CallProvider>
+                <VoiceRoomProvider>
+                  <AppContent />
+                </VoiceRoomProvider>
+              </CallProvider>
+            </AuthProvider>
+          </SocketProvider>
+        </RealtimeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
-
