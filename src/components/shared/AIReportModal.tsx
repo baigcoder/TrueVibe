@@ -311,9 +311,47 @@ export function AIReportModal({
                                                 {confidence}%
                                             </span>
                                         </div>
+
+                                        {/* Confidence Meter */}
+                                        <div className="mb-3 sm:mb-4">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[8px] sm:text-[10px] text-slate-500 uppercase font-black tracking-widest">Confidence Level</span>
+                                                <span className="text-[8px] sm:text-[10px] text-slate-400 uppercase font-bold">
+                                                    {confidence >= 80 ? 'Very High' : confidence >= 60 ? 'High' : confidence >= 40 ? 'Moderate' : 'Low'}
+                                                </span>
+                                            </div>
+                                            <div className="h-2 rounded-full bg-slate-800/50 overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${confidence}%` }}
+                                                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                                                    className={cn(
+                                                        "h-full rounded-full",
+                                                        report.report.verdict === 'authentic'
+                                                            ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                                                            : report.report.verdict === 'suspicious'
+                                                                ? "bg-gradient-to-r from-amber-500 to-amber-400"
+                                                                : "bg-gradient-to-r from-red-500 to-red-400"
+                                                    )}
+                                                />
+                                            </div>
+                                        </div>
+
                                         <p className="text-[11px] sm:text-[15px] text-white/80 leading-relaxed font-bold">
                                             {report.report.summary}
                                         </p>
+
+                                        {/* What This Means */}
+                                        <div className="mt-3 pt-3 border-t border-white/10">
+                                            <p className="text-[9px] sm:text-[11px] text-slate-400 italic leading-relaxed">
+                                                <span className="font-black text-slate-300 not-italic">What this means: </span>
+                                                {report.report.verdict === 'authentic'
+                                                    ? "Our AI analysis found no significant signs of manipulation. The content appears to be genuine and unaltered."
+                                                    : report.report.verdict === 'suspicious'
+                                                        ? "Some anomalies were detected that may indicate editing or manipulation. Review the detailed breakdown below."
+                                                        : "Strong indicators of digital manipulation were found. This content has likely been artificially altered or generated."}
+                                            </p>
+                                        </div>
                                     </div>
                                 </motion.div>
 

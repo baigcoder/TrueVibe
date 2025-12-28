@@ -395,8 +395,8 @@ export function TrustBadge({
                                         className="grid grid-cols-2 gap-1.5"
                                     >
                                         {[
-                                            { label: "AUTH", icon: Activity, val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
-                                            { label: "FAKE", icon: Target, val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
+                                            { label: "AUTHENTIC", icon: Activity, val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
+                                            { label: "RISK", icon: Target, val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
                                         ].map((gauge, i) => (
                                             <div
                                                 key={i}
@@ -443,27 +443,27 @@ export function TrustBadge({
                                     >
                                         {[
                                             analysisDetails?.facesDetected !== undefined && analysisDetails.facesDetected > 0
-                                                ? { label: "Faces", val: analysisDetails.facesDetected.toString(), color: "text-purple-400" }
+                                                ? { label: "Faces Analyzed", val: analysisDetails.facesDetected.toString(), color: "text-purple-400", hint: "Number of faces scanned" }
                                                 : null,
                                             analysisDetails?.avgFaceScore !== undefined && analysisDetails.avgFaceScore > 0
-                                                ? { label: "Face Score", val: `${Math.round(analysisDetails.avgFaceScore * 100)}%`, color: analysisDetails.avgFaceScore > 0.5 ? "text-rose-400" : "text-emerald-400" }
+                                                ? { label: "Face Manip.", val: `${Math.round(analysisDetails.avgFaceScore * 100)}%`, color: analysisDetails.avgFaceScore > 0.5 ? "text-rose-400" : "text-emerald-400", hint: "Face manipulation risk" }
                                                 : null,
                                             analysisDetails?.avgFftScore !== undefined && analysisDetails.avgFftScore > 0.01
-                                                ? { label: "FFT Score", val: `${Math.round(analysisDetails.avgFftScore * 100)}%`, color: analysisDetails.avgFftScore > 0.5 ? "text-rose-400" : "text-emerald-400" }
+                                                ? { label: "Frequency", val: `${Math.round(analysisDetails.avgFftScore * 100)}%`, color: analysisDetails.avgFftScore > 0.5 ? "text-rose-400" : "text-emerald-400", hint: "FFT artifact detection" }
                                                 : null,
                                             analysisDetails?.avgEyeScore !== undefined && analysisDetails.avgEyeScore > 0.01
-                                                ? { label: "Eye Score", val: `${Math.round(analysisDetails.avgEyeScore * 100)}%`, color: analysisDetails.avgEyeScore > 0.5 ? "text-rose-400" : "text-emerald-400" }
+                                                ? { label: "Eye Analysis", val: `${Math.round(analysisDetails.avgEyeScore * 100)}%`, color: analysisDetails.avgEyeScore > 0.5 ? "text-rose-400" : "text-emerald-400", hint: "Eye region anomalies" }
                                                 : null,
                                             analysisDetails?.temporalBoost !== undefined && analysisDetails.temporalBoost !== 0
-                                                ? { label: "Temporal", val: `${analysisDetails.temporalBoost > 0 ? '+' : ''}${Math.round(analysisDetails.temporalBoost * 100)}%`, color: "text-amber-400" }
+                                                ? { label: "Temporal", val: `${analysisDetails.temporalBoost > 0 ? '+' : ''}${Math.round(analysisDetails.temporalBoost * 100)}%`, color: "text-amber-400", hint: "Frame consistency" }
                                                 : null,
                                             analysisDetails?.framesAnalyzed !== undefined && analysisDetails.framesAnalyzed > 0
-                                                ? { label: "Frames", val: analysisDetails.framesAnalyzed.toString(), color: "text-sky-400" }
+                                                ? { label: "Frames", val: analysisDetails.framesAnalyzed.toString(), color: "text-sky-400", hint: "Video frames analyzed" }
                                                 : null,
                                             analysisDetails?.processingTime !== undefined && analysisDetails.processingTime > 0
-                                                ? { label: "Time", val: `${(analysisDetails.processingTime / 1000).toFixed(1)}s`, color: "text-white/70" }
+                                                ? { label: "Time", val: `${(analysisDetails.processingTime / 1000).toFixed(1)}s`, color: "text-white/70", hint: "Processing duration" }
                                                 : null
-                                        ].filter((m): m is { label: string; val: string; color: string } => m !== null).map((metric, i) => (
+                                        ].filter((m): m is { label: string; val: string; color: string; hint: string } => m !== null).map((metric, i) => (
                                             <motion.div
                                                 key={i}
                                                 variants={{
@@ -471,6 +471,7 @@ export function TrustBadge({
                                                     visible: { opacity: 1, x: 0 }
                                                 }}
                                                 className="flex justify-between items-center text-[8px] py-0.5 border-b border-white/[0.03]"
+                                                title={metric.hint}
                                             >
                                                 <span className="text-slate-500 font-bold uppercase tracking-tighter truncate mr-1">{metric.label}</span>
                                                 <span className={cn("font-black tabular-nums text-[9px]", metric.color)}>
