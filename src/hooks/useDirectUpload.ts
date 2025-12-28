@@ -11,7 +11,7 @@ import { useState, useCallback } from 'react';
 import imageCompression from 'browser-image-compression';
 
 // Cloudinary configuration - using unsigned preset for direct upload
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dbqmh24nd';
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dkluke6zh';
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'truevibe_unsigned';
 
 interface UploadResult {

@@ -34,6 +34,7 @@ import groupCallRoutes from './modules/calls/groupCall.routes.js';
 import audioRoutes from './modules/shorts/audio.routes.js';
 import livestreamRoutes from './modules/streaming/livestream.routes.js';
 import encryptionRoutes from './modules/encryption/encryption.routes.js';
+import projectRoutes from './modules/projects/project.routes.js';
 
 export const createApp = (): Application => {
     const app = express();
@@ -153,6 +154,7 @@ export const createApp = (): Application => {
     app.use('/api/v1/audio', audioRoutes);
     app.use('/api/v1/livestream', livestreamRoutes);
     app.use('/api/v1/encryption', encryptionRoutes);
+    app.use('/api/v1/projects', projectRoutes);
 
     // Error handling
     app.use(notFoundHandler);

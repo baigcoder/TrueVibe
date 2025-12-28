@@ -474,3 +474,27 @@ export const encryptionApi = {
     getSession: (conversationId: string) => api.get(`/encryption/session/${conversationId}`),
     getStatus: (userId: string) => api.get(`/encryption/status/${userId}`),
 };
+
+// Projects API
+export const projectsApi = {
+    create: (data: {
+        title: string;
+        description: string;
+        shortDescription?: string;
+        thumbnail: { url: string; publicId?: string; width?: number; height?: number };
+        screenshots?: Array<{ url: string; publicId?: string; width?: number; height?: number }>;
+        videos?: Array<{ url: string; publicId?: string; thumbnailUrl?: string; duration?: number }>;
+        links?: Array<{ label: string; url: string; icon?: string }>;
+        techStack?: string[];
+        tags?: string[];
+        category?: string;
+        status?: 'draft' | 'published' | 'archived';
+        featured?: boolean;
+    }) => api.post('/projects', data),
+    getAll: (params?: { status?: string; featured?: string; category?: string; limit?: string; page?: string }) =>
+        api.get('/projects', params),
+    getById: (id: string) => api.get(`/projects/${id}`),
+    update: (id: string, data: Record<string, unknown>) => api.put(`/projects/${id}`, data),
+    delete: (id: string) => api.delete(`/projects/${id}`),
+    reorder: (projectIds: string[]) => api.post('/projects/reorder', { projectIds }),
+};

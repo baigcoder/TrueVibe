@@ -4,15 +4,22 @@
 
 **Authentic Social Media with AI-Powered Trust Scores**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/baigcoder/TrueVibe)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/baigcoder/TrueVibe/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/baigcoder/TrueVibe/ci.yml?label=CI)](https://github.com/baigcoder/TrueVibe/actions)
 [![Live Demo](https://img.shields.io/badge/demo-live-success.svg)](https://true-vibe.vercel.app/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Stars](https://img.shields.io/github/stars/baigcoder/TrueVibe?style=social)](https://github.com/baigcoder/TrueVibe/stargazers)
+
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7+-47A248?logo=mongodb)](https://www.mongodb.com/)
 
-**[🚀 Live Demo](https://true-vibe.vercel.app/)** • **[📖 Documentation](#documentation)** • **[🤝 Contributing](#contributing)**
+**[🚀 Live Demo](https://true-vibe.vercel.app/)** • **[📖 Documentation](https://github.com/baigcoder/TrueVibe/wiki)** • **[🤝 Contributing](CONTRIBUTING.md)** • **[📋 Changelog](CHANGELOG.md)**
 
 </div>
+
 
 ---
 
