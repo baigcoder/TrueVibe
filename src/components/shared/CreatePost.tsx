@@ -53,7 +53,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
     const videoInputRef = useRef<HTMLInputElement>(null);
     const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null);
     const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null);
-    const [videoEditSettings, setVideoEditSettings] = useState<VideoEditSettings | null>(null);
+    const [_videoEditSettings, setVideoEditSettings] = useState<VideoEditSettings | null>(null);
     const [showPollCreator, setShowPollCreator] = useState(false);
     const [pollData, setPollData] = useState<{ options: { text: string }[]; expiresIn: number; allowMultiple: boolean } | null>(null);
     const [showScheduler, setShowScheduler] = useState(false);
