@@ -6,7 +6,8 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, Image, Video, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { useDirectUpload, UploadResult } from '@/hooks/useDirectUpload';
+import { useDirectUpload } from '@/hooks/useDirectUpload';
+import type { UploadResult } from '@/hooks/useDirectUpload';
 import { cn } from '@/lib/utils';
 import styles from './MediaUploader.module.css';
 
@@ -53,7 +54,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
-    const { uploadSingle, isUploading, progress } = useDirectUpload({
+    const { uploadSingle, progress } = useDirectUpload({
         folder,
         maxSizeMB,
         maxWidthOrHeight: 2048,
@@ -85,9 +86,9 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             progress: 0,
         }));
 
-        // Update state with pending files
-        const newValue = multiple ? [...value, ...pendingFiles] : pendingFiles;
-        onChange(newValue);
+        // Keep track of all files including uploads in progress
+        let currentFiles = multiple ? [...value, ...pendingFiles] : pendingFiles;
+        onChange(currentFiles);
 
         // Upload each file
         for (const pendingFile of pendingFiles) {
@@ -95,44 +96,41 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
 
             try {
                 // Update to uploading status
-                onChange((prev) =>
-                    prev.map((f) =>
-                        f.id === pendingFile.id
-                            ? { ...f, status: 'uploading' as const }
-                            : f
-                    )
+                currentFiles = currentFiles.map((f) =>
+                    f.id === pendingFile.id
+                        ? { ...f, status: 'uploading' as const }
+                        : f
                 );
+                onChange(currentFiles);
 
                 // Upload to Cloudinary
                 const result: UploadResult = await uploadSingle(pendingFile.file);
 
                 // Update with final URL
-                onChange((prev) =>
-                    prev.map((f) =>
-                        f.id === pendingFile.id
-                            ? {
-                                ...f,
-                                url: result.secureUrl,
-                                publicId: result.publicId,
-                                width: result.width,
-                                height: result.height,
-                                duration: result.duration,
-                                thumbnailUrl: result.thumbnailUrl,
-                                status: 'done' as const,
-                                progress: 100,
-                            }
-                            : f
-                    )
+                currentFiles = currentFiles.map((f) =>
+                    f.id === pendingFile.id
+                        ? {
+                            ...f,
+                            url: result.secureUrl,
+                            publicId: result.publicId,
+                            width: result.width,
+                            height: result.height,
+                            duration: result.duration,
+                            thumbnailUrl: result.thumbnailUrl,
+                            status: 'done' as const,
+                            progress: 100,
+                        }
+                        : f
                 );
+                onChange(currentFiles);
             } catch (error) {
                 console.error('Upload failed:', error);
-                onChange((prev) =>
-                    prev.map((f) =>
-                        f.id === pendingFile.id
-                            ? { ...f, status: 'error' as const, error: 'Upload failed' }
-                            : f
-                    )
+                currentFiles = currentFiles.map((f) =>
+                    f.id === pendingFile.id
+                        ? { ...f, status: 'error' as const, error: 'Upload failed' }
+                        : f
                 );
+                onChange(currentFiles);
             }
         }
     }, [value, multiple, maxFiles, onChange, uploadSingle]);

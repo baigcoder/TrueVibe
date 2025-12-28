@@ -20,15 +20,13 @@ import {
     Save,
     Loader2,
     FolderOpen,
-    ExternalLink,
-    Github,
-    Globe,
     Tag,
     Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import MediaUploader, { MediaFile } from '@/components/admin/MediaUploader';
+import MediaUploader from '@/components/admin/MediaUploader';
+import type { MediaFile } from '@/components/admin/MediaUploader';
 import styles from './AdminProjectsPage.module.css';
 
 interface Project {

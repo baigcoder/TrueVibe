@@ -27,8 +27,10 @@ import { Route as AppFeedRouteImport } from './routes/app/feed'
 import { Route as AppChatRouteImport } from './routes/app/chat'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
 import { Route as AppAdminRouteImport } from './routes/app/admin'
+import { Route as AppProjectsIdRouteImport } from './routes/app/projects/$id'
 import { Route as AppProfileMeRouteImport } from './routes/app/profile/me'
 import { Route as AppProfileIdRouteImport } from './routes/app/profile/$id'
+import { Route as AppAdminProjectsRouteImport } from './routes/app/admin/projects'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -120,6 +122,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjectsIdRoute = AppProjectsIdRouteImport.update({
+  id: '/projects/$id',
+  path: '/projects/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileMeRoute = AppProfileMeRouteImport.update({
   id: '/profile/me',
   path: '/profile/me',
@@ -130,6 +137,11 @@ const AppProfileIdRoute = AppProfileIdRouteImport.update({
   path: '/profile/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminProjectsRoute = AppAdminProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,7 +150,7 @@ export interface FileRoutesByFullPath {
   '/modules': typeof ModulesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/app/admin': typeof AppAdminRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
   '/app/feed': typeof AppFeedRoute
@@ -150,8 +162,10 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/app/admin/projects': typeof AppAdminProjectsRoute
   '/app/profile/$id': typeof AppProfileIdRoute
   '/app/profile/me': typeof AppProfileMeRoute
+  '/app/projects/$id': typeof AppProjectsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -160,7 +174,7 @@ export interface FileRoutesByTo {
   '/modules': typeof ModulesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/app/admin': typeof AppAdminRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
   '/app/feed': typeof AppFeedRoute
@@ -172,8 +186,10 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/app/admin/projects': typeof AppAdminProjectsRoute
   '/app/profile/$id': typeof AppProfileIdRoute
   '/app/profile/me': typeof AppProfileMeRoute
+  '/app/projects/$id': typeof AppProjectsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -183,7 +199,7 @@ export interface FileRoutesById {
   '/modules': typeof ModulesRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
-  '/app/admin': typeof AppAdminRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/chat': typeof AppChatRoute
   '/app/feed': typeof AppFeedRoute
@@ -195,8 +211,10 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/app/admin/projects': typeof AppAdminProjectsRoute
   '/app/profile/$id': typeof AppProfileIdRoute
   '/app/profile/me': typeof AppProfileMeRoute
+  '/app/projects/$id': typeof AppProjectsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -219,8 +237,10 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/app/admin/projects'
     | '/app/profile/$id'
     | '/app/profile/me'
+    | '/app/projects/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -241,8 +261,10 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/app/admin/projects'
     | '/app/profile/$id'
     | '/app/profile/me'
+    | '/app/projects/$id'
   id:
     | '__root__'
     | '/'
@@ -263,8 +285,10 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/reset-password'
     | '/auth/signup'
+    | '/app/admin/projects'
     | '/app/profile/$id'
     | '/app/profile/me'
+    | '/app/projects/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -404,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/projects/$id': {
+      id: '/app/projects/$id'
+      path: '/projects/$id'
+      fullPath: '/app/projects/$id'
+      preLoaderRoute: typeof AppProjectsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profile/me': {
       id: '/app/profile/me'
       path: '/profile/me'
@@ -418,11 +449,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/projects': {
+      id: '/app/admin/projects'
+      path: '/projects'
+      fullPath: '/app/admin/projects'
+      preLoaderRoute: typeof AppAdminProjectsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminProjectsRoute: typeof AppAdminProjectsRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminProjectsRoute: AppAdminProjectsRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteChildren {
-  AppAdminRoute: typeof AppAdminRoute
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppChatRoute: typeof AppChatRoute
   AppFeedRoute: typeof AppFeedRoute
@@ -432,10 +482,11 @@ interface AppRouteChildren {
   AppShortsRoute: typeof AppShortsRoute
   AppProfileIdRoute: typeof AppProfileIdRoute
   AppProfileMeRoute: typeof AppProfileMeRoute
+  AppProjectsIdRoute: typeof AppProjectsIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAdminRoute: AppAdminRoute,
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppChatRoute: AppChatRoute,
   AppFeedRoute: AppFeedRoute,
@@ -445,6 +496,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppShortsRoute: AppShortsRoute,
   AppProfileIdRoute: AppProfileIdRoute,
   AppProfileMeRoute: AppProfileMeRoute,
+  AppProjectsIdRoute: AppProjectsIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
