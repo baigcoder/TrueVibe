@@ -151,29 +151,26 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
     }, [folder, onProgress]);
 
     /**
-     * Main upload function - compress + direct upload
+     * Main upload function - compress + direct upload (PARALLEL for speed!)
      */
     const upload = useCallback(async (files: File[]): Promise<UploadResult[]> => {
         setIsUploading(true);
         setProgress(0);
         setUploads([]);
 
-        const results: UploadResult[] = [];
-
         try {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const preview = URL.createObjectURL(file);
+            // Initialize upload states for all files
+            const initialUploads = files.map(file => ({
+                file,
+                progress: 0,
+                status: 'compressing' as const,
+                preview: URL.createObjectURL(file),
+            }));
+            setUploads(initialUploads);
 
-                // Update upload state
-                setUploads(prev => [...prev, {
-                    file,
-                    progress: 0,
-                    status: 'compressing',
-                    preview,
-                }]);
-
-                // Step 1: Compress (for images)
+            // Process all files in parallel for maximum speed
+            const uploadPromises = files.map(async (file, i) => {
+                // Step 1: Compress (for images only)
                 const processedFile = file.type.startsWith('image/')
                     ? await compressImage(file)
                     : file;
@@ -185,11 +182,16 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
 
                 // Step 2: Direct upload to Cloudinary
                 const result = await uploadDirect(processedFile, (percent) => {
-                    const overallProgress = ((i * 100) + percent) / files.length;
-                    setProgress(Math.round(overallProgress));
-                    setUploads(prev => prev.map((u, idx) =>
-                        idx === i ? { ...u, progress: percent } : u
-                    ));
+                    // Update individual file progress
+                    setUploads(prev => {
+                        const updated = prev.map((u, idx) =>
+                            idx === i ? { ...u, progress: percent } : u
+                        );
+                        // Calculate overall progress
+                        const totalProgress = updated.reduce((sum, u) => sum + u.progress, 0) / files.length;
+                        setProgress(Math.round(totalProgress));
+                        return updated;
+                    });
                 });
 
                 // Mark as done
@@ -197,10 +199,12 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
                     idx === i ? { ...u, status: 'done' as const, result } : u
                 ));
 
-                results.push(result);
                 onComplete?.(result);
-            }
+                return result;
+            });
 
+            // Wait for all uploads to complete in parallel
+            const results = await Promise.all(uploadPromises);
             return results;
         } catch (err) {
             const error = err as Error;
