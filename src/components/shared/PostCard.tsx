@@ -238,10 +238,20 @@ export function PostCard({ post }: PostCardProps) {
     // Check if analysis is complete by looking at aiAnalysis data presence
     const hasCompletedAnalysis = post.aiAnalysis !== undefined && post.aiAnalysis !== null;
     const canGenerateReport = hasCompletedAnalysis && normalizedTrust !== 'pending';
-    const { report, isLoading: isLoadingReport, isGenerating, error: reportError, generateReport } = useAIReport(
+    const { report, isLoading: isLoadingReport, isGenerating, error: reportError, generateReport, hasReport } = useAIReport(
         postId,
         canGenerateReport
     );
+
+    // Auto-generate report when analysis is complete and no report exists
+    useEffect(() => {
+        if (canGenerateReport && !hasReport && !isLoadingReport && !isGenerating) {
+            // Auto-generate report silently in background
+            generateReport().catch(() => {
+                // Silently fail - user can still manually generate
+            });
+        }
+    }, [canGenerateReport, hasReport, isLoadingReport, isGenerating, generateReport]);
 
     const handleGenerateReport = async () => {
         setShowReportModal(true);
@@ -513,7 +523,7 @@ export function PostCard({ post }: PostCardProps) {
                             <img
                                 src={postImage}
                                 alt="Post content"
-                                className="w-full h-auto object-cover max-h-[500px] transition-all duration-1000 group-hover/img:scale-105"
+                                className="w-full h-auto object-cover max-h-[350px] transition-all duration-1000 group-hover/img:scale-105"
                                 loading="lazy"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-60 pointer-events-none" />
@@ -542,7 +552,7 @@ export function PostCard({ post }: PostCardProps) {
                                 src={postVideo}
                                 controls
                                 playsInline
-                                className="w-full h-auto max-h-[500px] bg-black"
+                                className="w-full h-auto max-h-[350px] bg-black object-contain"
                                 onClick={(e) => e.stopPropagation()}
                             />
                             {/* Video Technical Label */}

@@ -267,7 +267,7 @@ export function TrustBadge({
             {/* Details Panel - TOP OF SCREEN */}
             <AnimatePresence>
                 {showDetails && (
-                    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 px-4 pb-28 overflow-y-auto">
+                    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-12 px-4 pb-24 overflow-y-auto">
                         {/* Backdrop with Strong Blur */}
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -277,16 +277,16 @@ export function TrustBadge({
                             className="fixed inset-0 bg-black/90 backdrop-blur-2xl"
                         />
 
-                        {/* Panel - Ultra Compact */}
+                        {/* Panel - No max-height, grows naturally */}
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: -20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: -20 }}
                             transition={{ type: "spring", damping: 30, stiffness: 600 }}
-                            className="relative w-full max-w-[300px] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[60vh]"
+                            className="relative w-full max-w-[300px] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl mb-20"
                         >
-                            {/* Header - Ultra Compact & Solid */}
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950 flex-shrink-0 rounded-t-2xl">
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950 rounded-t-2xl">
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-md bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
                                         <Brain className="w-3 h-3 text-indigo-400" />
@@ -301,8 +301,8 @@ export function TrustBadge({
                                 </button>
                             </div>
 
-                            {/* Content - Scrollable */}
-                            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+                            {/* Content */}
+                            <div className="p-3 space-y-3">
                                 <div className="flex flex-col items-center space-y-3">
                                     {/* Gauges Grid - Smaller */}
                                     <div className="grid grid-cols-2 gap-2 w-full">
