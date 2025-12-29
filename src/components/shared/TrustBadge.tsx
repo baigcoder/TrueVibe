@@ -267,7 +267,7 @@ export function TrustBadge({
             {/* Details Panel - CENTERED ON SCREEN */}
             <AnimatePresence>
                 {showDetails && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pb-24 sm:pb-4 sm:py-8">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 pb-24 sm:p-4 sm:py-8">
                         {/* Backdrop with Strong Blur */}
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -283,7 +283,7 @@ export function TrustBadge({
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             transition={{ type: "spring", damping: 30, stiffness: 600 }}
-                            className="relative w-full max-w-[320px] max-h-[calc(100vh-120px)] sm:max-h-[70vh] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            className="relative w-full max-w-[320px] max-h-[calc(100vh-160px)] sm:max-h-[70vh] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
                         >
                             {/* Header - Fixed */}
                             <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950 rounded-t-2xl flex-shrink-0">
