@@ -174,7 +174,7 @@ export default function SettingsPage() {
     const handleExportData = async () => {
         toast.info('Preparing your data export...');
         try {
-            const response = await api.get('/profile/export') as { data?: any };
+            const response = await api.get('/users/me/export') as { data?: any };
             const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

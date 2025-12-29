@@ -225,6 +225,85 @@ router.patch('/me/cover', authenticate, upload.single('coverImage'), async (req,
     }
 });
 
+// Export user data
+router.get('/me/export', authenticate, async (req, res, next) => {
+    try {
+        const userId = req.user!.userId;
+
+        // Fetch all user data in parallel
+        const [profile, posts, shorts, aiReports] = await Promise.all([
+            Profile.findOne({ $or: [{ userId }, { supabaseId: userId }] })
+                .select('-__v')
+                .lean(),
+            Post.find({ author: userId })
+                .select('content media viewsCount likesCount commentsCount sharesCount trustLevel createdAt')
+                .populate('media', 'url type')
+                .lean(),
+            Short.find({ author: userId })
+                .select('caption videoUrl thumbnailUrl viewsCount likesCount commentsCount trustLevel createdAt')
+                .lean(),
+            AIReport.find({ userId })
+                .select('contentType report generatedAt')
+                .lean(),
+        ]);
+
+        // Build export data
+        const exportData = {
+            exportedAt: new Date().toISOString(),
+            profile: profile ? {
+                name: profile.name,
+                handle: profile.handle,
+                bio: profile.bio,
+                avatar: profile.avatar,
+                location: profile.location,
+                website: profile.website,
+                isPrivate: profile.isPrivate,
+                createdAt: profile.createdAt,
+            } : null,
+            statistics: {
+                totalPosts: posts.length,
+                totalShorts: shorts.length,
+                totalAIReports: aiReports.length,
+                followers: profile?.followersCount || 0,
+                following: profile?.followingCount || 0,
+            },
+            posts: posts.map(post => ({
+                content: post.content,
+                media: (post.media as any[])?.map(m => ({ url: m.url, type: m.type })) || [],
+                views: post.viewsCount || 0,
+                likes: post.likesCount || 0,
+                comments: post.commentsCount || 0,
+                shares: post.sharesCount || 0,
+                trustLevel: post.trustLevel,
+                createdAt: post.createdAt,
+            })),
+            shorts: shorts.map(short => ({
+                caption: short.caption,
+                videoUrl: short.videoUrl,
+                thumbnailUrl: short.thumbnailUrl,
+                views: short.viewsCount || 0,
+                likes: short.likesCount || 0,
+                comments: short.commentsCount || 0,
+                trustLevel: short.trustLevel,
+                createdAt: short.createdAt,
+            })),
+            aiReports: aiReports.map(report => ({
+                contentType: report.contentType || 'post',
+                verdict: report.report?.verdict,
+                confidence: report.report?.confidence,
+                generatedAt: report.generatedAt,
+            })),
+        };
+
+        res.json({
+            success: true,
+            data: exportData,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // These routes have :id wildcard, so they must come LAST
 router.get('/:id', optionalAuth, userController.getUserById);
 router.post('/:id/follow', authenticate, userController.followUser);
