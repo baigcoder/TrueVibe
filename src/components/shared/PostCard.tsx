@@ -37,6 +37,7 @@ import { useState, useEffect, useCallback } from "react";
 import { CommentSection } from "./CommentSection";
 import { Textarea } from "@/components/ui/textarea";
 import { MediaPreviewModal } from "@/components/modals/MediaPreviewModal";
+import { CustomVideoPlayer } from "./CustomVideoPlayer";
 
 // Flexible post type that works with both mock data and API responses
 export interface PostData {
@@ -538,28 +539,15 @@ export function PostCard({ post }: PostCardProps) {
                     )}
 
                     {postVideo && (
-                        <div
-                            className="rounded-[2rem] overflow-hidden mt-2 bg-black border border-white/10 relative shadow-2xl group/vid cursor-pointer"
-                            onClick={(e) => {
-                                // Don't open preview if clicking on video controls
-                                if ((e.target as HTMLElement).tagName !== 'VIDEO') {
+                        <div className="mt-2">
+                            <CustomVideoPlayer
+                                src={postVideo}
+                                maxHeight="350px"
+                                onClickExpand={() => {
                                     setPreviewMediaIndex(postImage ? 1 : 0);
                                     setShowMediaPreview(true);
-                                }
-                            }}
-                        >
-                            <video
-                                src={postVideo}
-                                controls
-                                playsInline
-                                className="w-full h-auto max-h-[350px] bg-black object-contain"
-                                onClick={(e) => e.stopPropagation()}
+                                }}
                             />
-                            {/* Video Technical Label */}
-                            <div className="absolute top-4 right-4 px-3 py-1.5 bg-rose-500/20 backdrop-blur-md rounded-full border border-rose-500/30 text-[10px] font-semibold text-rose-400 opacity-0 group-hover/vid:opacity-100 transition-opacity flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                Tap to zoom
-                            </div>
                         </div>
                     )}
 
