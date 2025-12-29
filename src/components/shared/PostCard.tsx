@@ -16,6 +16,7 @@ import {
 } from "@/api/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useAIReport } from "@/hooks/useAIReport";
+import { useDownloadPDFReport, useEmailReport } from "@/hooks/useDownloadReport";
 import { PostAnalytics } from "./PostAnalytics";
 import { TipButton } from "./TipButton";
 import {
@@ -252,6 +253,59 @@ export function PostCard({ post }: PostCardProps) {
         }
     };
 
+    // Email and Download hooks for TrustBadge
+    const { downloadPDF, isDownloading } = useDownloadPDFReport();
+    const { emailReport, isEmailing } = useEmailReport();
+
+    const handleEmailReport = () => {
+        if (!report || !postId) {
+            toast.error("Generate the report first before emailing.");
+            return;
+        }
+        emailReport({
+            postId,
+            analysisResults: {
+                fake_score: 1 - (report.report.confidence || 0.5),
+                real_score: report.report.confidence || 0.5,
+                processing_time_ms: 0,
+                model_version: report.modelUsed || 'v7'
+            },
+            reportContent: {
+                verdict: report.report.verdict,
+                confidence: report.report.confidence,
+                summary: report.report.summary,
+                detectionBreakdown: report.report.detectionBreakdown,
+                technicalDetails: report.report.technicalDetails,
+                recommendations: report.report.recommendations
+            }
+        });
+    };
+
+    const handleDownloadReport = () => {
+        if (!report || !postId) {
+            toast.error("Generate the report first before downloading.");
+            return;
+        }
+        downloadPDF({
+            postId,
+            contentType: 'feed',
+            analysisResults: {
+                fake_score: 1 - (report.report.confidence || 0.5),
+                real_score: report.report.confidence || 0.5,
+                processing_time_ms: 0,
+                model_version: report.modelUsed || 'v7'
+            },
+            reportContent: {
+                verdict: report.report.verdict,
+                confidence: report.report.confidence,
+                summary: report.report.summary,
+                detectionBreakdown: report.report.detectionBreakdown,
+                technicalDetails: report.report.technicalDetails,
+                recommendations: report.report.recommendations
+            }
+        });
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -396,6 +450,10 @@ export function PostCard({ post }: PostCardProps) {
                                 } : undefined}
                                 onGenerateReport={handleGenerateReport}
                                 isGeneratingReport={isGenerating}
+                                onEmailReport={report ? handleEmailReport : undefined}
+                                isEmailing={isEmailing}
+                                onDownloadReport={report ? handleDownloadReport : undefined}
+                                isDownloading={isDownloading}
                             />
                         </motion.div>
                     )}

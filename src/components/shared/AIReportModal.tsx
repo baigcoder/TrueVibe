@@ -6,13 +6,10 @@ import {
     AlertTriangle,
     XOctagon,
     ChevronDown,
-    Loader2,
     RefreshCw,
     Brain,
     Sparkles,
     Zap,
-    FileDown,
-    Mail,
     Eye,
     Waves,
     Palette,
@@ -21,7 +18,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AIReport, DetectionItem } from "@/hooks/useAIReport";
-import { useDownloadPDFReport, useEmailReport } from "@/hooks/useDownloadReport";
 
 interface AIReportModalProps {
     isOpen: boolean;
@@ -151,51 +147,6 @@ export function AIReportModal({
 }: AIReportModalProps) {
     const [showTechnical, setShowTechnical] = useState(false);
     const [expandedMetricIndex, setExpandedMetricIndex] = useState<number | null>(null);
-    const { downloadPDF, isDownloading } = useDownloadPDFReport();
-    const { emailReport, isEmailing } = useEmailReport();
-
-    const handleDownloadPDF = () => {
-        if (!report || !postId) return;
-        downloadPDF({
-            postId,
-            contentType,
-            analysisResults: {
-                fake_score: 1 - (report.report.confidence || 0.5),
-                real_score: report.report.confidence || 0.5,
-                processing_time_ms: 0,
-                model_version: report.modelUsed || 'v7'
-            },
-            reportContent: {
-                verdict: report.report.verdict,
-                confidence: report.report.confidence,
-                summary: report.report.summary,
-                detectionBreakdown: report.report.detectionBreakdown,
-                technicalDetails: report.report.technicalDetails,
-                recommendations: report.report.recommendations
-            }
-        });
-    };
-
-    const handleEmailReport = () => {
-        if (!report || !postId) return;
-        emailReport({
-            postId,
-            analysisResults: {
-                fake_score: 1 - (report.report.confidence || 0.5),
-                real_score: report.report.confidence || 0.5,
-                processing_time_ms: 0,
-                model_version: report.modelUsed || 'v7'
-            },
-            reportContent: {
-                verdict: report.report.verdict,
-                confidence: report.report.confidence,
-                summary: report.report.summary,
-                detectionBreakdown: report.report.detectionBreakdown,
-                technicalDetails: report.report.technicalDetails,
-                recommendations: report.report.recommendations
-            }
-        });
-    };
 
     if (!isOpen) return null;
 
@@ -204,173 +155,133 @@ export function AIReportModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6">
-                {/* Backdrop */}
+            <div className="fixed inset-0 z-[100] flex items-start justify-center pt-2 px-3 pb-20 overflow-y-auto">
+                {/* Backdrop with Strong Blur */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+                    className="fixed inset-0 bg-black/90 backdrop-blur-2xl"
                     onClick={onClose}
                 />
 
-                {/* Modal */}
+                {/* Modal - Top Positioned & Scrollable */}
                 <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={{
-                        hidden: { scale: 0.95, opacity: 0, y: 20, filter: "blur(10px)" },
-                        visible: {
-                            scale: 1, opacity: 1, y: 0, filter: "blur(0px)",
-                            transition: {
-                                type: "spring", damping: 30, stiffness: 400,
-                                staggerChildren: 0.05, delayChildren: 0.1
-                            }
-                        }
-                    }}
-                    className="relative w-full max-w-sm sm:max-w-md md:max-w-xl max-h-[90vh] bg-slate-950 border border-white/10 rounded-[2rem] sm:rounded-[3rem] shadow-[0_0_50px_-12px_rgba(0,0,0,1)] overflow-hidden flex flex-col"
+                    layout
+                    initial={{ scale: 0.95, opacity: 0, y: -10 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: -10 }}
+                    transition={{ type: "spring", damping: 30, stiffness: 500 }}
+                    className="relative w-full max-w-sm bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-visible flex flex-col my-auto"
                 >
-                    {/* Header - HUD style */}
-                    <div className="flex items-center justify-between p-3 sm:p-5 border-b border-white/5 bg-white/[0.02] backdrop-blur-xl">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 flex items-center justify-center shadow-xl shadow-indigo-500/20 group">
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                >
-                                    <Brain className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                                </motion.div>
+                    {/* Header - Ultra Compact & Solid */}
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-slate-950 flex-shrink-0 sticky top-0 z-10 rounded-t-2xl">
+                        <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 flex items-center justify-center">
+                                <Brain className="w-3.5 h-3.5 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-[12px] sm:text-lg font-black italic uppercase tracking-tight text-white leading-tight">AI Authenticity</h2>
-                                <div className="flex items-center gap-1 sm:gap-2 text-blue-400 capitalize">
-                                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                    <span className="text-[8px] sm:text-xs font-black tracking-widest uppercase">{report ? report.modelUsed : "V8.0 Engine"}</span>
+                                <h2 className="text-[10px] font-black italic uppercase tracking-tight text-white leading-tight">AI Authenticity</h2>
+                                <div className="flex items-center gap-1 text-blue-400">
+                                    <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+                                    <span className="text-[7px] font-black tracking-widest uppercase">{report ? report.modelUsed : "GROQ"}</span>
                                 </div>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 active:scale-90"
+                            className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10"
                         >
-                            <X className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                            <X className="w-3 h-3 text-slate-400" />
                         </button>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 scrollbar-hide">
-
+                    <div className="p-3 space-y-3">
                         {(isLoading || isGenerating) && (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                <RefreshCw className="w-10 h-10 text-violet-500 animate-spin" />
-                                <p className="text-[11px] sm:text-sm font-black text-slate-400 uppercase tracking-widest">Neural Syncing...</p>
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                >
+                                    <RefreshCw className="w-10 h-10 text-violet-500" />
+                                </motion.div>
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Neural Syncing...</p>
                             </div>
                         )}
 
                         {error && !isLoading && !isGenerating && (
-                            <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-                                <XOctagon className="w-10 h-10 text-rose-500" />
-                                <p className="text-sm text-slate-400 font-bold">{error.message}</p>
+                            <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
+                                <XOctagon className="w-12 h-12 text-rose-500/50" />
+                                <p className="text-sm text-slate-400 font-bold max-w-[200px]">{error.message}</p>
+                                <button
+                                    onClick={_onGenerate}
+                                    className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-wider text-white"
+                                >
+                                    Retry Analysis
+                                </button>
                             </div>
                         )}
 
                         {report && !isLoading && !isGenerating && (
-                            <motion.div
-                                initial="hidden"
-                                animate="visible"
-                                variants={{
-                                    visible: { transition: { staggerChildren: 0.05 } }
-                                }}
-                                className="space-y-4 sm:space-y-6"
-                            >
-                                {/* Verdict Card */}
-                                <motion.div
-                                    variants={{
-                                        hidden: { opacity: 0, x: -20 },
-                                        visible: { opacity: 1, x: 0 }
-                                    }}
-                                    className={cn(
-                                        "p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border bg-gradient-to-br relative overflow-hidden group/v shadow-xl",
-                                        verdictInfo?.bgGradient,
-                                        verdictInfo?.borderColor
-                                    )}
-                                >
-                                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                                        {verdictInfo && <verdictInfo.icon className="w-24 h-24 sm:w-32 sm:h-32" />}
-                                    </div>
+                            <div className="space-y-5 sm:space-y-8">
+                                {/* Compact Verdict Card */}
+                                <div className={cn(
+                                    "p-4 sm:p-6 rounded-[2rem] border bg-gradient-to-br relative overflow-hidden group/v shadow-2xl",
+                                    verdictInfo?.bgGradient,
+                                    verdictInfo?.borderColor
+                                )}>
                                     <div className="relative z-10">
-                                        <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <div className={cn("w-2 h-2 rounded-full animate-pulse", verdictInfo?.color.replace("text-", "bg-"))} />
-                                                <span className={cn("text-[10px] sm:text-sm font-black italic uppercase tracking-[0.2em]", verdictInfo?.color)}>
-                                                    Verdict: {verdictInfo?.label}
-                                                </span>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={cn("px-2.5 py-1 rounded-lg bg-black/40 border text-[9px] sm:text-[10px] font-black italic tracking-widest", verdictInfo?.color, verdictInfo?.borderColor)}>
+                                                    {verdictInfo?.label}
+                                                </div>
                                             </div>
-                                            <span className="text-2xl sm:text-4xl font-black text-white tabular-nums tracking-tighter">
-                                                {confidence}%
-                                            </span>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-2xl sm:text-4xl font-black text-white leading-none tracking-tighter">
+                                                    {confidence}%
+                                                </span>
+                                                <span className="text-[8px] sm:text-[10px] text-white/40 font-bold uppercase tracking-widest">Real Score</span>
+                                            </div>
                                         </div>
 
-                                        {/* Confidence Meter */}
-                                        <div className="mb-3 sm:mb-4">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-[8px] sm:text-[10px] text-slate-500 uppercase font-black tracking-widest">Confidence Level</span>
-                                                <span className="text-[8px] sm:text-[10px] text-slate-400 uppercase font-bold">
-                                                    {confidence >= 80 ? 'Very High' : confidence >= 60 ? 'High' : confidence >= 40 ? 'Moderate' : 'Low'}
+                                        <p className="text-xs sm:text-base text-white/90 leading-relaxed font-bold mb-4">
+                                            {report.report.summary}
+                                        </p>
+
+                                        {/* Simplified Confidence Bar */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between text-[8px] sm:text-[10px] text-white/40 font-black uppercase tracking-widest px-0.5">
+                                                <span>Confidence Level</span>
+                                                <span className="text-white/60">
+                                                    {confidence >= 80 ? 'Optimal' : confidence >= 60 ? 'Stable' : 'Uncertain'}
                                                 </span>
                                             </div>
-                                            <div className="h-2 rounded-full bg-slate-800/50 overflow-hidden">
+                                            <div className="h-1.5 rounded-full bg-black/30 overflow-hidden p-[1px]">
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${confidence}%` }}
-                                                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
                                                     className={cn(
-                                                        "h-full rounded-full",
-                                                        report.report.verdict === 'authentic'
-                                                            ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
-                                                            : report.report.verdict === 'suspicious'
-                                                                ? "bg-gradient-to-r from-amber-500 to-amber-400"
-                                                                : "bg-gradient-to-r from-red-500 to-red-400"
+                                                        "h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)]",
+                                                        report.report.verdict === 'authentic' ? "bg-emerald-400" :
+                                                            report.report.verdict === 'suspicious' ? "bg-amber-400" : "bg-red-400"
                                                     )}
                                                 />
                                             </div>
                                         </div>
-
-                                        <p className="text-[11px] sm:text-[15px] text-white/80 leading-relaxed font-bold">
-                                            {report.report.summary}
-                                        </p>
-
-                                        {/* What This Means */}
-                                        <div className="mt-3 pt-3 border-t border-white/10">
-                                            <p className="text-[9px] sm:text-[11px] text-slate-400 italic leading-relaxed">
-                                                <span className="font-black text-slate-300 not-italic">What this means: </span>
-                                                {report.report.verdict === 'authentic'
-                                                    ? "Our AI analysis found no significant signs of manipulation. The content appears to be genuine and unaltered."
-                                                    : report.report.verdict === 'suspicious'
-                                                        ? "Some anomalies were detected that may indicate editing or manipulation. Review the detailed breakdown below."
-                                                        : "Strong indicators of digital manipulation were found. This content has likely been artificially altered or generated."}
-                                            </p>
-                                        </div>
                                     </div>
-                                </motion.div>
+                                </div>
 
-                                {/* Analysis List */}
-                                <div className="space-y-3 sm:space-y-4">
-                                    <div className="flex items-center justify-between px-1">
-                                        <h3 className="text-[9px] sm:text-xs font-black uppercase tracking-[0.4em] text-slate-500">Audit Metrics breakdown</h3>
-                                        <div className="w-12 sm:w-20 h-px bg-slate-800" />
+                                {/* Metrics - 3 Column Grid on Mobile */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 px-1">
+                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-800" />
+                                        <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 whitespace-nowrap">Audit Metrics</h3>
+                                        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-800" />
                                     </div>
-                                    <motion.div
-                                        variants={{
-                                            hidden: { opacity: 0 },
-                                            visible: {
-                                                opacity: 1,
-                                                transition: { staggerChildren: 0.1 }
-                                            }
-                                        }}
-                                        className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 items-start"
-                                    >
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {(report.report.detectionBreakdown || []).map((item, i) => (
                                             <MetricCard
                                                 key={i}
@@ -379,22 +290,22 @@ export function AIReportModal({
                                                 onToggle={() => setExpandedMetricIndex(expandedMetricIndex === i ? null : i)}
                                             />
                                         ))}
-                                    </motion.div>
+                                    </div>
                                 </div>
 
-                                {/* Summary & Actions Grouped */}
-                                <div className="space-y-3 sm:space-y-4">
-                                    {/* Tech Details */}
-                                    <div className="bg-slate-800/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+                                {/* Collapsible Tools */}
+                                <div className="grid grid-cols-1 gap-4">
+                                    {/* Diagnostics */}
+                                    <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md">
                                         <button
                                             onClick={() => setShowTechnical(!showTechnical)}
-                                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+                                            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-all"
                                         >
-                                            <div className="flex items-center gap-2.5">
-                                                <Zap className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-400" />
-                                                <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-slate-400">Core Diagnostics</span>
+                                            <div className="flex items-center gap-3">
+                                                <Zap className="w-4 h-4 text-amber-400" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Core Diagnostics</span>
                                             </div>
-                                            <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", showTechnical && "rotate-180")} />
+                                            <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform", showTechnical && "rotate-180")} />
                                         </button>
                                         <AnimatePresence>
                                             {showTechnical && (
@@ -402,13 +313,13 @@ export function AIReportModal({
                                                     initial={{ height: 0 }}
                                                     animate={{ height: "auto" }}
                                                     exit={{ height: 0 }}
-                                                    className="overflow-hidden border-t border-white/5"
+                                                    className="overflow-hidden bg-black/20"
                                                 >
-                                                    <div className="p-3 sm:p-4 space-y-2">
+                                                    <div className="p-4 space-y-2.5">
                                                         {(report.report.technicalDetails || []).map((detail, i) => (
-                                                            <div key={i} className="flex justify-between items-center px-1">
-                                                                <span className="text-[10px] sm:text-xs text-slate-500 uppercase font-black">{detail.metric}</span>
-                                                                <span className="text-[10px] sm:text-xs font-mono text-white font-black">{detail.value}</span>
+                                                            <div key={i} className="flex justify-between items-center bg-white/[0.02] p-2 rounded-lg border border-white/5">
+                                                                <span className="text-[9px] text-slate-500 uppercase font-black">{detail.metric}</span>
+                                                                <span className="text-[10px] font-mono text-white font-black">{detail.value}</span>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -417,61 +328,28 @@ export function AIReportModal({
                                         </AnimatePresence>
                                     </div>
 
-                                    {/* Recommendations */}
-                                    <div className="bg-violet-500/5 border border-violet-500/10 rounded-2xl p-4 sm:p-6">
-                                        <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                                            <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-violet-400" />
-                                            <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-violet-400/70">Expert Security Tips</span>
+                                    {/* Expert Tips */}
+                                    <div className="bg-violet-600/5 border border-violet-500/10 rounded-2xl p-4 sm:p-5">
+                                        <div className="flex items-center gap-2.5 mb-3">
+                                            <Sparkles className="w-4 h-4 text-violet-400" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-violet-400/80">Expert Security Tips</span>
                                         </div>
-                                        <ul className="space-y-2 sm:space-y-3">
+                                        <div className="space-y-3">
                                             {(report.report.recommendations || []).slice(0, 3).map((rec, i) => (
-                                                <li key={i} className="flex items-start gap-3 text-[11px] sm:text-sm text-slate-400 leading-relaxed font-bold">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-2 shrink-0 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
-                                                    {rec}
-                                                </li>
+                                                <div key={i} className="flex items-start gap-3">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0" />
+                                                    <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
+                                                        {rec}
+                                                    </p>
+                                                </div>
                                             ))}
-                                        </ul>
+                                        </div>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         )}
                     </div>
 
-                    {/* Footer */}
-                    {report && postId && (
-                        <div className="p-4 sm:p-6 border-t border-white/5 bg-slate-950/80 backdrop-blur-xl relative">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
-                            <div className="flex gap-3 sm:gap-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleEmailReport}
-                                    disabled={isEmailing}
-                                    className="flex-1 py-2 sm:py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 transition-all border border-white/5"
-                                >
-                                    {isEmailing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 text-indigo-400" />}
-                                    Email
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.02, y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleDownloadPDF}
-                                    disabled={isDownloading}
-                                    className="flex-[1.5] py-2 sm:py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/20"
-                                >
-                                    {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                                    PDF Report
-                                </motion.button>
-                            </div>
-                            <div className="mt-3 flex items-center justify-center gap-2 opacity-30">
-                                <div className="h-px flex-1 bg-slate-800" />
-                                <p className="text-[8px] sm:text-[10px] text-slate-500 font-mono tracking-widest uppercase font-bold">
-                                    Verified Secure · {new Date(report.generatedAt).toLocaleTimeString()}
-                                </p>
-                                <div className="h-px flex-1 bg-slate-800" />
-                            </div>
-                        </div>
-                    )}
                 </motion.div>
             </div>
         </AnimatePresence>

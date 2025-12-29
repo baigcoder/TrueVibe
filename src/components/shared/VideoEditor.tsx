@@ -194,10 +194,10 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-2xl flex flex-col"
+                className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-2xl flex flex-col overflow-hidden"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-2 sm:py-3 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 sm:py-3 border-b border-white/10 bg-white/[0.02]">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -220,7 +220,7 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                 </div>
 
                 {/* Tab Selector */}
-                <div className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 border-b border-white/5 bg-black/20">
+                <div className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 sm:py-3 border-b border-white/5 bg-black/20">
                     <button
                         onClick={() => setActiveTab('trim')}
                         className={cn(
@@ -247,22 +247,23 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                     </button>
                 </div>
 
-                {/* Video Preview */}
-                <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+                {/* Video Preview - Constrained Height */}
+                <div className="flex-1 min-h-0 relative bg-black flex items-center justify-center overflow-hidden p-2">
                     <div
                         className={cn(
-                            "relative",
-                            selectedAspect.id === '1:1' && "aspect-square max-w-[min(100%,80vh)]",
-                            selectedAspect.id === '4:5' && "aspect-[4/5] max-w-[min(100%,64vh)]",
-                            selectedAspect.id === '16:9' && "aspect-video max-w-full",
-                            selectedAspect.id === '9:16' && "aspect-[9/16] max-h-[70vh]",
-                            selectedAspect.id === 'free' && "max-w-full max-h-[70vh]"
+                            "relative max-h-full",
+                            selectedAspect.id === '1:1' && "aspect-square",
+                            selectedAspect.id === '4:5' && "aspect-[4/5]",
+                            selectedAspect.id === '16:9' && "aspect-video",
+                            selectedAspect.id === '9:16' && "aspect-[9/16]",
+                            selectedAspect.id === 'free' && "max-w-full"
                         )}
+                        style={{ maxHeight: 'calc(100% - 1rem)' }}
                     >
                         <video
                             ref={videoRef}
                             src={videoUrl}
-                            className="w-full h-full object-contain bg-black"
+                            className="w-full h-full object-contain bg-black max-h-[40vh] sm:max-h-[50vh]"
                             playsInline
                             loop
                             onClick={togglePlay}
@@ -273,11 +274,11 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                             className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
                             onClick={togglePlay}
                         >
-                            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center">
                                 {isPlaying ? (
-                                    <Pause className="w-8 h-8 text-white" />
+                                    <Pause className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                                 ) : (
-                                    <Play className="w-8 h-8 text-white ml-1" />
+                                    <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-1" />
                                 )}
                             </div>
                         </div>
@@ -292,23 +293,23 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                     <button
                         onClick={toggleMute}
                         className={cn(
-                            "absolute bottom-4 right-4 w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all",
+                            "absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all",
                             isMuted
                                 ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                                 : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
                         )}
                     >
                         {isMuted ? (
-                            <VolumeX className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                            <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                     </button>
                 </div>
 
                 {/* Crop Tab - Aspect Ratio Selection */}
                 {activeTab === 'crop' && (
-                    <div className="flex items-center justify-center gap-2 px-4 py-3 sm:py-4 bg-black/40 border-t border-white/5">
+                    <div className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-3 sm:py-4 bg-black/40 border-t border-white/5 overflow-x-auto">
                         {ASPECT_RATIOS.map((aspect) => (
                             <button
                                 key={aspect.id}
@@ -329,7 +330,7 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
 
                 {/* Trim Tab - Timeline */}
                 {activeTab === 'trim' && (
-                    <div className="px-4 py-4 sm:py-5 bg-black/40 border-t border-white/5">
+                    <div className="flex-shrink-0 px-4 py-3 sm:py-4 bg-black/40 border-t border-white/5">
                         {/* Time Display */}
                         <div className="flex items-center justify-between mb-3 text-[10px] sm:text-xs font-mono">
                             <span className="text-emerald-400">{formatTime(startTime)}</span>
@@ -418,7 +419,7 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                 )}
 
                 {/* Footer Actions */}
-                <div className="flex gap-3 px-4 py-3 sm:px-6 sm:py-5 border-t border-white/10 bg-slate-950/80 safe-area-inset-bottom">
+                <div className="flex-shrink-0 flex gap-3 px-4 py-3 sm:px-6 sm:py-4 border-t border-white/10 bg-slate-950">
                     <Button
                         variant="outline"
                         onClick={onCancel}

@@ -732,17 +732,35 @@ export default function AnalyticsPage() {
                                         >
                                             {/* Thumbnail */}
                                             <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden bg-slate-800 flex-shrink-0">
-                                                {report.post?.thumbnail ? (
-                                                    <img src={report.post.thumbnail} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        {report.post?.mediaType === 'video' ? (
-                                                            <Video className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
-                                                        ) : (
-                                                            <ImageIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
-                                                        )}
-                                                    </div>
-                                                )}
+                                                {(() => {
+                                                    // Try to get thumbnail from various sources
+                                                    const mediaUrl = report.post?.media?.[0]?.url ||
+                                                        report.post?.media?.[0]?.optimizedUrl ||
+                                                        report.post?.thumbnail ||
+                                                        report.post?.image;
+                                                    const videoUrl = report.post?.video ||
+                                                        (report.post?.media?.[0]?.type === 'video' ? report.post?.media?.[0]?.url : null);
+
+                                                    // For video, generate thumbnail from Cloudinary
+                                                    const thumbnailUrl = videoUrl && videoUrl.includes('cloudinary')
+                                                        ? videoUrl.replace('/upload/', '/upload/so_0,f_jpg,w_100,h_100,c_fill/')
+                                                        : mediaUrl;
+
+                                                    if (thumbnailUrl) {
+                                                        return <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />;
+                                                    }
+
+                                                    // Fallback icon
+                                                    return (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            {report.post?.mediaType === 'video' ? (
+                                                                <Video className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
+                                                            ) : (
+                                                                <ImageIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
                                                 <div className={cn(
                                                     "absolute top-0.5 left-0.5 md:top-1 md:left-1 px-1 md:px-1.5 py-0.5 rounded text-[6px] md:text-[8px] font-bold uppercase",
                                                     report.post?.mediaType === 'video' ? "bg-purple-500/80 text-white" : "bg-blue-500/80 text-white"
