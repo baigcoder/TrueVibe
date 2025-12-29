@@ -6,7 +6,7 @@ import { TrustBadge } from "./TrustBadge";
 import { AIReportModal } from "./AIReportModal";
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Bookmark,
-    ShieldCheck, Sparkles, Trash2, Edit2, BarChart3
+    ShieldCheck, Trash2, Edit2, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -297,17 +297,17 @@ export function PostCard({ post }: PostCardProps) {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">@{userHandle}</span>
-                                    <span className="w-1 h-1 bg-white/10 rounded-full" />
-                                    <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-600 italic">SYSTEM_SYNC: {timestamp}</span>
+                                    <span className="text-[10px] font-medium text-slate-500">@{userHandle}</span>
+                                    <span className="text-slate-600">·</span>
+                                    <span className="text-[10px] text-slate-500">{timestamp}</span>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-1">
                                 {isOwner && (
-                                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[8px] font-black text-primary uppercase tracking-[0.2em] mr-2">
-                                        <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                                        OWNER_SIGNAL
+                                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary mr-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                        Your Post
                                     </div>
                                 )}
                                 <DropdownMenu>
@@ -472,22 +472,13 @@ export function PostCard({ post }: PostCardProps) {
                                 className="w-full h-auto max-h-[500px] bg-black"
                             />
                             {/* Video Technical Label */}
-                            <div className="absolute top-4 right-4 px-2.5 py-1 bg-rose-500/20 backdrop-blur-md rounded-lg border border-rose-500/30 text-[8px] font-black text-rose-400 uppercase tracking-widest opacity-0 group-hover/vid:opacity-100 transition-opacity">
-                                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse inline-block mr-1.5" />
-                                VIDEO_FEED_ACTIVE
+                            <div className="absolute top-4 right-4 px-3 py-1.5 bg-rose-500/20 backdrop-blur-md rounded-full border border-rose-500/30 text-[10px] font-semibold text-rose-400 opacity-0 group-hover/vid:opacity-100 transition-opacity flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                Playing
                             </div>
                         </div>
                     )}
 
-                    {/* Vibe Summary - Technical Detail */}
-                    {normalizedTrust === 'authentic' && (
-                        <div className="flex items-center gap-2 pt-2">
-                            <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 transition-all hover:bg-emerald-500/10 group/vibe">
-                                <Sparkles className="w-4 h-4 group-hover/vibe:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] italic">AUTHENTIC_SCORE: {trustScore}%</span>
-                            </div>
-                        </div>
-                    )}
                 </CardContent>
 
                 <CardFooter className="px-3 sm:px-6 py-3 sm:py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between relative z-10">
