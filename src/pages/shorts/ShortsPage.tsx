@@ -50,8 +50,13 @@ const ShortItem = ({
     currentIndex: number
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const progressRef = useRef<HTMLDivElement>(null);
     const [isPlaying, setIsPlaying] = useState(true);
     const [showHeart, setShowHeart] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [isBuffering, setIsBuffering] = useState(false);
+    const [showControls, setShowControls] = useState(false);
     const followMutation = useFollowUser();
     const unfollowMutation = useUnfollowUser();
     const recordView = useRecordShortView();
@@ -59,6 +64,14 @@ const ShortItem = ({
     const { profile } = useAuth();
     const isOwner = profile?._id === short.userId || profile?._id === short.creator?._id;
     const shouldLoad = isActive || Math.abs(index - currentIndex) <= 1;
+    const controlsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Format time as M:SS
+    const formatTime = (time: number) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    };
 
     useEffect(() => {
         if (isActive) {
@@ -79,6 +92,32 @@ const ShortItem = ({
         }
     }, [isActive, short._id]);
 
+    // Video event listeners
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+        const handleLoadedMetadata = () => setDuration(video.duration);
+        const handleWaiting = () => setIsBuffering(true);
+        const handlePlaying = () => setIsBuffering(false);
+        const handleCanPlay = () => setIsBuffering(false);
+
+        video.addEventListener('timeupdate', handleTimeUpdate);
+        video.addEventListener('loadedmetadata', handleLoadedMetadata);
+        video.addEventListener('waiting', handleWaiting);
+        video.addEventListener('playing', handlePlaying);
+        video.addEventListener('canplay', handleCanPlay);
+
+        return () => {
+            video.removeEventListener('timeupdate', handleTimeUpdate);
+            video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            video.removeEventListener('waiting', handleWaiting);
+            video.removeEventListener('playing', handlePlaying);
+            video.removeEventListener('canplay', handleCanPlay);
+        };
+    }, []);
+
     const handlePlayPause = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!videoRef.current) return;
@@ -89,6 +128,10 @@ const ShortItem = ({
             videoRef.current.play();
             setIsPlaying(true);
         }
+        // Show controls briefly
+        setShowControls(true);
+        if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
+        controlsTimeout.current = setTimeout(() => setShowControls(false), 2000);
     };
 
     const handleDoubleTap = (e: React.MouseEvent) => {
@@ -100,6 +143,19 @@ const ShortItem = ({
             setTimeout(() => setShowHeart(false), 800);
         }
     };
+
+    // Seek video via progress bar
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!videoRef.current || !progressRef.current) return;
+        e.stopPropagation();
+        const rect = progressRef.current.getBoundingClientRect();
+        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const newTime = percent * duration;
+        videoRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+    };
+
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
         <div className="h-full w-full relative bg-black flex items-center justify-center snap-start overflow-hidden">
@@ -140,6 +196,7 @@ const ShortItem = ({
 
                 {/* 2. Visual Feedback Layer - Non-interactive */}
                 <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+                    {/* Double Tap Heart */}
                     <AnimatePresence>
                         {showHeart && (
                             <motion.div
@@ -152,15 +209,51 @@ const ShortItem = ({
                             </motion.div>
                         )}
                     </AnimatePresence>
-                    {!isPlaying && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-20 h-20 rounded-full bg-black/40 backdrop-blur-2xl border border-white/10 flex items-center justify-center"
-                        >
-                            <Play className="w-8 h-8 text-white fill-white ml-1.5" />
-                        </motion.div>
-                    )}
+
+                    {/* Play/Pause Indicator */}
+                    <AnimatePresence>
+                        {!isPlaying && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5 }}
+                                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                                className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-2xl border border-white/20 flex items-center justify-center shadow-2xl"
+                            >
+                                <Play className="w-9 h-9 text-white fill-white ml-1.5" />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Buffering Indicator */}
+                    <AnimatePresence>
+                        {isBuffering && isPlaying && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute"
+                            >
+                                <div className="w-14 h-14 rounded-full border-2 border-white/20 border-t-primary animate-spin" />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Brief controls overlay on tap */}
+                    <AnimatePresence>
+                        {showControls && isPlaying && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute"
+                            >
+                                <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center">
+                                    <Play className="w-7 h-7 text-white fill-white ml-1" />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* 3. Global HUD Layer - Pointer-events: none (controls children individually) */}
@@ -292,14 +385,36 @@ const ShortItem = ({
                     </div>
                 </div>
 
-                {/* 4. Bottom Progress Bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/5 z-30 pointer-events-none">
-                    <motion.div
-                        className="h-full bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)]"
-                        initial={{ width: 0 }}
-                        animate={isActive ? { width: '100%' } : { width: 0 }}
-                        transition={{ duration: 30, ease: 'linear', repeat: Infinity }}
-                    />
+                {/* 4. Enhanced Progress Bar with Time */}
+                <div className="absolute bottom-0 left-0 right-0 z-30">
+                    {/* Time Display */}
+                    <div className="flex justify-between px-4 pb-1.5 text-[10px] font-mono text-white/40">
+                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(duration)}</span>
+                    </div>
+
+                    {/* Interactive Progress Bar */}
+                    <div
+                        ref={progressRef}
+                        className="h-1.5 bg-white/10 cursor-pointer group pointer-events-auto relative"
+                        onClick={handleSeek}
+                    >
+                        {/* Buffered (placeholder) */}
+                        <div
+                            className="absolute inset-y-0 left-0 bg-white/20"
+                            style={{ width: `${Math.min(progress + 20, 100)}%` }}
+                        />
+                        {/* Progress */}
+                        <motion.div
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-purple-500 shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)]"
+                            style={{ width: `${progress}%` }}
+                        />
+                        {/* Thumb - visible on hover */}
+                        <div
+                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ left: `calc(${progress}% - 6px)` }}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
