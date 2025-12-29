@@ -41,12 +41,6 @@ import { UsernameSetupModal } from "@/components/modals/UsernameSetupModal";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { useNotifications, useSuggestedUsers, useFollow, useFollowRequests, useAcceptFollowRequest, useRejectFollowRequest } from "@/api/hooks";
-import { NotificationList } from "@/components/shared/NotificationList";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import { toast } from "sonner";
 import { SpotifyConnect } from "@/components/spotify/SpotifyConnect";
@@ -313,26 +307,21 @@ export default function AppLayout() {
                         {!isFeedPage && <div className="flex-1" />}
 
                         <div className="flex items-center gap-4">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl h-11 w-11 relative transition-all active:scale-95">
-                                        <Bell className="w-5 h-5" />
-                                        {totalUnreadCount > 0 && (
-                                            <motion.span
-                                                key={totalUnreadCount}
-                                                initial={{ scale: 0, y: 5 }}
-                                                animate={{ scale: 1, y: 0 }}
-                                                className="absolute -top-1 -right-1 min-w-[22px] h-5.5 px-1.5 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-[0_0_15px_rgba(129,140,248,0.4)] border border-white/20 z-20"
-                                            >
-                                                {displayBadgeCount}
-                                            </motion.span>
-                                        )}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-96 p-0 bg-[#0f172a]/95 backdrop-blur-3xl border-white/10 shadow-2xl rounded-2xl overflow-hidden glass-panel" align="end">
-                                    <NotificationList />
-                                </PopoverContent>
-                            </Popover>
+                            <Link to="/app/notifications">
+                                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl h-11 w-11 relative transition-all active:scale-95">
+                                    <Bell className="w-5 h-5" />
+                                    {totalUnreadCount > 0 && (
+                                        <motion.span
+                                            key={totalUnreadCount}
+                                            initial={{ scale: 0, y: 5 }}
+                                            animate={{ scale: 1, y: 0 }}
+                                            className="absolute -top-1 -right-1 min-w-[22px] h-5.5 px-1.5 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-[0_0_15px_rgba(129,140,248,0.4)] border border-white/20 z-20"
+                                        >
+                                            {displayBadgeCount}
+                                        </motion.span>
+                                    )}
+                                </Button>
+                            </Link>
 
                             <div className="hidden lg:block">
                                 <DropdownMenu>
