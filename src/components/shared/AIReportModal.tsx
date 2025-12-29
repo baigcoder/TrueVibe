@@ -155,7 +155,7 @@ export function AIReportModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-start justify-center pt-2 px-3 pb-20 overflow-y-auto">
+            <div className="fixed inset-0 z-[100] flex items-start justify-center pt-16 px-4 pb-28 overflow-y-auto">
                 {/* Backdrop with Strong Blur */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -168,14 +168,14 @@ export function AIReportModal({
                 {/* Modal - Top Positioned & Scrollable */}
                 <motion.div
                     layout
-                    initial={{ scale: 0.95, opacity: 0, y: -10 }}
+                    initial={{ scale: 0.95, opacity: 0, y: -20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.95, opacity: 0, y: -10 }}
+                    exit={{ scale: 0.95, opacity: 0, y: -20 }}
                     transition={{ type: "spring", damping: 30, stiffness: 500 }}
-                    className="relative w-full max-w-sm bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-visible flex flex-col my-auto"
+                    className="relative w-full max-w-sm bg-slate-950 border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[65vh]"
                 >
                     {/* Header - Ultra Compact & Solid */}
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-slate-950 flex-shrink-0 sticky top-0 z-10 rounded-t-2xl">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-slate-950 flex-shrink-0 rounded-t-2xl">
                         <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-md bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 flex items-center justify-center">
                                 <Brain className="w-3.5 h-3.5 text-white" />
@@ -196,8 +196,8 @@ export function AIReportModal({
                         </button>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-3 space-y-3">
+                    {/* Content - Scrollable */}
+                    <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
                         {(isLoading || isGenerating) && (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                 <motion.div

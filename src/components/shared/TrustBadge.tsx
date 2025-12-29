@@ -267,26 +267,26 @@ export function TrustBadge({
             {/* Details Panel - TOP OF SCREEN */}
             <AnimatePresence>
                 {showDetails && (
-                    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-4 px-4 overflow-hidden">
+                    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 px-4 pb-28 overflow-y-auto">
                         {/* Backdrop with Strong Blur */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setShowDetails(false)}
-                            className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
+                            className="fixed inset-0 bg-black/90 backdrop-blur-2xl"
                         />
 
                         {/* Panel - Ultra Compact */}
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: -10 }}
+                            initial={{ scale: 0.95, opacity: 0, y: -20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: -10 }}
+                            exit={{ scale: 0.95, opacity: 0, y: -20 }}
                             transition={{ type: "spring", damping: 30, stiffness: 600 }}
-                            className="relative w-full max-w-[280px] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            className="relative w-full max-w-[300px] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[60vh]"
                         >
-                            {/* Header - Ultra Compact */}
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 bg-white/[0.02] flex-shrink-0">
+                            {/* Header - Ultra Compact & Solid */}
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950 flex-shrink-0 rounded-t-2xl">
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-md bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
                                         <Brain className="w-3 h-3 text-indigo-400" />
@@ -301,141 +301,143 @@ export function TrustBadge({
                                 </button>
                             </div>
 
-                            {/* Content - Compact */}
-                            <div className="p-3 space-y-3 flex flex-col items-center">
-                                {/* Gauges Grid - Smaller */}
-                                <div className="grid grid-cols-2 gap-2 w-full">
-                                    {[
-                                        { label: "AUTHENTIC", val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
-                                        { label: "RISK", val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
-                                    ].map((gauge, i) => (
-                                        <div
-                                            key={i}
-                                            className={cn(
-                                                "border rounded-xl p-2 text-center flex flex-col items-center justify-center",
-                                                gauge.bg === "emerald" ? "bg-emerald-500/[0.03] border-emerald-500/20" : "bg-red-500/[0.03] border-red-500/20"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "text-[7px] font-black uppercase mb-1.5 tracking-widest",
-                                                gauge.bg === "emerald" ? "text-emerald-400" : "text-red-400"
-                                            )}>
-                                                {gauge.label}
-                                            </div>
-                                            <div className="relative w-10 h-10">
-                                                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                                                    <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.05]" />
-                                                    <motion.circle
-                                                        cx="18" cy="18" r="16" fill="none" stroke={gauge.color} strokeWidth="4" strokeLinecap="round"
-                                                        strokeDasharray={`${isPendingState ? 0 : gauge.p * 1.005} 100`}
-                                                        initial={{ strokeDasharray: "0 100" }}
-                                                        animate={{ strokeDasharray: `${isPendingState ? 0 : gauge.p * 1.005} 100` }}
-                                                        transition={{ duration: 1.5, ease: "circOut" }}
-                                                    />
-                                                </svg>
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className="text-[10px] font-black text-white italic">
-                                                        {gauge.val}
-                                                    </span>
+                            {/* Content - Scrollable */}
+                            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+                                <div className="flex flex-col items-center space-y-3">
+                                    {/* Gauges Grid - Smaller */}
+                                    <div className="grid grid-cols-2 gap-2 w-full">
+                                        {[
+                                            { label: "AUTHENTIC", val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
+                                            { label: "RISK", val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
+                                        ].map((gauge, i) => (
+                                            <div
+                                                key={i}
+                                                className={cn(
+                                                    "border rounded-xl p-2 text-center flex flex-col items-center justify-center",
+                                                    gauge.bg === "emerald" ? "bg-emerald-500/[0.03] border-emerald-500/20" : "bg-red-500/[0.03] border-red-500/20"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "text-[7px] font-black uppercase mb-1.5 tracking-widest",
+                                                    gauge.bg === "emerald" ? "text-emerald-400" : "text-red-400"
+                                                )}>
+                                                    {gauge.label}
+                                                </div>
+                                                <div className="relative w-10 h-10">
+                                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                                        <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.05]" />
+                                                        <motion.circle
+                                                            cx="18" cy="18" r="16" fill="none" stroke={gauge.color} strokeWidth="4" strokeLinecap="round"
+                                                            strokeDasharray={`${isPendingState ? 0 : gauge.p * 1.005} 100`}
+                                                            initial={{ strokeDasharray: "0 100" }}
+                                                            animate={{ strokeDasharray: `${isPendingState ? 0 : gauge.p * 1.005} 100` }}
+                                                            transition={{ duration: 1.5, ease: "circOut" }}
+                                                        />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="text-[10px] font-black text-white italic">
+                                                            {gauge.val}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
 
-                                {/* Metrics - Compact */}
-                                <div className="w-full space-y-1.5 px-1">
-                                    {[
-                                        { label: "Accuracy", val: analysisDetails?.temporalBoost !== undefined ? `${analysisDetails.temporalBoost > 0 ? '+' : ''}${Math.round(analysisDetails.temporalBoost * 100)}%` : "N/A", color: "text-emerald-400" },
-                                        { label: "Frames", val: analysisDetails?.framesAnalyzed?.toString() || "0", color: "text-sky-400" },
-                                        { label: "Time", val: analysisDetails?.processingTime !== undefined ? `${(analysisDetails.processingTime / 1000).toFixed(1)}s` : "N/A", color: "text-slate-400" }
-                                    ].map((m, i) => (
-                                        <div key={i} className="flex justify-between items-center text-[8px] uppercase font-black tracking-wide">
-                                            <span className="text-slate-500">{m.label}</span>
-                                            <span className={cn("font-mono", m.color)}>{m.val}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                    {/* Metrics - Compact */}
+                                    <div className="w-full space-y-1.5 px-1">
+                                        {[
+                                            { label: "Accuracy", val: analysisDetails?.temporalBoost !== undefined ? `${analysisDetails.temporalBoost > 0 ? '+' : ''}${Math.round(analysisDetails.temporalBoost * 100)}%` : "N/A", color: "text-emerald-400" },
+                                            { label: "Frames", val: analysisDetails?.framesAnalyzed?.toString() || "0", color: "text-sky-400" },
+                                            { label: "Time", val: analysisDetails?.processingTime !== undefined ? `${(analysisDetails.processingTime / 1000).toFixed(1)}s` : "N/A", color: "text-slate-400" }
+                                        ].map((m, i) => (
+                                            <div key={i} className="flex justify-between items-center text-[8px] uppercase font-black tracking-wide">
+                                                <span className="text-slate-500">{m.label}</span>
+                                                <span className={cn("font-mono", m.color)}>{m.val}</span>
+                                            </div>
+                                        ))}
+                                    </div>
 
-                                {/* Status Verdict - Compact */}
-                                <div className={cn(
-                                    "w-full py-2 px-3 rounded-xl text-center border font-black text-[9px] tracking-[0.15em] italic bg-black/40",
-                                    derivedLevel === 'authentic' ? "border-emerald-500/20 text-emerald-400" :
-                                        derivedLevel === 'suspicious' ? "border-amber-500/20 text-amber-400" :
-                                            "border-red-500/20 text-red-400"
-                                )}>
-                                    {derivedLevel === 'authentic' ? "✓ VALIDATED" :
-                                        derivedLevel === 'suspicious' ? "⚠ REVIEW" :
-                                            "⚠ MANIPULATED"}
-                                </div>
+                                    {/* Status Verdict - Compact */}
+                                    <div className={cn(
+                                        "w-full py-2 px-3 rounded-xl text-center border font-black text-[9px] tracking-[0.15em] italic bg-black/40",
+                                        derivedLevel === 'authentic' ? "border-emerald-500/20 text-emerald-400" :
+                                            derivedLevel === 'suspicious' ? "border-amber-500/20 text-amber-400" :
+                                                "border-red-500/20 text-red-400"
+                                    )}>
+                                        {derivedLevel === 'authentic' ? "✓ VALIDATED" :
+                                            derivedLevel === 'suspicious' ? "⚠ REVIEW" :
+                                                "⚠ MANIPULATED"}
+                                    </div>
 
-                                {/* Action Buttons Row */}
-                                <div className="w-full flex gap-2">
-                                    {/* Email Button */}
-                                    {onEmailReport && (
-                                        <motion.button
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onEmailReport();
-                                            }}
-                                            disabled={isEmailing || isPendingState}
-                                            className="flex-1 py-2 px-3 bg-slate-800/50 hover:bg-slate-700/50 border border-white/10 rounded-lg flex items-center justify-center gap-1.5 transition-all"
-                                        >
-                                            {isEmailing ? (
-                                                <Loader2 className="w-3 h-3 animate-spin text-indigo-400" />
-                                            ) : (
-                                                <Mail className="w-3 h-3 text-indigo-400" />
-                                            )}
-                                            <span className="text-[8px] font-black uppercase tracking-wide text-white">
-                                                Email
-                                            </span>
-                                        </motion.button>
-                                    )}
-                                    {/* Download Button */}
-                                    {onDownloadReport && (
-                                        <motion.button
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onDownloadReport();
-                                            }}
-                                            disabled={isDownloading || isPendingState}
-                                            className="flex-1 py-2 px-3 bg-slate-800/50 hover:bg-slate-700/50 border border-white/10 rounded-lg flex items-center justify-center gap-1.5 transition-all"
-                                        >
-                                            {isDownloading ? (
-                                                <Loader2 className="w-3 h-3 animate-spin text-emerald-400" />
-                                            ) : (
-                                                <FileDown className="w-3 h-3 text-emerald-400" />
-                                            )}
-                                            <span className="text-[8px] font-black uppercase tracking-wide text-white">
-                                                Download
-                                            </span>
-                                        </motion.button>
-                                    )}
-                                </div>
-
-                                {/* View Report Button - Compact */}
-                                {onGenerateReport && (
-                                    <motion.button
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onGenerateReport();
-                                        }}
-                                        disabled={isGeneratingReport || isPendingState}
-                                        className="w-full py-2.5 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
-                                    >
-                                        {isGeneratingReport ? (
-                                            <RefreshCw className="w-3 h-3 animate-spin text-white" />
-                                        ) : (
-                                            <FileText className="w-3 h-3 text-white" />
+                                    {/* Action Buttons Row */}
+                                    <div className="w-full flex gap-2">
+                                        {/* Email Button */}
+                                        {onEmailReport && (
+                                            <motion.button
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEmailReport();
+                                                }}
+                                                disabled={isEmailing || isPendingState}
+                                                className="flex-1 py-2 px-3 bg-slate-800/50 hover:bg-slate-700/50 border border-white/10 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                                            >
+                                                {isEmailing ? (
+                                                    <Loader2 className="w-3 h-3 animate-spin text-indigo-400" />
+                                                ) : (
+                                                    <Mail className="w-3 h-3 text-indigo-400" />
+                                                )}
+                                                <span className="text-[8px] font-black uppercase tracking-wide text-white">
+                                                    Email
+                                                </span>
+                                            </motion.button>
                                         )}
-                                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
-                                            {isGeneratingReport ? "Loading..." : "View Report"}
-                                        </span>
-                                    </motion.button>
-                                )}
+                                        {/* Download Button */}
+                                        {onDownloadReport && (
+                                            <motion.button
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDownloadReport();
+                                                }}
+                                                disabled={isDownloading || isPendingState}
+                                                className="flex-1 py-2 px-3 bg-slate-800/50 hover:bg-slate-700/50 border border-white/10 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                                            >
+                                                {isDownloading ? (
+                                                    <Loader2 className="w-3 h-3 animate-spin text-emerald-400" />
+                                                ) : (
+                                                    <FileDown className="w-3 h-3 text-emerald-400" />
+                                                )}
+                                                <span className="text-[8px] font-black uppercase tracking-wide text-white">
+                                                    Download
+                                                </span>
+                                            </motion.button>
+                                        )}
+                                    </div>
+
+                                    {/* View Report Button - Compact */}
+                                    {onGenerateReport && (
+                                        <motion.button
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onGenerateReport();
+                                            }}
+                                            disabled={isGeneratingReport || isPendingState}
+                                            className="w-full py-2.5 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
+                                        >
+                                            {isGeneratingReport ? (
+                                                <RefreshCw className="w-3 h-3 animate-spin text-white" />
+                                            ) : (
+                                                <FileText className="w-3 h-3 text-white" />
+                                            )}
+                                            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+                                                {isGeneratingReport ? "Loading..." : "View Report"}
+                                            </span>
+                                        </motion.button>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     </div>
