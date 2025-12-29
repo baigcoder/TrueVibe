@@ -172,18 +172,160 @@ export default function SettingsPage() {
     };
 
     const handleExportData = async () => {
-        toast.info('Preparing your data export...');
+        toast.info('Generating your data report...');
         try {
             const response = await api.get('/users/me/export') as { data?: any };
-            const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `truevibe-data-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            toast.success('Data exported successfully!');
+            const data = response.data;
+
+            // Generate PDF-friendly HTML
+            const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            const getTrustColor = (level: string) => {
+                switch (level?.toLowerCase()) {
+                    case 'authentic': return '#22c55e';
+                    case 'suspicious': case 'likely_fake': return '#eab308';
+                    case 'fake': return '#ef4444';
+                    default: return '#64748b';
+                }
+            };
+
+            const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TrueVibe Account Report - ${data.account?.name}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 40px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(20,184,166,0.1)); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .logo { font-size: 28px; font-weight: 800; color: #818cf8; margin-bottom: 10px; }
+        .subtitle { color: #64748b; font-size: 14px; }
+        .section { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+        .section-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: linear-gradient(to bottom, #818cf8, #2dd4bf); border-radius: 2px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 4px; }
+        .stat-value { font-size: 24px; font-weight: 800; color: #fff; }
+        .stat-small { font-size: 18px; }
+        .account-info { display: flex; gap: 20px; align-items: flex-start; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #818cf8; }
+        .account-details { flex: 1; }
+        .account-name { font-size: 24px; font-weight: 800; color: #fff; }
+        .account-handle { color: #818cf8; font-size: 14px; margin-bottom: 8px; }
+        .account-bio { color: #94a3b8; font-size: 14px; }
+        .trust-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .trust-score { font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #22c55e, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .bar-fill { height: 100%; border-radius: 4px; }
+        .content-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+        .content-text { color: #cbd5e1; font-size: 13px; margin-bottom: 8px; }
+        .content-meta { display: flex; gap: 16px; font-size: 11px; color: #64748b; }
+        .footer { text-align: center; padding: 20px; color: #475569; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px; }
+        @media print { body { background: #fff; color: #1e293b; } .section { border-color: #e2e8f0; background: #f8fafc; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">TrueVibe</div>
+            <div class="subtitle">Account Data Export Report</div>
+            <div class="subtitle">Generated on ${formatDate(data.exportedAt)}</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Account Information</div>
+            <div class="account-info">
+                <div class="avatar">${data.account?.name?.[0]?.toUpperCase() || '?'}</div>
+                <div class="account-details">
+                    <div class="account-name">${data.account?.name || 'Unknown'}</div>
+                    <div class="account-handle">@${data.account?.handle || 'unknown'}</div>
+                    <div class="account-bio">${data.account?.bio || 'No bio available'}</div>
+                    ${data.account?.location ? `<div style="color: #64748b; font-size: 12px; margin-top: 8px;">📍 ${data.account.location}</div>` : ''}
+                    <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Joined: ${data.account?.joinedAt ? formatDate(data.account.joinedAt) : 'Unknown'}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Engagement Statistics</div>
+            <div class="grid">
+                <div class="stat-card"><div class="stat-label">Followers</div><div class="stat-value">${data.statistics?.followers?.toLocaleString() || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Following</div><div class="stat-value">${data.statistics?.following?.toLocaleString() || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value">${data.statistics?.totalPosts || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Shorts</div><div class="stat-value">${data.statistics?.totalShorts || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Views</div><div class="stat-value stat-small">${data.statistics?.totalViews?.toLocaleString() || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Likes Received</div><div class="stat-value stat-small">${data.statistics?.totalLikesReceived?.toLocaleString() || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Comments</div><div class="stat-value stat-small">${data.statistics?.totalCommentsReceived?.toLocaleString() || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Shares</div><div class="stat-value stat-small">${data.statistics?.totalShares?.toLocaleString() || 0}</div></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Trust Analysis</div>
+            <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 20px;">
+                <div><div class="stat-label">Overall Trust Score</div><div class="trust-score">${data.trustAnalysis?.overallTrustScore || 0}</div></div>
+                <div style="flex: 1;">
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span>Authentic Content</span><span style="color: #22c55e;">${data.trustAnalysis?.contentDistribution?.authentic || 0}</span></div>
+                        <div class="bar"><div class="bar-fill" style="width: ${((data.trustAnalysis?.contentDistribution?.authentic || 0) / Math.max(1, (data.statistics?.totalPosts || 0) + (data.statistics?.totalShorts || 0))) * 100}%; background: #22c55e;"></div></div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span>Suspicious Content</span><span style="color: #eab308;">${data.trustAnalysis?.contentDistribution?.suspicious || 0}</span></div>
+                        <div class="bar"><div class="bar-fill" style="width: ${((data.trustAnalysis?.contentDistribution?.suspicious || 0) / Math.max(1, (data.statistics?.totalPosts || 0) + (data.statistics?.totalShorts || 0))) * 100}%; background: #eab308;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span>Unverified</span><span style="color: #64748b;">${data.trustAnalysis?.contentDistribution?.unverified || 0}</span></div>
+                        <div class="bar"><div class="bar-fill" style="width: ${((data.trustAnalysis?.contentDistribution?.unverified || 0) / Math.max(1, (data.statistics?.totalPosts || 0) + (data.statistics?.totalShorts || 0))) * 100}%; background: #64748b;"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="stat-card"><div class="stat-label">Total AI Reports</div><div class="stat-value stat-small">${data.trustAnalysis?.aiReportsSummary?.total || 0}</div></div>
+                <div class="stat-card"><div class="stat-label">Avg Confidence</div><div class="stat-value stat-small">${Math.round((data.trustAnalysis?.aiReportsSummary?.avgConfidence || 0) * 100)}%</div></div>
+            </div>
+        </div>
+
+        ${data.aiReports?.length > 0 ? `
+        <div class="section">
+            <div class="section-title">AI Analysis Reports (${data.aiReports.length})</div>
+            ${data.aiReports.slice(0, 10).map((r: any) => `
+                <div class="content-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span class="trust-badge" style="background: ${getTrustColor(r.verdict)}20; color: ${getTrustColor(r.verdict)};">${r.verdict?.toUpperCase() || 'UNKNOWN'}</span>
+                        <span style="font-size: 11px; color: #64748b;">${r.contentType} • ${r.confidence}% confidence</span>
+                    </div>
+                    ${r.summary ? `<div class="content-text">${r.summary}</div>` : ''}
+                    <div class="content-meta"><span>${r.generatedAt ? formatDate(r.generatedAt) : 'Unknown date'}</span></div>
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+
+        <div class="footer">
+            This report was generated by TrueVibe • Authenticity Matters<br>
+            Export ID: ${Date.now()} • Data accurate as of ${formatDate(data.exportedAt)}
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // Open in new window and trigger print
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(html);
+                printWindow.document.close();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            }
+
+            toast.success('Report generated! Use your browser to save as PDF.');
         } catch {
-            toast.error('Failed to export data');
+            toast.error('Failed to generate report');
         }
     };
 
