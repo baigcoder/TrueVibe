@@ -283,8 +283,53 @@ export const getCloudinaryUrl = (
     });
 };
 
-export const deleteCloudinaryAsset = async (publicId: string): Promise<void> => {
-    await cloudinary.uploader.destroy(publicId);
+/**
+ * Extract Cloudinary public_id from a URL
+ * Works with URLs like: https://res.cloudinary.com/cloud_name/image/upload/v123456/folder/filename.ext
+ */
+export const extractPublicId = (url: string): string | null => {
+    if (!url || !url.includes('cloudinary.com')) return null;
+
+    try {
+        // Match pattern: /upload/v{version}/{public_id}.{ext}
+        // or /upload/{public_id}.{ext}
+        const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^/.]+)?$/);
+        if (match && match[1]) {
+            return match[1];
+        }
+        return null;
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * Delete asset from Cloudinary
+ * @param publicId - The public ID of the asset
+ * @param resourceType - 'image' or 'video' (defaults to 'image')
+ */
+export const deleteCloudinaryAsset = async (
+    publicId: string,
+    resourceType: 'image' | 'video' = 'image'
+): Promise<void> => {
+    try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    } catch (error) {
+        console.warn(`Failed to delete Cloudinary asset ${publicId}:`, error);
+    }
+};
+
+/**
+ * Delete media from Cloudinary by URL
+ * Automatically detects resource type from URL
+ */
+export const deleteCloudinaryByUrl = async (url: string): Promise<void> => {
+    const publicId = extractPublicId(url);
+    if (!publicId) return;
+
+    // Detect if video from URL
+    const isVideo = url.includes('/video/') || url.match(/\.(mp4|mov|avi|webm)$/i);
+    await deleteCloudinaryAsset(publicId, isVideo ? 'video' : 'image');
 };
 
 export { cloudinary };

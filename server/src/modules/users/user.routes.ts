@@ -230,54 +230,33 @@ router.get('/me/export', authenticate, async (req, res, next) => {
     try {
         const userId = req.user!.userId;
 
-        // Fetch all user data in parallel
-        const [profile, posts, shorts, stories, aiReports] = await Promise.all([
-            Profile.findOne({ $or: [{ userId }, { supabaseId: userId }] })
-                .select('-__v')
-                .lean(),
-            Post.find({ author: userId })
-                .select('content media viewsCount likesCount commentsCount sharesCount trustLevel createdAt')
-                .populate('media', 'url type')
-                .lean(),
-            Short.find({ author: userId })
-                .select('caption videoUrl thumbnailUrl viewsCount likesCount commentsCount trustLevel createdAt')
-                .lean(),
-            Story.find({ author: userId })
-                .select('caption mediaUrl mediaType viewsCount trustLevel createdAt expiresAt')
-                .lean(),
-            AIReport.find({ userId })
-                .select('contentType report generatedAt postId')
-                .lean(),
+        // Fetch all user data in parallel - cast to any[] to avoid TypeScript issues
+        const [profileDoc, postsDoc, shortsDoc, storiesDoc, aiReportsDoc] = await Promise.all([
+            Profile.findOne({ $or: [{ userId }, { supabaseId: userId }] }).lean(),
+            Post.find({ userId }).select('content likesCount commentsCount sharesCount trustLevel createdAt').lean(),
+            Short.find({ userId }).select('caption likesCount commentsCount trustLevel createdAt').lean(),
+            Story.find({ userId }).select('caption mediaType trustLevel createdAt viewers').lean(),
+            AIReport.find({ userId }).select('contentType report generatedAt').lean(),
         ]);
 
-        // Calculate total engagement stats
+        const profile = profileDoc as any;
+        const posts = postsDoc as any[];
+        const shorts = shortsDoc as any[];
+        const stories = storiesDoc as any[];
+        const aiReports = aiReportsDoc as any[];
+
+        // Calculate stats
         const totalLikesReceived = posts.reduce((sum, p) => sum + (p.likesCount || 0), 0) +
             shorts.reduce((sum, s) => sum + (s.likesCount || 0), 0);
         const totalCommentsReceived = posts.reduce((sum, p) => sum + (p.commentsCount || 0), 0) +
             shorts.reduce((sum, s) => sum + (s.commentsCount || 0), 0);
-        const totalViews = posts.reduce((sum, p) => sum + (p.viewsCount || 0), 0) +
-            shorts.reduce((sum, s) => sum + (s.viewsCount || 0), 0) +
-            stories.reduce((sum, s) => sum + (s.viewsCount || 0), 0);
-        const totalShares = posts.reduce((sum, p) => sum + (p.sharesCount || 0), 0);
 
-        // Calculate trust score distribution
+        // Trust distribution
         const allContent = [...posts, ...shorts, ...stories];
         const trustDistribution = {
             authentic: allContent.filter(c => c.trustLevel === 'authentic').length,
-            suspicious: allContent.filter(c => c.trustLevel === 'suspicious' || c.trustLevel === 'likely_fake').length,
-            fake: allContent.filter(c => c.trustLevel === 'fake').length,
+            suspicious: allContent.filter(c => c.trustLevel === 'suspicious').length,
             unverified: allContent.filter(c => !c.trustLevel || c.trustLevel === 'pending').length,
-        };
-
-        // AI Reports summary
-        const aiReportsSummary = {
-            total: aiReports.length,
-            authentic: aiReports.filter(r => r.report?.verdict === 'authentic').length,
-            suspicious: aiReports.filter(r => r.report?.verdict === 'suspicious').length,
-            fake: aiReports.filter(r => r.report?.verdict === 'fake').length,
-            avgConfidence: aiReports.length > 0
-                ? Math.round((aiReports.reduce((sum, r) => sum + (r.report?.confidence || 0), 0) / aiReports.length) * 100) / 100
-                : 0,
         };
 
         // Build export data
@@ -286,65 +265,43 @@ router.get('/me/export', authenticate, async (req, res, next) => {
             account: {
                 name: profile?.name || 'Unknown',
                 handle: profile?.handle || 'unknown',
-                email: profile?.email || '',
                 bio: profile?.bio || '',
                 avatar: profile?.avatar || '',
-                location: profile?.location || '',
-                website: profile?.website || '',
-                isPrivate: profile?.isPrivate || false,
-                isVerified: profile?.isVerified || false,
-                trustScore: profile?.trustScore || 0,
                 joinedAt: profile?.createdAt,
             },
             statistics: {
-                followers: profile?.followersCount || 0,
-                following: profile?.followingCount || 0,
+                followers: profile?.followers?.length || 0,
+                following: profile?.following?.length || 0,
                 totalPosts: posts.length,
                 totalShorts: shorts.length,
                 totalStories: stories.length,
                 totalLikesReceived,
                 totalCommentsReceived,
-                totalViews,
-                totalShares,
                 totalAIReports: aiReports.length,
             },
             trustAnalysis: {
-                overallTrustScore: profile?.trustScore || 0,
                 contentDistribution: trustDistribution,
-                aiReportsSummary,
+                aiReportsCount: aiReports.length,
             },
             content: {
                 posts: posts.slice(0, 50).map(post => ({
                     content: post.content?.substring(0, 200) || '',
-                    mediaCount: (post.media as any[])?.length || 0,
-                    views: post.viewsCount || 0,
                     likes: post.likesCount || 0,
                     comments: post.commentsCount || 0,
-                    shares: post.sharesCount || 0,
                     trustLevel: post.trustLevel || 'pending',
                     createdAt: post.createdAt,
                 })),
                 shorts: shorts.slice(0, 50).map(short => ({
                     caption: short.caption?.substring(0, 200) || '',
-                    views: short.viewsCount || 0,
                     likes: short.likesCount || 0,
-                    comments: short.commentsCount || 0,
                     trustLevel: short.trustLevel || 'pending',
                     createdAt: short.createdAt,
                 })),
-                stories: stories.slice(0, 20).map(story => ({
-                    caption: story.caption?.substring(0, 100) || '',
-                    mediaType: story.mediaType,
-                    views: story.viewsCount || 0,
-                    trustLevel: story.trustLevel || 'pending',
-                    createdAt: story.createdAt,
-                })),
             },
-            aiReports: aiReports.slice(0, 100).map(report => ({
+            aiReports: aiReports.slice(0, 50).map(report => ({
                 contentType: report.contentType || 'post',
                 verdict: report.report?.verdict || 'unknown',
                 confidence: Math.round((report.report?.confidence || 0) * 100),
-                summary: report.report?.summary?.substring(0, 200) || '',
                 generatedAt: report.generatedAt,
             })),
         };

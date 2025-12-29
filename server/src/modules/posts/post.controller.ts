@@ -193,7 +193,7 @@ export const deletePost = async (
         const { id } = req.params;
         const userId = req.user!.userId;
 
-        const post = await Post.findById(id);
+        const post = await Post.findById(id).populate('media');
 
         if (!post) {
             throw new NotFoundError('Post');
@@ -201,6 +201,19 @@ export const deletePost = async (
 
         if (post.userId.toString() !== userId && req.user!.role !== 'admin') {
             throw new ForbiddenError('Not authorized to delete this post');
+        }
+
+        // Delete media from Cloudinary
+        if (post.media && post.media.length > 0) {
+            const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
+            for (const mediaDoc of post.media as any[]) {
+                if (mediaDoc?.url) {
+                    await deleteCloudinaryByUrl(mediaDoc.url);
+                }
+                if (mediaDoc?.originalUrl && mediaDoc.originalUrl !== mediaDoc.url) {
+                    await deleteCloudinaryByUrl(mediaDoc.originalUrl);
+                }
+            }
         }
 
         // Soft delete

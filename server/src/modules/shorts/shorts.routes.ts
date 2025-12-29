@@ -306,6 +306,12 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 
         const short = await Short.findOne({ _id: id, userId });
         if (short) {
+            // Delete media from Cloudinary
+            if (short.videoUrl) {
+                const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
+                await deleteCloudinaryByUrl(short.videoUrl);
+            }
+
             short.isDeleted = true;
             await short.save();
         }
