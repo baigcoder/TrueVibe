@@ -142,8 +142,8 @@ export function AIReportModal({
     isGenerating,
     onGenerate: _onGenerate,
     error,
-    postId,
-    contentType = 'feed'
+    postId: _postId,
+    contentType: _contentType = 'feed'
 }: AIReportModalProps) {
     const [showTechnical, setShowTechnical] = useState(false);
     const [expandedMetricIndex, setExpandedMetricIndex] = useState<number | null>(null);

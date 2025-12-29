@@ -36,6 +36,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback } from "react";
 import { CommentSection } from "./CommentSection";
 import { Textarea } from "@/components/ui/textarea";
+import { MediaPreviewModal } from "@/components/modals/MediaPreviewModal";
 
 // Flexible post type that works with both mock data and API responses
 export interface PostData {
@@ -98,6 +99,8 @@ export function PostCard({ post }: PostCardProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
+    const [showMediaPreview, setShowMediaPreview] = useState(false);
+    const [previewMediaIndex, setPreviewMediaIndex] = useState(0);
 
     const likePost = useLikePost();
     const unlikePost = useUnlikePost();
@@ -223,7 +226,6 @@ export function PostCard({ post }: PostCardProps) {
         : rawTrustLevel.includes('fake')
             ? (rawTrustLevel === 'likely_fake' ? 'likely_fake' : 'fake')
             : rawTrustLevel as 'authentic' | 'suspicious' | 'fake' | 'pending' | 'likely_fake';
-    const trustScore = post.trustScore || (normalizedTrust === 'authentic' ? 95 : normalizedTrust === 'suspicious' ? 60 : 30);
 
     // Get image from media array or direct property (prefer optimized for images too)
     const imageMedia = post.media?.find(m => m.type === 'image');
@@ -502,7 +504,11 @@ export function PostCard({ post }: PostCardProps) {
                         <motion.div
                             whileHover={{ scale: 1.01 }}
                             transition={{ duration: 0.4 }}
-                            className="rounded-[2rem] overflow-hidden mt-2 bg-slate-900 border border-white/10 group/img relative shadow-2xl"
+                            className="rounded-[2rem] overflow-hidden mt-2 bg-slate-900 border border-white/10 group/img relative shadow-2xl cursor-pointer"
+                            onClick={() => {
+                                setPreviewMediaIndex(0);
+                                setShowMediaPreview(true);
+                            }}
                         >
                             <img
                                 src={postImage}
@@ -515,24 +521,34 @@ export function PostCard({ post }: PostCardProps) {
                             {/* Image Metadata Overlay */}
                             <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover/img:opacity-100 transition-opacity duration-500">
                                 <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-[8px] font-black text-white/80 uppercase tracking-widest">
-                                    IMG_DATA: VERIFIED
+                                    Tap to zoom
                                 </div>
                             </div>
                         </motion.div>
                     )}
 
                     {postVideo && (
-                        <div className="rounded-[2rem] overflow-hidden mt-2 bg-black border border-white/10 relative shadow-2xl group/vid">
+                        <div
+                            className="rounded-[2rem] overflow-hidden mt-2 bg-black border border-white/10 relative shadow-2xl group/vid cursor-pointer"
+                            onClick={(e) => {
+                                // Don't open preview if clicking on video controls
+                                if ((e.target as HTMLElement).tagName !== 'VIDEO') {
+                                    setPreviewMediaIndex(postImage ? 1 : 0);
+                                    setShowMediaPreview(true);
+                                }
+                            }}
+                        >
                             <video
                                 src={postVideo}
                                 controls
                                 playsInline
                                 className="w-full h-auto max-h-[500px] bg-black"
+                                onClick={(e) => e.stopPropagation()}
                             />
                             {/* Video Technical Label */}
                             <div className="absolute top-4 right-4 px-3 py-1.5 bg-rose-500/20 backdrop-blur-md rounded-full border border-rose-500/30 text-[10px] font-semibold text-rose-400 opacity-0 group-hover/vid:opacity-100 transition-opacity flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                Playing
+                                Tap to zoom
                             </div>
                         </div>
                     )}
@@ -683,6 +699,18 @@ export function PostCard({ post }: PostCardProps) {
                 error={reportError}
                 postId={post._id}
                 contentType={post.media?.[0]?.type === 'video' || post.aiAnalysis?.mediaType === 'video' ? 'short' : 'feed'}
+            />
+
+            {/* Media Preview Modal */}
+            <MediaPreviewModal
+                isOpen={showMediaPreview}
+                onClose={() => setShowMediaPreview(false)}
+                media={[
+                    ...(postImage ? [{ url: postImage, type: 'image' as const }] : []),
+                    ...(postVideo ? [{ url: postVideo, type: 'video' as const }] : [])
+                ]}
+                initialIndex={previewMediaIndex}
+                showStats={true}
             />
         </motion.div>
     );
