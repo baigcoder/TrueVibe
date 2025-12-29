@@ -158,7 +158,7 @@ export default function FeedPage() {
     };
 
     return (
-        <div className="w-full max-w-full overflow-x-hidden flex flex-col gap-4 lg:gap-6 max-w-2xl mx-auto py-2 lg:py-6">
+        <div className="w-full max-w-full overflow-x-hidden flex flex-col gap-4 lg:gap-6 max-w-2xl mx-auto py-2 lg:py-6 pb-24 lg:pb-6">
             {/* Gen-Z Stories Section - Floating Tiles */}
             <div className="relative group mb-2">
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">

@@ -382,7 +382,7 @@ export default function AppLayout() {
                     isChatPage ? "p-0 pb-0 overflow-hidden" :
                         location.pathname === '/app/shorts' ? "p-0 pb-0 overflow-hidden" :
                             location.pathname === '/app/search' ? "pt-16 pb-[72px] lg:pb-0 overflow-hidden" :
-                                "p-4 lg:p-8 pb-24 lg:pb-8 overflow-y-auto overflow-x-hidden scrollbar-hide"
+                                "p-4 lg:p-8 pb-32 lg:pb-8 overflow-y-auto overflow-x-hidden scrollbar-hide"
                 )}>
                     <AnimatePresence mode="wait">
                         <motion.div
