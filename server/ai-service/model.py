@@ -2336,6 +2336,25 @@ class DeepfakeDetector:
         
         print(f"🔬 DEEPFAKE ANALYSIS v7 (Advanced Detection)")
         
+        # NEW: Stylization Detection for 3D renders, cartoons, animated avatars
+        stylization_boost = 0.0
+        stylization_result = None
+        if STYLIZATION_DETECTION_AVAILABLE:
+            print(f"   🎨 Running stylization detection...")
+            stylization_result = detect_stylization(image)
+            
+            if stylization_result.is_stylized:
+                style_name = stylization_result.style_type.value
+                print(f"   🤖 STYLIZED CONTENT DETECTED: {style_name}")
+                print(f"      Confidence: {stylization_result.confidence*100:.1f}%")
+                print(f"      Indicators: {', '.join(stylization_result.indicators)}")
+                
+                # Apply fake boost for stylized content
+                stylization_boost = stylization_result.fake_boost
+                print(f"   ⚡ Stylization boost: +{stylization_boost*100:.1f}%")
+            else:
+                print(f"   ✅ Photorealistic content - no stylization detected")
+        
         # Phase 1: New advanced analyses
         print(f"   📊 Running advanced analyses...")
         
@@ -2379,6 +2398,16 @@ class DeepfakeDetector:
         if blending_details.get('boundary_artifacts_detected'):
             phase1_boost += 0.12
             print(f"   ⚡ Blending artifacts detected: +12%")
+        
+        # Apply stylization boost (3D renders, cartoons, animated content)
+        if stylization_boost > 0:
+            probs['fake'] = min(probs['fake'] + stylization_boost, 0.99)
+            probs['real'] = max(probs['real'] - stylization_boost, 0.01)
+            details['stylization_boost'] = stylization_boost
+            if stylization_result:
+                details['stylization_type'] = stylization_result.style_type.value
+                details['stylization_confidence'] = stylization_result.confidence
+                details['stylization_indicators'] = stylization_result.indicators
         
         # Apply Phase 1 boost to probabilities
         if phase1_boost > 0:
