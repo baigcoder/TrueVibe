@@ -288,7 +288,7 @@ export function AIReportModal({
                                         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-800" />
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                         {(report.report.detectionBreakdown || []).map((item, i) => (
                                             <MetricCard
                                                 key={i}
