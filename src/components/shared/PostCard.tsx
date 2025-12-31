@@ -175,6 +175,13 @@ export function PostCard({ post }: PostCardProps) {
 
     // Listen for AI analysis completion and refresh the post
     useAIAnalysisUpdate(useCallback(({ postId: updatePostId, analysis }) => {
+        console.log(`📡 [Socket Event] ai:analysis-complete received:`, {
+            receivedPostId: updatePostId,
+            currentPostId: postId,
+            currentPostInternalId: post._id,
+            match: updatePostId === post._id || updatePostId === postId
+        });
+
         if (updatePostId === post._id || updatePostId === postId) {
             console.log(`🔔 AI Analysis complete for post: ${updatePostId}, refetching...`);
 
