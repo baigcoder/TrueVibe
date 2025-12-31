@@ -47,6 +47,15 @@ class TechnicalDetail:
 
 
 @dataclass
+class FrameAnalysisItem:
+    """Individual frame analysis result"""
+    name: str
+    weight: float
+    fake_score: float
+    status: str  # 'ok', 'suspicious'
+
+
+@dataclass
 class AIReport:
     """Structured AI authenticity report"""
     verdict: str  # 'authentic', 'suspicious', 'fake'
@@ -56,9 +65,10 @@ class AIReport:
     technical_details: List[TechnicalDetail]
     recommendations: List[str]
     model_used: str
+    frame_analysis: Optional[List[FrameAnalysisItem]] = None
     
     def to_dict(self) -> Dict:
-        return {
+        result = {
             "verdict": self.verdict,
             "confidence": self.confidence,
             "summary": self.summary,
@@ -67,6 +77,10 @@ class AIReport:
             "recommendations": self.recommendations,
             "modelUsed": self.model_used
         }
+        if self.frame_analysis:
+            result["frameAnalysis"] = [asdict(f) for f in self.frame_analysis]
+        return result
+
 
 
 def build_report_prompt(analysis_results: Dict) -> str:
@@ -86,6 +100,18 @@ def build_report_prompt(analysis_results: Dict) -> str:
     processing_time = analysis_results.get("processing_time_ms", 0)
     media_type = analysis_results.get("media_type", "image")
     frames_analyzed = analysis_results.get("frames_analyzed", 0)
+    frame_breakdown = analysis_results.get("frame_breakdown", [])
+    
+    # Build frame breakdown text for the prompt
+    frame_details_text = ""
+    if frame_breakdown:
+        frame_details_text = "\n## Individual Frame Analysis:\n"
+        for frame in frame_breakdown:
+            status = "🔴 SUSPICIOUS" if frame.get('is_suspicious', False) else "🟢 OK"
+            name = frame.get('name', 'unknown')
+            weight = frame.get('weight', 0)
+            fake = frame.get('fake_score', 0) * 100
+            frame_details_text += f"- **{name}** (weight={weight}): {fake:.1f}% fake {status}\n"
     
     prompt = f"""You are an AI content authenticity expert. Analyze the following deepfake detection results and generate a detailed, user-friendly report.
 
@@ -95,7 +121,7 @@ def build_report_prompt(analysis_results: Dict) -> str:
 - **Real Score**: {real_score * 100:.1f}%
 - **Confidence**: {confidence * 100:.1f}%
 - **Media Type**: {media_type}
-- **Frames Analyzed**: {frames_analyzed}
+- **Total Frames Analyzed**: {frames_analyzed if frames_analyzed else len(frame_breakdown)}
 
 ## Face Analysis:
 - **Faces Detected**: {faces_detected}
@@ -109,7 +135,7 @@ def build_report_prompt(analysis_results: Dict) -> str:
 - **Eye Region Anomaly Boost**: {f'+{eye_boost * 100:.1f}%' if eye_boost else 'None detected'}
 - **Temporal Boost**: {f'+{temporal_boost * 100:.1f}%' if temporal_boost else 'None detected'}
 - **Processing Time**: {processing_time}ms
-
+{frame_details_text}
 ## Your Task:
 Generate a JSON report with exactly this structure:
 {{
@@ -123,6 +149,14 @@ Generate a JSON report with exactly this structure:
             "severity": "low" | "medium" | "high",
             "explanation": "<user-friendly explanation>",
             "score": <REQUIRED: must be 0.0-1.0 based on actual analysis data above>
+        }}
+    ],
+    "frameAnalysis": [
+        {{
+            "name": "<frame name>",
+            "weight": <weight value>,
+            "fakeScore": <0.0-1.0>,
+            "status": "ok" | "suspicious"
         }}
     ],
     "technicalDetails": [
@@ -142,6 +176,8 @@ IMPORTANT: For detection breakdown, use ACTUAL SCORES from the data above:
 4. Noise Pattern Analysis - score derived from confidence level  
 5. Eye Region Analysis - score MUST be {avg_eye_score if avg_eye_score else fake_score * 0.7}
 
+For frameAnalysis: Include ALL frames from the Individual Frame Analysis section above. Copy the exact names, weights, and scores.
+
 For recommendations, include:
 - If FAKE/SUSPICIOUS: What signs indicate manipulation, what user can verify manually
 - If AUTHENTIC: Confirmation of authenticity, general tips for content verification
@@ -150,6 +186,7 @@ For recommendations, include:
 Return ONLY valid JSON, no markdown formatting or extra text."""
 
     return prompt
+
 
 
 async def call_gemini(prompt: str) -> Optional[str]:
@@ -405,6 +442,18 @@ def create_fallback_report(analysis_results: Dict) -> AIReport:
         ]
         summary = f"Our AI analysis indicates this content is authentic with {confidence * 100:.0f}% confidence. No significant manipulation markers were detected."
     
+    # Build frame analysis from input data
+    frame_analysis = None
+    if analysis_results.get("frame_breakdown"):
+        frame_analysis = [
+            FrameAnalysisItem(
+                name=f.get("name", "unknown"),
+                weight=float(f.get("weight", 0)),
+                fake_score=float(f.get("fake_score", 0)),
+                status="suspicious" if f.get("is_suspicious", False) else "ok"
+            ) for f in analysis_results.get("frame_breakdown", [])
+        ]
+    
     return AIReport(
         verdict=verdict,
         confidence=confidence,
@@ -412,7 +461,8 @@ def create_fallback_report(analysis_results: Dict) -> AIReport:
         detection_breakdown=breakdown,
         technical_details=technical,
         recommendations=recommendations,
-        model_used="fallback"
+        model_used="fallback",
+        frame_analysis=frame_analysis
     )
 
 
@@ -445,6 +495,18 @@ async def generate_report(analysis_results: Dict) -> AIReport:
                 
                 # Build AIReport from parsed JSON
                 try:
+                    # Parse frame analysis if present
+                    frame_analysis = None
+                    if parsed.get("frameAnalysis"):
+                        frame_analysis = [
+                            FrameAnalysisItem(
+                                name=f.get("name", "unknown"),
+                                weight=float(f.get("weight", 0)),
+                                fake_score=float(f.get("fakeScore", 0)),
+                                status=f.get("status", "ok")
+                            ) for f in parsed.get("frameAnalysis", [])
+                        ]
+                    
                     return AIReport(
                         verdict=parsed.get("verdict", "authentic"),
                         confidence=parsed.get("confidence", 0.5),
@@ -456,7 +518,8 @@ async def generate_report(analysis_results: Dict) -> AIReport:
                             TechnicalDetail(**t) for t in parsed.get("technicalDetails", [])
                         ],
                         recommendations=parsed.get("recommendations", []),
-                        model_used=name
+                        model_used=name,
+                        frame_analysis=frame_analysis
                     )
                 except Exception as e:
                     print(f"⚠️ Error building report from {name}: {e}")

@@ -2200,6 +2200,19 @@ class DeepfakeDetector:
         
         print(f"   👥 Multi-face analysis: {len(faces)} faces, sizes={[f.size for f in faces[:5]]}")
         
+        # Build frame breakdown for report
+        frame_breakdown = []
+        for i, (frame, name, weight) in enumerate(frames):
+            if i < len(results):
+                frame_breakdown.append({
+                    'index': i + 1,
+                    'name': name,
+                    'weight': round(float(weight), 2),
+                    'fake_score': round(float(results[i].get('fake', 0)), 4),
+                    'real_score': round(float(results[i].get('real', 0)), 4),
+                    'is_suspicious': results[i].get('fake', 0) > 0.5
+                })
+        
         # Create detailed metadata
         details = {
             'total_frames': total,
@@ -2214,6 +2227,7 @@ class DeepfakeDetector:
             'avg_fft_score': sum(fft_scores) / len(fft_scores) if fft_scores else None,
             'avg_eye_score': sum(eye_scores) / len(eye_scores) if eye_scores else None,
             'multi_face_analysis': multi_face_analysis,
+            'frame_breakdown': frame_breakdown,  # NEW: Individual frame analysis
             # v8 accuracy improvements metadata
             'v8_accuracy': {
                 'face_consistency_boost': face_consistency_boost,

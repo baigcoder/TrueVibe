@@ -415,6 +415,8 @@ async def analyze_image(request: AnalyzeRequest):
             'filter_intensity': details.get('filter_intensity'),
             'filter_analysis': details.get('filter_analysis'),
             'multi_face_analysis': details.get('multi_face_analysis'),
+            # NEW: Individual frame breakdown for detailed report
+            'frame_breakdown': details.get('frame_breakdown'),
         }
         
         # Convert numpy types to native Python types (fixes PydanticSerializationError)
