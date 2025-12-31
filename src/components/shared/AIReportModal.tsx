@@ -136,14 +136,20 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden bg-black/40"
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden bg-gradient-to-b from-slate-900/60 to-slate-950/80"
                     >
-                        <div className="px-5 pb-5 pt-2 border-t border-white/5">
-                            <div className="flex gap-3">
-                                <div className="w-1 bg-violet-500/50 rounded-full flex-shrink-0" />
-                                <p className="text-[11px] sm:text-[13px] text-slate-400 leading-relaxed font-medium pt-1">
-                                    {item.explanation}
-                                </p>
+                        <div className="px-5 pb-5 pt-4 border-t border-violet-500/20">
+                            <div className="flex items-start gap-4">
+                                <div className="w-1 min-h-[40px] bg-gradient-to-b from-violet-500 to-violet-600/50 rounded-full flex-shrink-0" />
+                                <div className="flex-1">
+                                    <span className="block text-[9px] font-black uppercase tracking-[0.2em] text-violet-400/80 mb-2">
+                                        AI Explanation
+                                    </span>
+                                    <p className="text-sm sm:text-[15px] text-white/80 leading-relaxed font-medium">
+                                        {item.explanation || "No detailed explanation available for this metric. The analysis is based on pattern recognition and statistical modeling."}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </m.div>
