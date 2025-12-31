@@ -471,6 +471,7 @@ export function PostCard({ post }: PostCardProps) {
                             className="relative group/trust"
                         >
                             <TrustBadge
+                                key={`trust-${postId}-${post.aiAnalysis?.fakeScore ?? 'pending'}-${normalizedTrust}`}
                                 level={normalizedTrust}
                                 score={Math.round(100 - (post.trustScore ?? (post.aiAnalysis?.fakeScore ? post.aiAnalysis.fakeScore * 100 : 0)))}
                                 analysisDetails={post.aiAnalysis ? {

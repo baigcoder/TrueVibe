@@ -210,6 +210,18 @@ export function TrustBadge({
         <div className="relative group/trust">
             <m.div
                 onClick={() => setShowDetails(!showDetails)}
+                initial={{ opacity: 0, scale: 0.9, x: -10 }}
+                animate={{
+                    opacity: 1,
+                    scale: 1,
+                    x: 0,
+                }}
+                transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 25,
+                    delay: 0.1
+                }}
                 className={cn(
                     "inline-flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 pr-2.5 sm:pr-4 rounded-xl sm:rounded-2xl border bg-slate-950/80 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/80 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
                     displayConfig.borderColor,
