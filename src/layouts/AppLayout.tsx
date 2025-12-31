@@ -288,7 +288,7 @@ export default function AppLayout() {
                         </div>
 
                         <div className="hidden lg:block">
-                            {!isFeedPage && location.pathname !== '/app/search' && location.pathname !== '/app/notifications' && (
+                            {!isFeedPage && location.pathname !== '/app/search' && location.pathname !== '/app/notifications' && location.pathname !== '/app/analytics' && (
                                 <h1 className="font-heading font-black text-2xl bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent tracking-[-0.05em] uppercase italic drop-shadow-lg">
                                     {(() => {
                                         const path = location.pathname;
