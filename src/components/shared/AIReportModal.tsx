@@ -84,40 +84,35 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
                 visible: { opacity: 1, y: 0, scale: 1 }
             }}
             className={cn(
-                "bg-slate-800/40 border rounded-xl sm:rounded-2xl overflow-hidden transition-all backdrop-blur-sm",
-                item.detected ? "border-red-500/20" : "border-slate-700/30",
-                "h-fit"
+                "bg-slate-800/40 border rounded-xl sm:rounded-2xl overflow-hidden transition-all backdrop-blur-sm relative",
+                item.detected ? "border-red-500/20" : "border-slate-700/30"
             )}
         >
             <button
                 onClick={onToggle}
-                className="w-full p-3 sm:p-4 hover:bg-white/5 transition-colors"
+                className="w-full p-4 hover:bg-white/5 transition-colors text-left"
             >
-                <div className="flex items-center gap-3">
-                    {/* Icon */}
-                    <div className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0",
-                        item.detected ? "bg-red-500/10" : "bg-slate-700/30"
-                    )}>
-                        <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", item.detected ? "text-red-400" : "text-slate-400")} />
-                    </div>
-
-                    {/* Label + Score Column */}
-                    <div className="flex-1 min-w-0">
-                        <span className="block text-[10px] sm:text-xs font-black uppercase tracking-wide text-white/80 leading-tight">
-                            {item.category.replace(" Analysis", "").replace(" Detection", "")}
+                {/* Score Badge - Absolute positioned top-right */}
+                {score !== null && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1">
+                        <span className={cn("text-xl font-black italic", getScoreColor(score))}>
+                            {score}%
                         </span>
-                    </div>
-
-                    {/* Score + Chevron */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        {score !== null && (
-                            <span className={cn("text-lg sm:text-xl font-black italic", getScoreColor(score))}>
-                                {score}%
-                            </span>
-                        )}
                         <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-300", isExpanded && "rotate-180")} />
                     </div>
+                )}
+
+                {/* Icon + Label - with padding-right to avoid score */}
+                <div className="flex items-center gap-3 pr-20">
+                    <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                        item.detected ? "bg-red-500/10" : "bg-slate-700/30"
+                    )}>
+                        <Icon className={cn("w-5 h-5", item.detected ? "text-red-400" : "text-slate-400")} />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-wide text-white/90">
+                        {item.category.replace(" Analysis", "").replace(" Detection", "")}
+                    </span>
                 </div>
             </button>
             <AnimatePresence>
