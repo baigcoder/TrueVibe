@@ -91,22 +91,22 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
         >
             <button
                 onClick={onToggle}
-                className="w-full p-2.5 sm:p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+                className="w-full p-2.5 sm:p-4 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors"
             >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <div className={cn(
-                        "w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center",
+                        "w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0",
                         item.detected ? "bg-red-500/10" : "bg-slate-700/30"
                     )}>
                         <Icon className={cn("w-3.5 h-3.5 sm:w-5 sm:h-5", item.detected ? "text-red-400" : "text-slate-400")} />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-tight text-white/80">
+                    <span className="text-[9px] sm:text-xs font-black uppercase tracking-tight text-white/80 leading-tight line-clamp-2">
                         {item.category.replace(" Analysis", "").replace(" Detection", "")}
                     </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {score !== null && (
-                        <span className={cn("text-xs sm:text-lg font-black italic", getScoreColor(score))}>
+                        <span className={cn("text-sm sm:text-lg font-black italic whitespace-nowrap", getScoreColor(score))}>
                             {score}%
                         </span>
                     )}

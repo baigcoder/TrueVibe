@@ -105,7 +105,7 @@ export default function LandingPage() {
                     </Link>
 
                     <nav className="hidden lg:flex items-center gap-8">
-                        {['Features', 'Security', 'Modules', 'Mission'].map((item) => (
+                        {['Features', 'Security', 'Mission'].map((item) => (
                             <a key={item} href={`#${item.toLowerCase()}`} className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] hover:text-white transition-colors relative group">
                                 {item}
                                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all group-hover:w-full" />
@@ -287,7 +287,7 @@ export default function LandingPage() {
             </section>
 
             {/* Premium Feed & Shorts Showcase */}
-            <section id="modules" className="py-32 sm:py-48 px-4 sm:px-8 relative overflow-hidden bg-[#020617]">
+            <section id="features" className="py-32 sm:py-48 px-4 sm:px-8 relative overflow-hidden bg-[#020617]">
                 <div className="max-w-7xl mx-auto relative z-10">
                     <div className="text-center mb-24">
                         <m.div
