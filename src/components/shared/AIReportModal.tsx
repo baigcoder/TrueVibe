@@ -110,6 +110,14 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
                         <h4 className="text-xs sm:text-sm font-black uppercase tracking-tight text-white/90 leading-tight break-words">
                             {item.category.replace(" Analysis", "").replace(" Detection", "")}
                         </h4>
+                        {/* Short info always visible */}
+                        <p className="text-[10px] sm:text-xs text-slate-400 mt-1.5 leading-snug line-clamp-2">
+                            {item.category.includes("Face") && "Analyzes facial features for manipulation signs"}
+                            {item.category.includes("FFT") && "Detects AI-generated texture patterns in frequency domain"}
+                            {item.category.includes("Color") && "Checks color distribution consistency across the image"}
+                            {item.category.includes("Eye") && "Examines eye region for deepfake artifacts"}
+                            {item.category.includes("Noise") && "Analyzes noise patterns for synthetic content markers"}
+                        </p>
                     </div>
 
                     {/* Score Area - Far Right, Fixed width to prevent overlap */}
