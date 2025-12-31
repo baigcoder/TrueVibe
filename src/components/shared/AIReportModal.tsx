@@ -100,7 +100,7 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
                     )}>
                         <Icon className={cn("w-3.5 h-3.5 sm:w-5 sm:h-5", item.detected ? "text-red-400" : "text-slate-400")} />
                     </div>
-                    <span className="text-[9px] sm:text-xs font-black uppercase tracking-tight text-white/80 leading-tight line-clamp-2">
+                    <span className="text-[8px] sm:text-[11px] font-black uppercase tracking-tight text-white/80 leading-tight break-words">
                         {item.category.replace(" Analysis", "").replace(" Detection", "")}
                     </span>
                 </div>
