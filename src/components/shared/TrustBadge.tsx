@@ -72,7 +72,7 @@ export function TrustBadge({
         },
         suspicious: {
             icon: AlertTriangle,
-            label: "Review",
+            label: "Caution",
             color: "#f59e0b",
             textColor: "text-amber-400",
             borderColor: "border-amber-500/30",
@@ -372,15 +372,23 @@ export function TrustBadge({
                                     {/* Status Verdict - Compact */}
                                     <div className={cn(
                                         "w-full py-2 px-3 rounded-xl text-center border font-black text-[9px] tracking-[0.15em] italic bg-black/40",
-                                        derivedLevel === 'authentic' ? "border-emerald-500/20 text-emerald-400" :
-                                            derivedLevel === 'suspicious' ? "border-amber-500/20 text-amber-400" :
-                                                derivedLevel === 'likely_fake' ? "border-orange-500/20 text-orange-400" :
-                                                    "border-red-500/20 text-red-400"
+                                        isPendingState ? "border-slate-500/20 text-slate-400" :
+                                            derivedLevel === 'authentic' ? "border-emerald-500/20 text-emerald-400" :
+                                                derivedLevel === 'suspicious' ? "border-amber-500/20 text-amber-400" :
+                                                    derivedLevel === 'likely_fake' ? "border-orange-500/20 text-orange-400" :
+                                                        "border-red-500/20 text-red-400"
                                     )}>
-                                        {derivedLevel === 'authentic' ? "✓ VERIFIED" :
-                                            derivedLevel === 'suspicious' ? "⚠ REVIEW NEEDED" :
-                                                derivedLevel === 'likely_fake' ? "⚠ HIGH RISK" :
-                                                    "⛔ MANIPULATED"}
+                                        {isPendingState ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                                ANALYZING...
+                                            </span>
+                                        ) : (
+                                            derivedLevel === 'authentic' ? "✓ VERIFIED" :
+                                                derivedLevel === 'suspicious' ? "⚠ CAUTION" :
+                                                    derivedLevel === 'likely_fake' ? "⚠ HIGH RISK" :
+                                                        "⛔ MANIPULATED"
+                                        )}
                                     </div>
 
                                     {/* Action Buttons Row */}
@@ -429,15 +437,15 @@ export function TrustBadge({
                                         )}
                                     </div>
 
-                                    {/* View Report Button - Compact */}
-                                    {onGenerateReport && (
+                                    {/* View Report Button - Hidden when pending */}
+                                    {onGenerateReport && !isPendingState && (
                                         <m.button
                                             whileTap={{ scale: 0.98 }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onGenerateReport();
                                             }}
-                                            disabled={isGeneratingReport || isPendingState}
+                                            disabled={isGeneratingReport}
                                             className="w-full py-2.5 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
                                         >
                                             {isGeneratingReport ? (
