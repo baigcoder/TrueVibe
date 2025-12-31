@@ -369,6 +369,8 @@ async def analyze_image(request: AnalyzeRequest):
                 logger.info("📦 Returning cached analysis result")
                 # Update processing time to indicate cache hit
                 cached_result['processing_time_ms'] = 0
+                # Convert numpy types to native Python (for old cache entries)
+                cached_result = convert_numpy_types(cached_result)
                 return AnalyzeResponse(**cached_result)
         else:
             # Invalidate cache when force_reanalyze is requested
