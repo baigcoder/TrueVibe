@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ShieldOff, User, Search, AlertTriangle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
@@ -8,14 +8,15 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface BlockedUser {
     _id: string;
-    user: {
-        userId: string;
-        name: string;
-        handle: string;
-        avatar?: string;
-    };
+    userId: string;
     reason?: string;
     blockedAt: string;
+    profile: {
+        userId: string;
+        username: string;
+        displayName: string;
+        avatarUrl?: string;
+    } | null;
 }
 
 export function BlockedUsersSection() {
@@ -24,11 +25,11 @@ export function BlockedUsersSection() {
     const queryClient = useQueryClient();
 
     // Fetch blocked users
-    const { data: blockedData, isLoading, error } = useQuery({
+    const { data: blockedUsers = [], isLoading, error } = useQuery({
         queryKey: ['blockedUsers'],
         queryFn: async () => {
-            const response = await api.get('/users/blocked') as { data: { data: { blockedUsers: BlockedUser[]; total: number } } };
-            return response.data.data;
+            const response = await api.get('/users/blocked') as { data: { data: BlockedUser[] } };
+            return response.data.data || [];
         },
     });
 
@@ -48,13 +49,14 @@ export function BlockedUsersSection() {
         },
     });
 
-    const blockedUsers: BlockedUser[] = blockedData?.blockedUsers || [];
     const filteredUsers = blockedUsers.filter((blocked) => {
         if (!searchQuery.trim()) return true;
         const query = searchQuery.toLowerCase();
+        const name = blocked.profile?.displayName || blocked.profile?.username || '';
+        const handle = blocked.profile?.username || '';
         return (
-            blocked.user.name.toLowerCase().includes(query) ||
-            blocked.user.handle.toLowerCase().includes(query)
+            name.toLowerCase().includes(query) ||
+            handle.toLowerCase().includes(query)
         );
     });
 
@@ -105,7 +107,7 @@ export function BlockedUsersSection() {
             {/* Blocked Users List */}
             <div className="space-y-2">
                 {filteredUsers.map((blocked, index) => (
-                    <motion.div
+                    <m.div
                         key={blocked._id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -114,10 +116,10 @@ export function BlockedUsersSection() {
                     >
                         <div className="flex items-center gap-4">
                             {/* Avatar */}
-                            {blocked.user.avatar ? (
+                            {blocked.profile?.avatarUrl ? (
                                 <img
-                                    src={blocked.user.avatar}
-                                    alt={blocked.user.name}
+                                    src={blocked.profile.avatarUrl}
+                                    alt={blocked.profile.displayName || blocked.profile.username}
                                     className="w-12 h-12 rounded-full object-cover"
                                 />
                             ) : (
@@ -128,18 +130,18 @@ export function BlockedUsersSection() {
 
                             {/* User Info */}
                             <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white truncate">{blocked.user.name}</p>
-                                <p className="text-sm text-neutral-400">@{blocked.user.handle}</p>
+                                <p className="font-medium text-white truncate">{blocked.profile?.displayName || blocked.profile?.username || 'Unknown User'}</p>
+                                <p className="text-sm text-neutral-400">@{blocked.profile?.username || blocked.userId}</p>
                                 <p className="text-xs text-neutral-500 mt-1">
                                     Blocked {formatDistanceToNow(new Date(blocked.blockedAt), { addSuffix: true })}
                                 </p>
                             </div>
 
                             {/* Unblock Button */}
-                            {confirmUnblock === blocked.user.userId ? (
+                            {confirmUnblock === blocked.userId ? (
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => unblockMutation.mutate(blocked.user.userId)}
+                                        onClick={() => unblockMutation.mutate(blocked.userId)}
                                         disabled={unblockMutation.isPending}
                                         className="px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded-lg text-sm font-medium text-white transition-colors"
                                     >
@@ -154,7 +156,7 @@ export function BlockedUsersSection() {
                                 </div>
                             ) : (
                                 <button
-                                    onClick={() => setConfirmUnblock(blocked.user.userId)}
+                                    onClick={() => setConfirmUnblock(blocked.userId)}
                                     className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-xl text-sm font-medium text-white transition-colors"
                                 >
                                     Unblock
@@ -168,7 +170,7 @@ export function BlockedUsersSection() {
                                 Reason: {blocked.reason}
                             </p>
                         )}
-                    </motion.div>
+                    </m.div>
                 ))}
 
                 {filteredUsers.length === 0 && blockedUsers.length > 0 && (

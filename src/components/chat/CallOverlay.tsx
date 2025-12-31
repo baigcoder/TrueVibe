@@ -1,5 +1,5 @@
 import { useCall } from "@/context/CallContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Sparkles, Settings, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,7 +37,7 @@ export function CallOverlay() {
 
     return (
         <AnimatePresence>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -45,7 +45,7 @@ export function CallOverlay() {
             >
                 {/* Background Aura */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <motion.div
+                    <m.div
                         animate={{
                             scale: [1, 1.2, 1],
                             opacity: [0.1, 0.2, 0.1],
@@ -55,7 +55,7 @@ export function CallOverlay() {
                         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                         className="absolute -top-1/4 -right-1/4 w-[80%] h-[80%] bg-primary/20 blur-[120px] rounded-full"
                     />
-                    <motion.div
+                    <m.div
                         animate={{
                             scale: [1.2, 1, 1.2],
                             opacity: [0.1, 0.15, 0.1],
@@ -69,7 +69,7 @@ export function CallOverlay() {
 
                 {/* Ringing State */}
                 {isRinging && !isInCall && (
-                    <motion.div
+                    <m.div
                         initial={{ scale: 0.9, y: 20, opacity: 0 }}
                         animate={{ scale: 1, y: 0, opacity: 1 }}
                         exit={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -78,7 +78,7 @@ export function CallOverlay() {
                         <div className="relative mb-10 flex justify-center">
                             {/* Organic Pulse Layers */}
                             {[1, 2].map((i) => (
-                                <motion.div
+                                <m.div
                                     key={i}
                                     initial={{ scale: 1, opacity: 0.4 }}
                                     animate={{ scale: 2, opacity: 0 }}
@@ -87,7 +87,7 @@ export function CallOverlay() {
                                 />
                             ))}
 
-                            <motion.div
+                            <m.div
                                 animate={{ y: [0, -6, 0] }}
                                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                                 className="relative z-10 p-1 bg-gradient-to-br from-primary/30 to-accent/30 rounded-[2.5rem] shadow-2xl"
@@ -99,7 +99,7 @@ export function CallOverlay() {
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-lg shadow-emerald-500/20" />
-                            </motion.div>
+                            </m.div>
                         </div>
 
                         <div className="space-y-2 mb-12">
@@ -127,12 +127,12 @@ export function CallOverlay() {
                                 Accept
                             </Button>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {/* Active Call State */}
                 {isInCall && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="relative w-full h-full max-w-6xl aspect-video bg-black/60 rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_48px_100px_-24px_rgba(0,0,0,0.8)] group"
@@ -169,7 +169,7 @@ export function CallOverlay() {
 
                                     <div className="relative z-10 text-center mt-[-2rem]">
                                         <div className="relative mb-10 flex justify-center">
-                                            <motion.div
+                                            <m.div
                                                 animate={{
                                                     scale: [1, 1.2, 1],
                                                     opacity: [0.1, 0.3, 0.1]
@@ -189,7 +189,7 @@ export function CallOverlay() {
                                         </h3>
                                         <div className="flex gap-2 justify-center items-center h-12">
                                             {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                                                <motion.div
+                                                <m.div
                                                     key={i}
                                                     animate={{ height: [12, 40, 12] }}
                                                     transition={{
@@ -211,7 +211,7 @@ export function CallOverlay() {
 
                             {/* Local Video (PiP) */}
                             {callType === 'video' && (
-                                <motion.div
+                                <m.div
                                     drag
                                     dragConstraints={{ left: 20, right: 20, top: 20, bottom: 20 }}
                                     className="absolute bottom-8 right-8 w-48 sm:w-64 aspect-video bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl cursor-move active:scale-95 transition-all hover:border-primary/50 group/pip"
@@ -234,14 +234,14 @@ export function CallOverlay() {
                                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                                         <span className="text-[9px] font-bold text-white uppercase tracking-wider premium-font">Me</span>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             )}
                         </div>
 
                         {/* Controls Panel */}
                         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center gap-6 sm:gap-10 bg-black/40 backdrop-blur-3xl px-10 py-5 rounded-[2.5rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all hover:bg-black/50 hover:border-white/20">
                             <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5 backdrop-blur-2xl">
-                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <m.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -255,10 +255,10 @@ export function CallOverlay() {
                                     >
                                         {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                                     </Button>
-                                </motion.div>
+                                </m.div>
 
                                 {callType === 'video' && (
-                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                    <m.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -272,11 +272,11 @@ export function CallOverlay() {
                                         >
                                             {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
                                         </Button>
-                                    </motion.div>
+                                    </m.div>
                                 )}
                             </div>
 
-                            <motion.div
+                            <m.div
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.9 }}
                             >
@@ -286,7 +286,7 @@ export function CallOverlay() {
                                 >
                                     <PhoneOff className="w-7 h-7" />
                                 </Button>
-                            </motion.div>
+                            </m.div>
 
                             <div className="hidden sm:flex items-center gap-4">
                                 <Button
@@ -305,9 +305,9 @@ export function CallOverlay() {
                                 </Button>
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
-            </motion.div>
+            </m.div>
         </AnimatePresence>
     );
 }

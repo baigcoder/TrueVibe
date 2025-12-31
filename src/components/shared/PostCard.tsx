@@ -9,7 +9,7 @@ import {
     ShieldCheck, Trash2, Edit2, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
     useLikePost, useUnlikePost, useDeletePost,
     useUpdatePost, useRecordView
@@ -174,13 +174,40 @@ export function PostCard({ post }: PostCardProps) {
     };
 
     // Listen for AI analysis completion and refresh the post
-    useAIAnalysisUpdate(useCallback(({ postId: updatePostId }) => {
+    useAIAnalysisUpdate(useCallback(({ postId: updatePostId, analysis }) => {
         if (updatePostId === post._id || updatePostId === postId) {
             console.log(`🔔 AI Analysis complete for post: ${updatePostId}, refetching...`);
             // Force immediate refetch to get updated aiAnalysis data
             queryClient.invalidateQueries({ queryKey: ['posts', updatePostId], refetchType: 'all' });
             queryClient.invalidateQueries({ queryKey: ['feed'], refetchType: 'all' });
             queryClient.invalidateQueries({ queryKey: ['hashtags'], refetchType: 'all' });
+
+            // Show toast notification with scroll-to-post action
+            const trustLevel = analysis?.trustLevel || 'authentic';
+            const statusLabel = trustLevel === 'authentic' ? '✓ Verified' :
+                trustLevel === 'suspicious' ? '⚠ Review Needed' :
+                    trustLevel === 'likely_fake' ? '⚠ High Risk' : '⛔ Manipulated';
+
+            const scrollToPost = () => {
+                const postElement = document.getElementById(`post-${updatePostId}`);
+                if (postElement) {
+                    postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Add highlight effect
+                    postElement.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+                    setTimeout(() => {
+                        postElement.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+                    }, 3000);
+                }
+            };
+
+            toast.success(`AI Analysis Complete`, {
+                description: `TrustBadge: ${statusLabel}`,
+                action: {
+                    label: 'View Post',
+                    onClick: scrollToPost
+                },
+                duration: 6000
+            });
         }
     }, [post._id, postId, queryClient]));
 
@@ -245,14 +272,17 @@ export function PostCard({ post }: PostCardProps) {
     );
 
     // Auto-generate report when analysis is complete and no report exists
+    // Only try once - don't retry on errors
+    const [autoGenerateAttempted, setAutoGenerateAttempted] = useState(false);
     useEffect(() => {
-        if (canGenerateReport && !hasReport && !isLoadingReport && !isGenerating) {
+        if (canGenerateReport && !hasReport && !isLoadingReport && !isGenerating && !reportError && !autoGenerateAttempted) {
+            setAutoGenerateAttempted(true);
             // Auto-generate report silently in background
             generateReport().catch(() => {
                 // Silently fail - user can still manually generate
             });
         }
-    }, [canGenerateReport, hasReport, isLoadingReport, isGenerating, generateReport]);
+    }, [canGenerateReport, hasReport, isLoadingReport, isGenerating, reportError, autoGenerateAttempted, generateReport]);
 
     const handleGenerateReport = async () => {
         setShowReportModal(true);
@@ -320,11 +350,12 @@ export function PostCard({ post }: PostCardProps) {
     };
 
     return (
-        <motion.div
+        <m.div
+            id={`post-${postId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="group/post relative"
+            className="group/post relative transition-all duration-300"
         >
             <Card className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] relative">
                 {/* Technical Grid Pattern Overlay */}
@@ -379,13 +410,13 @@ export function PostCard({ post }: PostCardProps) {
                                 )}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <motion.button
+                                        <m.button
                                             whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.05)" }}
                                             whileTap={{ scale: 0.95 }}
                                             className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-white transition-colors"
                                         >
                                             <MoreHorizontal className="w-5 h-5" />
-                                        </motion.button>
+                                        </m.button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56 bg-slate-950/90 backdrop-blur-3xl border-white/10 rounded-2xl p-2 shadow-2xl">
                                         {isOwner && (
@@ -434,7 +465,7 @@ export function PostCard({ post }: PostCardProps) {
                 <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5 relative z-10">
                     {/* AI Logic Analysis - Technical Implementation */}
                     {((postImage || postVideo) || normalizedTrust !== 'authentic' || post.aiAnalysis) && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="relative group/trust"
@@ -468,7 +499,7 @@ export function PostCard({ post }: PostCardProps) {
                                 onDownloadReport={report ? handleDownloadReport : undefined}
                                 isDownloading={isDownloading}
                             />
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {isEditing ? (
@@ -483,7 +514,7 @@ export function PostCard({ post }: PostCardProps) {
                                 />
                             </div>
                             <div className="flex justify-end gap-3">
-                                <motion.button
+                                <m.button
                                     whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => {
@@ -493,8 +524,8 @@ export function PostCard({ post }: PostCardProps) {
                                     className="h-11 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all"
                                 >
                                     ABORT
-                                </motion.button>
-                                <motion.button
+                                </m.button>
+                                <m.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={handleEditSave}
@@ -502,7 +533,7 @@ export function PostCard({ post }: PostCardProps) {
                                     className="h-11 px-8 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(129,140,248,0.3)] hover:shadow-primary/50 transition-all disabled:opacity-50"
                                 >
                                     {updatePost.isPending ? "SYNCING..." : "DEPLOY_UPDATE"}
-                                </motion.button>
+                                </m.button>
                             </div>
                         </div>
                     ) : (
@@ -512,7 +543,7 @@ export function PostCard({ post }: PostCardProps) {
                     )}
 
                     {postImage && (
-                        <motion.div
+                        <m.div
                             whileHover={{ scale: 1.01 }}
                             transition={{ duration: 0.4 }}
                             className="rounded-[2rem] overflow-hidden mt-2 bg-slate-900 border border-white/10 group/img relative shadow-2xl cursor-pointer"
@@ -535,7 +566,7 @@ export function PostCard({ post }: PostCardProps) {
                                     Tap to zoom
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {postVideo && (
@@ -555,7 +586,7 @@ export function PostCard({ post }: PostCardProps) {
 
                 <CardFooter className="px-3 sm:px-6 py-3 sm:py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                        <motion.button
+                        <m.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLike}
@@ -573,9 +604,9 @@ export function PostCard({ post }: PostCardProps) {
                                 <Heart className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all duration-500 group-hover/btn:scale-110", post.isLiked && "fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]")} />
                             )}
                             <span className="text-[10px] sm:text-[11px] font-black tracking-widest">{likesCount}</span>
-                        </motion.button>
+                        </m.button>
 
-                        <motion.button
+                        <m.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowComments(!showComments)}
@@ -588,13 +619,13 @@ export function PostCard({ post }: PostCardProps) {
                         >
                             <MessageCircle className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all duration-500 group-hover/btn:scale-110", showComments && "fill-current drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")} />
                             <span className="text-[10px] sm:text-[11px] font-black tracking-widest">{commentsCount}</span>
-                        </motion.button>
+                        </m.button>
 
                         <div className="h-4 w-px bg-white/10 mx-1 hidden sm:block" />
 
                         <div className="hidden sm:flex items-center gap-2">
                             {isOwner && (
-                                <motion.button
+                                <m.button
                                     whileHover={{ scale: 1.05, backgroundColor: "rgba(129,140,248,0.1)" }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setShowAnalytics(true)}
@@ -602,13 +633,13 @@ export function PostCard({ post }: PostCardProps) {
                                     title="View Insights"
                                 >
                                     <BarChart3 className="w-4.5 h-4.5" />
-                                </motion.button>
+                                </m.button>
                             )}
                             <TipButton authorName={userName} />
                         </div>
                     </div>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, color: "#FDE047" }}
                         whileTap={{ scale: 0.9 }}
                         className={cn(
@@ -619,12 +650,12 @@ export function PostCard({ post }: PostCardProps) {
                         )}
                     >
                         <Bookmark className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all", post.isSaved && "fill-current")} />
-                    </motion.button>
+                    </m.button>
                 </CardFooter>
 
                 <AnimatePresence mode="wait">
                     {showComments && (
-                        <motion.div
+                        <m.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -634,7 +665,7 @@ export function PostCard({ post }: PostCardProps) {
                             <div className="p-2 sm:p-4">
                                 <CommentSection postId={postId} />
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </Card>
@@ -710,6 +741,6 @@ export function PostCard({ post }: PostCardProps) {
                 initialIndex={previewMediaIndex}
                 showStats={true}
             />
-        </motion.div>
+        </m.div>
     );
 }

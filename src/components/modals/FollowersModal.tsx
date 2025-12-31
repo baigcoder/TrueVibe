@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, UserPlus, UserMinus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -69,14 +69,14 @@ export function FollowersModal({ isOpen, onClose, userId, type, currentUserId }:
 
     return (
         <AnimatePresence>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                 onClick={onClose}
             >
-                <motion.div
+                <m.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
@@ -113,7 +113,7 @@ export function FollowersModal({ isOpen, onClose, userId, type, currentUserId }:
                         ) : (
                             <div className="space-y-2">
                                 {users.map((item, index) => (
-                                    <motion.div
+                                    <m.div
                                         key={item.user?.userId || index}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -171,7 +171,7 @@ export function FollowersModal({ isOpen, onClose, userId, type, currentUserId }:
                                                 )}
                                             </Button>
                                         )}
-                                    </motion.div>
+                                    </m.div>
                                 ))}
 
                                 {/* Load More */}
@@ -187,8 +187,8 @@ export function FollowersModal({ isOpen, onClose, userId, type, currentUserId }:
                             </div>
                         )}
                     </div>
-                </motion.div>
-            </motion.div>
+                </m.div>
+            </m.div>
         </AnimatePresence>
     );
 }

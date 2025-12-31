@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
     Play,
     Pause,
@@ -198,7 +198,7 @@ export function CustomVideoPlayer({
             {/* Center Play Button (when paused) */}
             <AnimatePresence>
                 {!isPlaying && (
-                    <motion.button
+                    <m.button
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
@@ -209,14 +209,14 @@ export function CustomVideoPlayer({
                         <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-2xl hover:bg-white/30 transition-all">
                             <Play className="w-7 h-7 text-white ml-1" fill="white" />
                         </div>
-                    </motion.button>
+                    </m.button>
                 )}
             </AnimatePresence>
 
             {/* Controls Overlay */}
             <AnimatePresence>
                 {showControls && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
@@ -326,7 +326,7 @@ export function CustomVideoPlayer({
                                 </button>
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
 

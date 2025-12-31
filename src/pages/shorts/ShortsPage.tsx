@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -199,21 +199,21 @@ const ShortItem = ({
                     {/* Double Tap Heart */}
                     <AnimatePresence>
                         {showHeart && (
-                            <motion.div
+                            <m.div
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: 1.5, opacity: 1 }}
                                 exit={{ scale: 2, opacity: 0 }}
                                 className="z-50"
                             >
                                 <Heart className="w-28 h-28 text-primary fill-primary drop-shadow-[0_0_40px_rgba(var(--primary-rgb),0.6)]" />
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
 
                     {/* Play/Pause Indicator */}
                     <AnimatePresence>
                         {!isPlaying && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, scale: 0.5 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.5 }}
@@ -221,28 +221,28 @@ const ShortItem = ({
                                 className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-2xl border border-white/20 flex items-center justify-center shadow-2xl"
                             >
                                 <Play className="w-9 h-9 text-white fill-white ml-1.5" />
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
 
                     {/* Buffering Indicator */}
                     <AnimatePresence>
                         {isBuffering && isPlaying && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="absolute"
                             >
                                 <div className="w-14 h-14 rounded-full border-2 border-white/20 border-t-primary animate-spin" />
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
 
                     {/* Brief controls overlay on tap */}
                     <AnimatePresence>
                         {showControls && isPlaying && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
@@ -251,7 +251,7 @@ const ShortItem = ({
                                 <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center">
                                     <Play className="w-7 h-7 text-white fill-white ml-1" />
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>
@@ -405,7 +405,7 @@ const ShortItem = ({
                             style={{ width: `${Math.min(progress + 20, 100)}%` }}
                         />
                         {/* Progress */}
-                        <motion.div
+                        <m.div
                             className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-purple-500 shadow-[0_0_15px_rgba(var(--primary-rgb),0.8)]"
                             style={{ width: `${progress}%` }}
                         />
@@ -649,7 +649,7 @@ export default function ShortsPage() {
 
                 <div className="flex flex-col items-center gap-2">
                     <div className="h-24 w-1 rounded-full bg-white/5 overflow-hidden relative">
-                        <motion.div
+                        <m.div
                             className="absolute top-0 left-0 w-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
                             animate={{ height: `${((currentIndex + 1) / shorts.length) * 100}%` }}
                         />
@@ -669,7 +669,7 @@ export default function ShortsPage() {
 
             {/* Create Button Overlay - Adjusted for 100dvh */}
             <div className="absolute bottom-24 sm:bottom-10 left-6 sm:left-10 z-50">
-                <motion.button
+                <m.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsCreateOpen(true)}
@@ -678,7 +678,7 @@ export default function ShortsPage() {
                     <div className="w-full h-full bg-slate-950/80 backdrop-blur-xl rounded-[0.9rem] flex items-center justify-center transition-all group-hover:bg-transparent">
                         <Plus className="w-5 h-5 text-white" />
                     </div>
-                </motion.button>
+                </m.button>
             </div>
 
             {/* Comments Panel - Hybrid Responsive */}
@@ -686,7 +686,7 @@ export default function ShortsPage() {
                 {isCommentOpen && (
                     <>
                         {/* Backdrop for mobile */}
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -694,7 +694,7 @@ export default function ShortsPage() {
                             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] md:hidden"
                         />
 
-                        <motion.div
+                        <m.div
                             initial={window.innerWidth < 768 ? { y: '100%' } : { x: '100%' }}
                             animate={window.innerWidth < 768 ? { y: 0 } : { x: 0 }}
                             exit={window.innerWidth < 768 ? { y: '100%' } : { x: '100%' }}
@@ -793,7 +793,7 @@ export default function ShortsPage() {
                                     </Button>
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     </>
                 )}
             </AnimatePresence>

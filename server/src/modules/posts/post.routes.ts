@@ -18,6 +18,45 @@ const router = Router();
 // Create post
 router.post('/', authenticate, validateBody(createPostSchema), createPost);
 
+// ============ SPECIFIC ROUTES MUST COME BEFORE /:id ============
+
+// ============ DRAFTS ============
+// Get drafts (must come before /:id)
+router.get('/drafts', authenticate, getDrafts);
+router.get('/drafts/list', authenticate, getDrafts);
+
+// Save draft
+router.post('/drafts/save', authenticate, saveDraft);
+
+// Delete draft
+router.delete('/drafts/:id', authenticate, deleteDraft);
+
+// Publish draft
+router.post('/drafts/:id/publish', authenticate, publishDraft);
+
+// ============ SCHEDULING ============
+// Get scheduled posts (must come before /:id)
+router.get('/scheduled', authenticate, getScheduledPosts);
+router.get('/scheduled/list', authenticate, getScheduledPosts);
+
+// Cancel scheduled post
+router.delete('/scheduled/:id', authenticate, cancelScheduledPost);
+
+// ============ HASHTAGS ============
+// Get trending hashtags
+router.get('/hashtags/trending', optionalAuth, getTrendingHashtags);
+
+// Get posts by hashtag
+router.get('/hashtags/:hashtag', optionalAuth, getHashtagPosts);
+
+// Get user posts
+router.get('/user/:userId', optionalAuth, getUserPosts);
+
+// Get user liked posts
+router.get('/user/:userId/likes', optionalAuth, getLikedPosts);
+
+// ============ NOW THE /:id ROUTES ============
+
 // Get post
 router.get('/:id', optionalAuth, getPost);
 
@@ -40,19 +79,6 @@ router.post('/:id/repost', authenticate, repost);
 
 // Get AI analysis
 router.get('/:id/ai-analysis', optionalAuth, getAIAnalysis);
-
-// Get user posts
-router.get('/user/:userId', optionalAuth, getUserPosts);
-
-// Get user liked posts
-router.get('/user/:userId/likes', optionalAuth, getLikedPosts);
-
-// ============ HASHTAGS ============
-// Get trending hashtags
-router.get('/hashtags/trending', optionalAuth, getTrendingHashtags);
-
-// Get posts by hashtag
-router.get('/hashtags/:hashtag', optionalAuth, getHashtagPosts);
 
 // ============ POLLS ============
 // Vote on poll
@@ -79,26 +105,6 @@ router.post('/:id/download-pdf-report', authenticate, downloadPDFReport);
 
 // Email PDF report to admin (owner-only)
 router.post('/:id/email-pdf-report', authenticate, emailPDFReport);
-
-// ============ DRAFTS ============
-// Save draft
-router.post('/drafts/save', authenticate, saveDraft);
-
-// Get drafts
-router.get('/drafts/list', authenticate, getDrafts);
-
-// Delete draft
-router.delete('/drafts/:id', authenticate, deleteDraft);
-
-// Publish draft
-router.post('/drafts/:id/publish', authenticate, publishDraft);
-
-// ============ SCHEDULING ============
-// Get scheduled posts
-router.get('/scheduled/list', authenticate, getScheduledPosts);
-
-// Cancel scheduled post
-router.delete('/scheduled/:id', authenticate, cancelScheduledPost);
 
 // Analytics
 router.post('/:id/view', authenticate, recordView);

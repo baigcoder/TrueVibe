@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Clock, Key, Fingerprint, Activity, ShieldAlert, Sparkles } from 'lucide-react';
 import { useVoiceRoom } from '@/context/VoiceRoomContext';
 import { toast } from 'sonner';
@@ -45,7 +45,7 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -54,7 +54,7 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                     />
 
                     {/* Modal */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -102,12 +102,12 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                                     {waitingForApproval ? (
                                         <div className="text-center py-12">
                                             <div className="relative w-32 h-32 mx-auto mb-10">
-                                                <motion.div
+                                                <m.div
                                                     animate={{ rotate: 360 }}
                                                     transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                                                     className="absolute inset-0 rounded-full border-2 border-primary/10 border-t-primary shadow-[0_0_40px_rgba(129,140,248,0.2)]"
                                                 />
-                                                <motion.div
+                                                <m.div
                                                     animate={{ rotate: -360 }}
                                                     transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
                                                     className="absolute inset-4 rounded-full border-2 border-white/5 border-b-primary/40"
@@ -197,7 +197,7 @@ export function JoinRoomModal({ isOpen, onClose, initialRoomId = '' }: JoinRoomM
                                 )}
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 </>
             )
             }

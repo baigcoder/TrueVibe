@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,7 +35,7 @@ export function OfflineIndicator() {
     return (
         <AnimatePresence>
             {!isOnline && (
-                <motion.div
+                <m.div
                     initial={{ y: -100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -100, opacity: 0 }}
@@ -59,11 +59,11 @@ export function OfflineIndicator() {
                             Retry
                         </Button>
                     </div>
-                </motion.div>
+                </m.div>
             )}
 
             {showReconnected && (
-                <motion.div
+                <m.div
                     initial={{ y: -100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -100, opacity: 0 }}
@@ -73,7 +73,7 @@ export function OfflineIndicator() {
                         <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                         <p className="text-white font-medium text-sm">Back online!</p>
                     </div>
-                </motion.div>
+                </m.div>
             )}
         </AnimatePresence>
     );

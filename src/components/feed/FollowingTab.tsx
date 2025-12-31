@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,7 +60,7 @@ export function FollowingTab() {
 
     if (followingItems.length === 0) {
         return (
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-[#0c0c0e]/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] p-16 text-center relative overflow-hidden group"
@@ -84,14 +84,14 @@ export function FollowingTab() {
                         </Button>
                     </Link>
                 </div>
-            </motion.div>
+            </m.div>
         );
     }
 
     return (
         <div className="space-y-4">
             {/* Header Stats */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 border border-white/10 rounded-2xl p-4 flex items-center justify-between"
@@ -109,7 +109,7 @@ export function FollowingTab() {
                     <Activity className="w-4 h-4 text-emerald-400" />
                     <span className="text-xs font-bold text-white/80">Active</span>
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Following List */}
             <AnimatePresence mode="popLayout">
@@ -117,7 +117,7 @@ export function FollowingTab() {
                     const user = item.user;
                     if (!user) return null;
                     return (
-                        <motion.div
+                        <m.div
                             key={user._id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -202,7 +202,7 @@ export function FollowingTab() {
                                     </Button>
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     );
                 })}
             </AnimatePresence>
@@ -227,7 +227,7 @@ export function FollowingTab() {
             )}
 
             {/* Discover More CTA */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -242,7 +242,7 @@ export function FollowingTab() {
                         Discover More Creators
                     </Button>
                 </Link>
-            </motion.div>
+            </m.div>
         </div>
     );
 }

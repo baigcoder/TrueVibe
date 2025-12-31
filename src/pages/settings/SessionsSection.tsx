@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
     Monitor,
     Smartphone,
@@ -38,11 +38,11 @@ export function SessionsSection() {
     const queryClient = useQueryClient();
 
     // Fetch sessions
-    const { data: sessions, isLoading, error } = useQuery({
+    const { data: sessions = [], isLoading, error } = useQuery({
         queryKey: ['sessions'],
         queryFn: async () => {
             const response = await api.get('/auth/sessions') as { data: { data: { sessions: Session[] } } };
-            return response.data.data.sessions;
+            return response.data?.data?.sessions || [];
         },
     });
 
@@ -163,7 +163,7 @@ export function SessionsSection() {
             {/* Sessions List */}
             <div className="space-y-3">
                 {sessions?.map((session, index) => (
-                    <motion.div
+                    <m.div
                         key={session._id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -225,7 +225,7 @@ export function SessionsSection() {
                                 </button>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 ))}
 
                 {(!sessions || sessions.length === 0) && (

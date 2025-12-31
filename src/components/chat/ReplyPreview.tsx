@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { X, Reply } from 'lucide-react';
 
 interface ReplyPreviewProps {
@@ -13,7 +13,7 @@ interface ReplyPreviewProps {
 
 export function ReplyPreview({ replyingTo, onCancel }: ReplyPreviewProps) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
@@ -41,7 +41,7 @@ export function ReplyPreview({ replyingTo, onCancel }: ReplyPreviewProps) {
             >
                 <X className="w-4 h-4 text-neutral-400" />
             </button>
-        </motion.div>
+        </m.div>
     );
 }
 

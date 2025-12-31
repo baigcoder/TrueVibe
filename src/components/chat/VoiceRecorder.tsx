@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Mic, Square, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -122,7 +122,7 @@ export function VoiceRecorder({ onRecordingComplete, onCancel, maxDuration = 120
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -144,7 +144,7 @@ export function VoiceRecorder({ onRecordingComplete, onCancel, maxDuration = 120
                     {/* Audio visualization */}
                     <div className="flex items-center gap-1 h-10">
                         {Array.from({ length: 20 }).map((_, i) => (
-                            <motion.div
+                            <m.div
                                 key={i}
                                 className="w-1 bg-primary rounded-full"
                                 animate={{
@@ -181,7 +181,7 @@ export function VoiceRecorder({ onRecordingComplete, onCancel, maxDuration = 120
                     </div>
                 </>
             )}
-        </motion.div>
+        </m.div>
     );
 }
 

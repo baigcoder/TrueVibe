@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
     Layout, Play, Users, Cpu, ShieldCheck,
     Zap, Sparkles, MessageSquare,
@@ -142,7 +142,7 @@ const BackgroundAtmosphere = () => {
     return (
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.2]" />
-            <motion.div
+            <m.div
                 animate={{
                     opacity: [0.05, 0.1, 0.05],
                     scale: [1, 1.1, 1],
@@ -152,7 +152,7 @@ const BackgroundAtmosphere = () => {
             >
                 <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full" />
                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary/10 blur-[120px] rounded-full" />
-            </motion.div>
+            </m.div>
         </div>
     );
 };
@@ -234,14 +234,14 @@ export default function ModulesPage() {
             <main className="pt-28 sm:pt-40 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
                 {/* Hero Header */}
                 <div className="mb-16 sm:mb-24 text-center">
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-full bg-secondary/5 border border-secondary/10 text-secondary text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.5em] mb-6 sm:mb-8"
                     >
                         <Zap className="w-3 h-3" />
                         SYSTEM_ARCHIVE_CORE_v4
-                    </motion.div>
+                    </m.div>
 
                     <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl lg:text-7xl xl:text-8xl font-black text-white italic uppercase tracking-tighter mb-6 sm:mb-8 leading-none">
                         DETAILED_ <br />
@@ -264,7 +264,7 @@ export default function ModulesPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {category.items.map((module, idx) => (
-                                <motion.div
+                                <m.div
                                     key={module.title}
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -312,7 +312,7 @@ export default function ModulesPage() {
 
                                     {/* Decorative background glow */}
                                     <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary/5 blur-[60px] rounded-full group-hover:bg-primary/10 transition-all duration-700" />
-                                </motion.div>
+                                </m.div>
                             ))}
                         </div>
                     </section>

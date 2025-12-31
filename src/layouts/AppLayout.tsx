@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Outlet, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
     Plus,
@@ -196,14 +196,14 @@ export default function AppLayout() {
                                 >
                                     {/* Active Background Pill */}
                                     {isActive(item.path) && (
-                                        <motion.div
+                                        <m.div
                                             layoutId="sidebarActivePill"
                                             className="absolute inset-0 bg-white/[0.05] border border-white/10 rounded-2xl"
                                             transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-secondary/5" />
                                             <div className="absolute left-0 top-3 bottom-3 w-[2px] bg-primary shadow-[0_0_10px_rgba(129,140,248,0.8)]" />
-                                        </motion.div>
+                                        </m.div>
                                     )}
 
                                     {/* Shimmer on Hover */}
@@ -222,13 +222,13 @@ export default function AppLayout() {
                                     )}>{item.label}</span>
 
                                     {item.label === "Notifications" && totalUnreadCount > 0 && (
-                                        <motion.div
+                                        <m.div
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
                                             className="absolute right-4 px-1.5 h-4 min-w-[16px] rounded-full bg-primary text-[8px] font-black flex items-center justify-center text-white shadow-[0_0_12px_rgba(129,140,248,0.6)] z-10"
                                         >
                                             {displayBadgeCount}
-                                        </motion.div>
+                                        </m.div>
                                     )}
                                 </Button>
                             </Link>
@@ -311,14 +311,14 @@ export default function AppLayout() {
                                 <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl h-11 w-11 relative transition-all active:scale-95">
                                     <Bell className="w-5 h-5" />
                                     {totalUnreadCount > 0 && (
-                                        <motion.span
+                                        <m.span
                                             key={totalUnreadCount}
                                             initial={{ scale: 0, y: 5 }}
                                             animate={{ scale: 1, y: 0 }}
                                             className="absolute -top-1 -right-1 min-w-[22px] h-5.5 px-1.5 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-[0_0_15px_rgba(129,140,248,0.4)] border border-white/20 z-20"
                                         >
                                             {displayBadgeCount}
-                                        </motion.span>
+                                        </m.span>
                                     )}
                                 </Button>
                             </Link>
@@ -385,7 +385,7 @@ export default function AppLayout() {
                                 "p-4 lg:p-8 pb-32 lg:pb-8 overflow-y-auto overflow-x-hidden scrollbar-hide"
                 )}>
                     <AnimatePresence mode="wait">
-                        <motion.div
+                        <m.div
                             key={location.pathname}
                             initial={{ opacity: 0, y: 10, scale: 0.995 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -394,7 +394,7 @@ export default function AppLayout() {
                             className="w-full h-full"
                         >
                             <Outlet />
-                        </motion.div>
+                        </m.div>
                     </AnimatePresence>
                 </main>
 
@@ -404,7 +404,7 @@ export default function AppLayout() {
                         {/* Aurora Background Effects & Technical Grid Overlay */}
                         <div className="absolute inset-0 pointer-events-none overflow-hidden">
                             <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
-                            <motion.div
+                            <m.div
                                 animate={{
                                     opacity: [0.05, 0.1, 0.05],
                                     scale: [1, 1.1, 1],
@@ -412,7 +412,7 @@ export default function AppLayout() {
                                 transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
                                 className="absolute top-20 -right-32 w-80 h-80 bg-primary/20 blur-[120px] rounded-full"
                             />
-                            <motion.div
+                            <m.div
                                 animate={{
                                     opacity: [0.03, 0.08, 0.03],
                                     scale: [1, 1.1, 1],
@@ -432,7 +432,7 @@ export default function AppLayout() {
                         </div>
 
                         {/* Follow Requests - TECHNICAL GLASS REDESIGN */}
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
@@ -460,7 +460,7 @@ export default function AppLayout() {
                                     </div>
                                 ) : followRequests.length > 0 ? (
                                     followRequests.map((request: any, index: number) => (
-                                        <motion.div
+                                        <m.div
                                             key={request._id}
                                             initial={{ opacity: 0, x: 10 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -485,7 +485,7 @@ export default function AppLayout() {
                                             </div>
 
                                             <div className="flex gap-2">
-                                                <motion.button
+                                                <m.button
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={() => handleAcceptRequest(request._id)}
@@ -493,9 +493,9 @@ export default function AppLayout() {
                                                     title="Accept"
                                                 >
                                                     <Plus className="w-4 h-4" />
-                                                </motion.button>
+                                                </m.button>
 
-                                                <motion.button
+                                                <m.button
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={() => handleRejectRequest(request._id)}
@@ -503,9 +503,9 @@ export default function AppLayout() {
                                                     title="Reject"
                                                 >
                                                     <X className="w-4 h-4" />
-                                                </motion.button>
+                                                </m.button>
                                             </div>
-                                        </motion.div>
+                                        </m.div>
                                     ))
                                 ) : (
                                     <div className="py-6 text-center">
@@ -513,10 +513,10 @@ export default function AppLayout() {
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
+                        </m.div>
 
                         {/* Suggested Users - VIBE MATCH DESIGN */}
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
@@ -529,12 +529,12 @@ export default function AppLayout() {
                                     <h3 className="text-[10px] font-black text-white uppercase tracking-[0.25em] italic">Vibe_Match</h3>
                                 </div>
                                 <Link to="/app/search">
-                                    <motion.button
+                                    <m.button
                                         whileHover={{ x: 3 }}
                                         className="flex items-center gap-1.5 text-[8px] font-black text-primary/80 uppercase tracking-widest hover:text-primary transition-colors"
                                     >
                                         EXPLORE <ChevronRight className="w-3 h-3" />
-                                    </motion.button>
+                                    </m.button>
                                 </Link>
                             </div>
 
@@ -559,7 +559,7 @@ export default function AppLayout() {
                                         })
                                         .slice(0, 5) // Keep it focused
                                         .map((suggestedUser: any, index: number) => (
-                                            <motion.div
+                                            <m.div
                                                 key={suggestedUser.userId || suggestedUser._id}
                                                 initial={{ opacity: 0, x: 20 }}
                                                 animate={{ opacity: 1, x: 0 }}
@@ -587,7 +587,7 @@ export default function AppLayout() {
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest truncate">@{suggestedUser.handle || 'viber'}</p>
                                                 </div>
 
-                                                <motion.button
+                                                <m.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={(e) => {
@@ -606,8 +606,8 @@ export default function AppLayout() {
                                                     )}
                                                 >
                                                     {followedUsers.has((suggestedUser.userId || suggestedUser._id) as any) ? '✓' : 'SYNC'}
-                                                </motion.button>
-                                            </motion.div>
+                                                </m.button>
+                                            </m.div>
                                         ))
                                 ) : (
                                     <div className="w-full py-10 text-center">
@@ -615,7 +615,7 @@ export default function AppLayout() {
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
+                        </m.div>
 
                         {/* Footer */}
                         <div className="px-4 pt-2 space-y-3 flex-shrink-0">
@@ -684,7 +684,7 @@ export default function AppLayout() {
                     {isProfileDrawerOpen && (
                         <>
                             {/* Backdrop */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
@@ -692,7 +692,7 @@ export default function AppLayout() {
                                 className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] lg:hidden"
                             />
                             {/* Drawer Content */}
-                            <motion.div
+                            <m.div
                                 initial={{ x: '100%', opacity: 0 }}
                                 animate={{ x: 0, opacity: 1 }}
                                 exit={{ x: '100%', opacity: 0 }}
@@ -720,7 +720,7 @@ export default function AppLayout() {
                                 </div>
 
                                 {/* Profile Info - High Fidelity */}
-                                <motion.div
+                                <m.div
                                     initial={{ y: 20, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.1 }}
@@ -761,7 +761,7 @@ export default function AppLayout() {
                                             </div>
                                         </Link>
                                     </div>
-                                </motion.div>
+                                </m.div>
 
                                 {/* Menu Items - Staggered */}
                                 <div className="space-y-3 flex-1 overflow-y-auto scrollbar-hide relative z-10 px-1">
@@ -770,7 +770,7 @@ export default function AppLayout() {
                                         { icon: Settings, label: "System Settings", sub: "Configure directives", route: "/app/settings", color: "text-secondary", bg: "bg-secondary/10" },
                                         { icon: Bell, label: "Signal Feed", sub: "Neural notifications", route: "/app/notifications", color: "text-orange-400", bg: "bg-orange-500/10", count: totalUnreadCount }
                                     ].map((item, idx) => (
-                                        <motion.div
+                                        <m.div
                                             key={item.label}
                                             initial={{ x: 20, opacity: 0 }}
                                             animate={{ x: 0, opacity: 1 }}
@@ -795,12 +795,12 @@ export default function AppLayout() {
                                                     </div>
                                                 </Button>
                                             </Link>
-                                        </motion.div>
+                                        </m.div>
                                     ))}
                                 </div>
 
                                 {/* Footer / Logout - KILL SWITCH */}
-                                <motion.div
+                                <m.div
                                     initial={{ y: 50, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.5 }}
@@ -834,8 +834,8 @@ export default function AppLayout() {
                                             <span className="w-1 h-1 bg-orange-500/40 rounded-full" />
                                         </div>
                                     </div>
-                                </motion.div>
-                            </motion.div>
+                                </m.div>
+                            </m.div>
                         </>
                     )}
                 </AnimatePresence>

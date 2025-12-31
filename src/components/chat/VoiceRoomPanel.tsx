@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
     Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
     Copy, LogOut, Volume2, Shield, Trash2, Check, X, UserPlus
@@ -45,7 +45,7 @@ export function RoomParticipant({
     }, [stream]);
 
     return (
-        <motion.div
+        <m.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className={cn(
@@ -72,7 +72,7 @@ export function RoomParticipant({
 
                     {participant.avatar ? (
                         <div className="relative group/avatar">
-                            <motion.div
+                            <m.div
                                 animate={!muted ? { scale: [1, 1.05, 1] } : {}}
                                 transition={{ duration: 2, repeat: Infinity }}
                                 className="absolute -inset-2 bg-primary/20 rounded-full blur-md opacity-0 group-hover/avatar:opacity-100 transition-opacity"
@@ -103,7 +103,7 @@ export function RoomParticipant({
             {!muted && (
                 <div className="absolute top-3 right-3 z-20">
                     <div className="relative flex items-center justify-center">
-                        <motion.div
+                        <m.div
                             animate={{ scale: [1, 2, 1], opacity: [0.3, 0.6, 0.3] }}
                             transition={{ duration: 2, repeat: Infinity }}
                             className="absolute w-8 h-8 rounded-full bg-primary/30"
@@ -145,7 +145,7 @@ export function RoomParticipant({
                     )}
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -286,7 +286,7 @@ export function VoiceRoomPanel() {
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -380,7 +380,7 @@ export function VoiceRoomPanel() {
             {/* Join Requests Overlay */}
             <AnimatePresence>
                 {showRequests && pendingRequests.length > 0 && isAdmin && (
-                    <motion.div
+                    <m.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -434,7 +434,7 @@ export function VoiceRoomPanel() {
                                 ))}
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
 
@@ -542,7 +542,7 @@ export function VoiceRoomPanel() {
                     </button>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 

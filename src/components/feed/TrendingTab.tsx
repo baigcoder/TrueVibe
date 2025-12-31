@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,7 +56,7 @@ export function TrendingTab() {
     return (
         <div className="space-y-6">
             {/* Hot Right Now Banner */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative bg-gradient-to-r from-orange-500/20 via-rose-500/20 to-purple-500/20 border border-white/10 rounded-2xl p-5 overflow-hidden"
@@ -73,17 +73,17 @@ export function TrendingTab() {
                         <p className="text-white/60 text-sm">Discover what's trending on TrueVibe</p>
                     </div>
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Trending Categories */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="grid grid-cols-2 gap-3"
             >
                 {TRENDING_CATEGORIES.map((category, index) => (
-                    <motion.div
+                    <m.div
                         key={category.name}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -98,12 +98,12 @@ export function TrendingTab() {
                         </div>
                         <h4 className="font-bold text-white text-sm">{category.name}</h4>
                         <p className="text-white/40 text-xs mt-1">Explore →</p>
-                    </motion.div>
+                    </m.div>
                 ))}
-            </motion.div>
+            </m.div>
 
             {/* Trending Hashtags */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
@@ -118,7 +118,7 @@ export function TrendingTab() {
                 <div className="space-y-3">
                     {trendingHashtags.length > 0 ? (
                         trendingHashtags.map((topic: any, index: number) => (
-                            <motion.div
+                            <m.div
                                 key={topic._id || topic.hashtag || index}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -138,16 +138,16 @@ export function TrendingTab() {
                                     <ArrowUpRight className="w-3 h-3 text-primary" />
                                     <span className="text-xs font-bold text-primary">Trending</span>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         ))
                     ) : (
                         <p className="text-center text-white/40 py-4">No trending topics yet. Start posting!</p>
                     )}
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Trending Creators */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
@@ -172,7 +172,7 @@ export function TrendingTab() {
                 ) : (
                     <div className="space-y-3">
                         {trendingCreators.slice(0, 5).map((creator: any, index: number) => (
-                            <motion.div
+                            <m.div
                                 key={creator._id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -215,11 +215,11 @@ export function TrendingTab() {
                                 >
                                     {followingIds.has(creator._id) ? "Following" : "Follow"}
                                 </Button>
-                            </motion.div>
+                            </m.div>
                         ))}
                     </div>
                 )}
-            </motion.div>
+            </m.div>
         </div>
     );
 }

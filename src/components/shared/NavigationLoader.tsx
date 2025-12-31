@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 interface NavigationLoaderProps {
@@ -22,7 +22,7 @@ export function NavigationLoader({ isNavigating }: NavigationLoaderProps) {
             {isVisible && (
                 <>
                     {/* Top Progress Bar */}
-                    <motion.div
+                    <m.div
                         initial={{ width: "0%", opacity: 0 }}
                         animate={{
                             width: isNavigating ? "70%" : "100%",
@@ -37,7 +37,7 @@ export function NavigationLoader({ isNavigating }: NavigationLoaderProps) {
                     />
 
                     {/* Subtle Overlay & Blur for the content area */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

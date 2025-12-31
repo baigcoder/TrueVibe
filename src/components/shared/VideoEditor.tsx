@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
     X, Check, RotateCcw, Play, Pause,
@@ -190,7 +190,7 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
 
     return createPortal(
         <AnimatePresence>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -445,7 +445,7 @@ export function VideoEditor({ videoUrl, onApply, onCancel }: VideoEditorProps) {
                         )}
                     </Button>
                 </div>
-            </motion.div>
+            </m.div>
         </AnimatePresence>,
         document.body
     );

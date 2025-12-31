@@ -1,6 +1,6 @@
 import { ShieldCheck, AlertTriangle, XOctagon, Clock, RefreshCw, ChevronDown, Scan, Brain, FileText, X, Mail, FileDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
 type TrustLevel = 'authentic' | 'suspicious' | 'fake' | 'likely_fake' | 'analyzing' | 'pending';
@@ -147,22 +147,22 @@ export function TrustBadge({
     const realPercent = 100 - fakePercent;
 
     // Derive the ACTUAL level from SCORE FIRST to ensure accuracy
-    // This ensures 66% authentic shows as VERIFIED, not SUSPICIOUS
-    // More lenient thresholds based on real-world testing:
-    // - Under 35% fake = VERIFIED (authentic)
-    // - 35-50% fake = SUSPICIOUS (needs review)
-    // - 50-65% fake = LIKELY FAKE (high risk)
-    // - 65%+ fake = DEEPFAKE (confirmed)
+    // This ensures 60%+ authentic shows as VERIFIED
+    // Professional thresholds:
+    // - 40% or less fake (60%+ authentic) = VERIFIED (authentic)
+    // - 40-55% fake (45-60% authentic) = REVIEW (needs review)
+    // - 55-70% fake (30-45% authentic) = HIGH RISK (likely fake)
+    // - 70%+ fake (under 30% authentic) = MANIPULATED (confirmed fake)
     let rawLevel: string;
     if (isPendingState) {
         rawLevel = level.toLowerCase();
     } else if (analysisDetails?.fakeScore !== undefined) {
-        // fakeScore is 0-1 (0.34 = 34% fake, 66% authentic)
+        // fakeScore is 0-1 (0.35 = 35% fake, 65% authentic)
         const fakePct = analysisDetails.fakeScore;
-        if (fakePct < 0.35) rawLevel = 'authentic';          // 65%+ authentic = VERIFIED
-        else if (fakePct < 0.50) rawLevel = 'suspicious';    // 50-65% authentic = SUSPICIOUS
-        else if (fakePct < 0.65) rawLevel = 'likely_fake';   // 35-50% authentic = LIKELY FAKE
-        else rawLevel = 'fake';                               // <35% authentic = DEEPFAKE
+        if (fakePct <= 0.40) rawLevel = 'authentic';          // 60%+ authentic = VERIFIED
+        else if (fakePct <= 0.55) rawLevel = 'suspicious';    // 45-60% authentic = REVIEW
+        else if (fakePct <= 0.70) rawLevel = 'likely_fake';   // 30-45% authentic = HIGH RISK
+        else rawLevel = 'fake';                                // <30% authentic = MANIPULATED
     } else if (analysisDetails?.classification) {
         rawLevel = analysisDetails.classification.toLowerCase();
     } else {
@@ -185,7 +185,7 @@ export function TrustBadge({
 
     if (compact) {
         return (
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className={cn(
@@ -202,13 +202,13 @@ export function TrustBadge({
                 <span className="text-[10px] font-mono font-bold text-white/80">
                     {badgeDisplayPercent}
                 </span>
-            </motion.div>
+            </m.div>
         );
     }
 
     return (
         <div className="relative group/trust">
-            <motion.div
+            <m.div
                 onClick={() => setShowDetails(!showDetails)}
                 className={cn(
                     "inline-flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 pr-2.5 sm:pr-4 rounded-xl sm:rounded-2xl border bg-slate-950/80 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/80 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
@@ -245,7 +245,7 @@ export function TrustBadge({
                         </div>
                         <div className="flex items-center gap-2 mt-1 sm:mt-1.5">
                             <div className="w-16 sm:w-24 h-1 sm:h-1.5 bg-white/5 rounded-full overflow-hidden p-[0.5px]">
-                                <motion.div
+                                <m.div
                                     className={cn("h-full rounded-full", displayConfig.signalColor)}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${badgeProgressValue}%` }}
@@ -262,14 +262,14 @@ export function TrustBadge({
                         )} />
                     </div>
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Details Panel - CENTERED ON SCREEN */}
             <AnimatePresence>
                 {showDetails && (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 pb-24 sm:p-4 sm:py-8">
                         {/* Backdrop with Strong Blur */}
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -278,7 +278,7 @@ export function TrustBadge({
                         />
 
                         {/* Panel - Centered with better mobile handling */}
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -326,7 +326,7 @@ export function TrustBadge({
                                                 <div className="relative w-10 h-10">
                                                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                                                         <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.05]" />
-                                                        <motion.circle
+                                                        <m.circle
                                                             cx="18" cy="18" r="16" fill="none" stroke={gauge.color} strokeWidth="4" strokeLinecap="round"
                                                             strokeDasharray={`${isPendingState ? 0 : gauge.p * 1.005} 100`}
                                                             initial={{ strokeDasharray: "0 100" }}
@@ -346,11 +346,22 @@ export function TrustBadge({
 
                                     {/* Metrics - Compact */}
                                     <div className="w-full space-y-1.5 px-1">
-                                        {[
-                                            { label: "Accuracy", val: analysisDetails?.temporalBoost !== undefined ? `${analysisDetails.temporalBoost > 0 ? '+' : ''}${Math.round(analysisDetails.temporalBoost * 100)}%` : "N/A", color: "text-emerald-400" },
-                                            { label: "Frames", val: analysisDetails?.framesAnalyzed?.toString() || "0", color: "text-sky-400" },
-                                            { label: "Time", val: analysisDetails?.processingTime !== undefined ? `${(analysisDetails.processingTime / 1000).toFixed(1)}s` : "N/A", color: "text-slate-400" }
-                                        ].map((m, i) => (
+                                        {(() => {
+                                            // For confidence, show the dominant score (whichever is higher)
+                                            // e.g., 65% authentic = 65% confidence in authentic result
+                                            const realScore = analysisDetails?.realScore ?? (realPercent / 100);
+                                            const fakeScore = analysisDetails?.fakeScore ?? (fakePercent / 100);
+                                            const dominantScore = Math.max(realScore, fakeScore);
+                                            const confidenceDisplay = analysisDetails?.realScore !== undefined || analysisDetails?.fakeScore !== undefined
+                                                ? `${Math.round(dominantScore * 100)}%`
+                                                : "N/A";
+
+                                            return [
+                                                { label: "Confidence", val: confidenceDisplay, color: "text-emerald-400" },
+                                                { label: "Frames", val: analysisDetails?.framesAnalyzed?.toString() || "0", color: "text-sky-400" },
+                                                { label: "Time", val: analysisDetails?.processingTime !== undefined ? `${(analysisDetails.processingTime / 1000).toFixed(1)}s` : "N/A", color: "text-slate-400" }
+                                            ]
+                                        })().map((m, i) => (
                                             <div key={i} className="flex justify-between items-center text-[8px] uppercase font-black tracking-wide">
                                                 <span className="text-slate-500">{m.label}</span>
                                                 <span className={cn("font-mono", m.color)}>{m.val}</span>
@@ -363,18 +374,20 @@ export function TrustBadge({
                                         "w-full py-2 px-3 rounded-xl text-center border font-black text-[9px] tracking-[0.15em] italic bg-black/40",
                                         derivedLevel === 'authentic' ? "border-emerald-500/20 text-emerald-400" :
                                             derivedLevel === 'suspicious' ? "border-amber-500/20 text-amber-400" :
-                                                "border-red-500/20 text-red-400"
+                                                derivedLevel === 'likely_fake' ? "border-orange-500/20 text-orange-400" :
+                                                    "border-red-500/20 text-red-400"
                                     )}>
-                                        {derivedLevel === 'authentic' ? "✓ VALIDATED" :
-                                            derivedLevel === 'suspicious' ? "⚠ REVIEW" :
-                                                "⚠ MANIPULATED"}
+                                        {derivedLevel === 'authentic' ? "✓ VERIFIED" :
+                                            derivedLevel === 'suspicious' ? "⚠ REVIEW NEEDED" :
+                                                derivedLevel === 'likely_fake' ? "⚠ HIGH RISK" :
+                                                    "⛔ MANIPULATED"}
                                     </div>
 
                                     {/* Action Buttons Row */}
                                     <div className="w-full flex gap-2">
                                         {/* Email Button */}
                                         {onEmailReport && (
-                                            <motion.button
+                                            <m.button
                                                 whileTap={{ scale: 0.98 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -391,11 +404,11 @@ export function TrustBadge({
                                                 <span className="text-[8px] font-black uppercase tracking-wide text-white">
                                                     Email
                                                 </span>
-                                            </motion.button>
+                                            </m.button>
                                         )}
                                         {/* Download Button */}
                                         {onDownloadReport && (
-                                            <motion.button
+                                            <m.button
                                                 whileTap={{ scale: 0.98 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -412,13 +425,13 @@ export function TrustBadge({
                                                 <span className="text-[8px] font-black uppercase tracking-wide text-white">
                                                     Download
                                                 </span>
-                                            </motion.button>
+                                            </m.button>
                                         )}
                                     </div>
 
                                     {/* View Report Button - Compact */}
                                     {onGenerateReport && (
-                                        <motion.button
+                                        <m.button
                                             whileTap={{ scale: 0.98 }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -435,11 +448,11 @@ export function TrustBadge({
                                             <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
                                                 {isGeneratingReport ? "Loading..." : "View Report"}
                                             </span>
-                                        </motion.button>
+                                        </m.button>
                                     )}
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     </div>
                 )}
             </AnimatePresence>

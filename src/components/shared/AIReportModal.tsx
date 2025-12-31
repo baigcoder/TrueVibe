@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
     X,
     ShieldCheck,
@@ -78,7 +78,7 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
     };
 
     return (
-        <motion.div
+        <m.div
             variants={{
                 hidden: { opacity: 0, y: 10, scale: 0.95 },
                 visible: { opacity: 1, y: 0, scale: 1 }
@@ -115,7 +115,7 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
             </button>
             <AnimatePresence>
                 {isExpanded && (
-                    <motion.div
+                    <m.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -126,10 +126,10 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
                                 {item.explanation}
                             </p>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -157,7 +157,7 @@ export function AIReportModal({
         <AnimatePresence>
             <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-20">
                 {/* Backdrop with Strong Blur */}
-                <motion.div
+                <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -166,7 +166,7 @@ export function AIReportModal({
                 />
 
                 {/* Modal - Centered with max-height */}
-                <motion.div
+                <m.div
                     layout
                     initial={{ scale: 0.95, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -200,12 +200,12 @@ export function AIReportModal({
                     <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
                         {(isLoading || isGenerating) && (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                <motion.div
+                                <m.div
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                 >
                                     <RefreshCw className="w-10 h-10 text-violet-500" />
-                                </motion.div>
+                                </m.div>
                                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Neural Syncing...</p>
                             </div>
                         )}
@@ -259,7 +259,7 @@ export function AIReportModal({
                                                 </span>
                                             </div>
                                             <div className="h-1.5 rounded-full bg-black/30 overflow-hidden p-[1px]">
-                                                <motion.div
+                                                <m.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${confidence}%` }}
                                                     className={cn(
@@ -309,7 +309,7 @@ export function AIReportModal({
                                         </button>
                                         <AnimatePresence>
                                             {showTechnical && (
-                                                <motion.div
+                                                <m.div
                                                     initial={{ height: 0 }}
                                                     animate={{ height: "auto" }}
                                                     exit={{ height: 0 }}
@@ -323,7 +323,7 @@ export function AIReportModal({
                                                             </div>
                                                         ))}
                                                     </div>
-                                                </motion.div>
+                                                </m.div>
                                             )}
                                         </AnimatePresence>
                                     </div>
@@ -350,7 +350,7 @@ export function AIReportModal({
                         )}
                     </div>
 
-                </motion.div>
+                </m.div>
             </div>
         </AnimatePresence>
     );

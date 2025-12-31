@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Phone, PhoneOff, Video } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,25 +19,25 @@ export function IncomingCallModal({
     onReject,
 }: IncomingCallModalProps) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
         >
-            <motion.div
+            <m.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 className="bg-[#161616] border border-[#2a2a2a] rounded-3xl p-8 max-w-sm w-full text-center"
             >
                 {/* Animated Ring */}
                 <div className="relative mx-auto w-32 h-32 mb-6">
-                    <motion.div
+                    <m.div
                         className="absolute inset-0 rounded-full bg-primary/20"
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     />
-                    <motion.div
+                    <m.div
                         className="absolute inset-2 rounded-full bg-primary/30"
                         animate={{ scale: [1, 1.15, 1] }}
                         transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
@@ -58,7 +58,7 @@ export function IncomingCallModal({
 
                 {/* Action Buttons */}
                 <div className="flex justify-center gap-6">
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                    <m.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                         <Button
                             size="lg"
                             onClick={onReject}
@@ -66,8 +66,8 @@ export function IncomingCallModal({
                         >
                             <PhoneOff className="w-7 h-7" />
                         </Button>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                    </m.div>
+                    <m.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                         <Button
                             size="lg"
                             onClick={onAccept}
@@ -79,10 +79,10 @@ export function IncomingCallModal({
                                 <Phone className="w-7 h-7" />
                             )}
                         </Button>
-                    </motion.div>
+                    </m.div>
                 </div>
-            </motion.div>
-        </motion.div>
+            </m.div>
+        </m.div>
     );
 }
 

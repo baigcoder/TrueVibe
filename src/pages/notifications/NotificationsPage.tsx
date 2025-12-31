@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
 
             <AnimatePresence mode="wait">
                 {mainTab === 'alerts' && (
-                    <motion.div
+                    <m.div
                         key="alerts"
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -214,7 +214,7 @@ export default function NotificationsPage() {
                                     <span className="text-xs sm:text-sm text-slate-400 font-medium">Loading notifications...</span>
                                 </div>
                             ) : filteredNotifications.length === 0 ? (
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="text-center py-16 sm:py-24 bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] backdrop-blur-xl"
@@ -226,7 +226,7 @@ export default function NotificationsPage() {
                                     <p className="text-slate-400 text-xs sm:text-sm mt-2 max-w-[260px] sm:max-w-[280px] mx-auto px-4">
                                         When you get likes, comments, or new followers, they'll show up here.
                                     </p>
-                                </motion.div>
+                                </m.div>
                             ) : (
                                 <AnimatePresence mode="popLayout">
                                     {filteredNotifications.map((notification: any, index: number) => {
@@ -243,7 +243,7 @@ export default function NotificationsPage() {
                                         const senderInitial = senderName.charAt(0).toUpperCase();
 
                                         return (
-                                            <motion.div
+                                            <m.div
                                                 key={notification._id}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -318,7 +318,7 @@ export default function NotificationsPage() {
                                                 {!notification.isRead && (
                                                     <div className="absolute top-2 right-2 sm:hidden w-2 h-2 rounded-full bg-primary animate-pulse" />
                                                 )}
-                                            </motion.div>
+                                            </m.div>
                                         );
                                     })}
                                 </AnimatePresence>
@@ -343,11 +343,11 @@ export default function NotificationsPage() {
                                 </div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {mainTab === 'requests' && (
-                    <motion.div
+                    <m.div
                         key="requests"
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -404,11 +404,11 @@ export default function NotificationsPage() {
                                 ))}
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {mainTab === 'suggestions' && (
-                    <motion.div
+                    <m.div
                         key="suggestions"
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -463,7 +463,7 @@ export default function NotificationsPage() {
                                 ))}
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ const BackgroundAtmosphere = () => {
     return (
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.3]" />
-            <motion.div
+            <m.div
                 animate={{
                     opacity: [0.1, 0.2, 0.1],
                     scale: [1, 1.05, 1],
@@ -24,7 +24,7 @@ const BackgroundAtmosphere = () => {
             >
                 <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/20 blur-[100px] rounded-full" />
                 <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-secondary/15 blur-[120px] rounded-full" />
-            </motion.div>
+            </m.div>
         </div>
     );
 };
@@ -106,7 +106,7 @@ export default function SignupPage() {
         <div className="min-h-screen relative flex items-center justify-center py-8 px-4 sm:p-6 selection:bg-secondary/30 overflow-y-auto overflow-x-hidden bg-[#030712] mesh-bg noise-bg">
             <BackgroundAtmosphere />
 
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
@@ -120,13 +120,13 @@ export default function SignupPage() {
                     <div className="relative z-10">
                         {success ? (
                             <div className="text-center py-16">
-                                <motion.div
+                                <m.div
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-secondary/10 flex items-center justify-center border border-secondary/20 backdrop-blur-3xl shadow-glow-secondary"
                                 >
                                     <ShieldCheck className="w-10 h-10 text-secondary" />
-                                </motion.div>
+                                </m.div>
                                 <h2 className="font-heading text-3xl font-black text-white italic uppercase tracking-tighter mb-2 leading-none">Welcome!</h2>
                                 <p className="text-slate-600 text-[8px] font-black uppercase tracking-[0.4em]">ACCOUNT_CREATED</p>
                             </div>
@@ -176,13 +176,13 @@ export default function SignupPage() {
 
                                 <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                                     {error && (
-                                        <motion.div
+                                        <m.div
                                             initial={{ opacity: 0, scale: 0.98 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-bold uppercase tracking-widest text-center"
                                         >
                                             FAIL: {error}
-                                        </motion.div>
+                                        </m.div>
                                     )}
 
                                     <div className="grid grid-cols-1 gap-3 sm:gap-4">
@@ -316,7 +316,7 @@ export default function SignupPage() {
                     </div>
                     <span className="text-[6px] sm:text-[7px] font-black text-slate-700 uppercase tracking-[0.2em] sm:tracking-[0.4em]">STABLE_v1.0.42</span>
                 </div>
-            </motion.div>
+            </m.div>
         </div>
     );
 }

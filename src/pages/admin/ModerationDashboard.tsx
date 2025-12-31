@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api/client';
 import {
@@ -164,7 +164,7 @@ function OverviewTab({ stats, loading, queue }: { stats: any; loading: boolean; 
     ];
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -229,7 +229,7 @@ function OverviewTab({ stats, loading, queue }: { stats: any; loading: boolean; 
                     ))}
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -266,7 +266,7 @@ function ReportsTab({ reports, loading, onRefresh }: { reports: any[]; loading: 
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -358,14 +358,14 @@ function ReportsTab({ reports, loading, onRefresh }: { reports: any[]; loading: 
             {/* Report Detail Modal */}
             <AnimatePresence>
                 {selectedReport && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
                         onClick={() => setSelectedReport(null)}
                     >
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
@@ -419,11 +419,11 @@ function ReportsTab({ reports, loading, onRefresh }: { reports: any[]; loading: 
                                     </Button>
                                 </div>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </m.div>
+                    </m.div>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -435,7 +435,7 @@ function QueueTab({ queue, loading }: { queue: any; loading: boolean }) {
     const suspiciousPosts = queue?.suspiciousPosts || [];
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -501,14 +501,14 @@ function QueueTab({ queue, loading }: { queue: any; loading: boolean }) {
                     </div>
                 )}
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 
 // Users Tab (placeholder for user management)
 function UsersTab({ stats }: { stats: any }) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -537,7 +537,7 @@ function UsersTab({ stats }: { stats: any }) {
                 <p className="text-white/50">User search and management coming soon</p>
                 <p className="text-sm text-white/30 mt-1">Use the API to suspend/restore users for now</p>
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 

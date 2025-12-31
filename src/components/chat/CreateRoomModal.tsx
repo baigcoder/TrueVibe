@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Mic, Video, Link2, Loader2, Shield, ShieldCheck, Copy, Check, Fingerprint, Activity, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useVoiceRoom } from '@/context/VoiceRoomContext';
@@ -61,7 +61,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -70,7 +70,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                     />
 
                     {/* Modal */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -238,7 +238,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                                         "w-10 h-5 rounded-full p-0.5 transition-all",
                                                         requireApproval ? "bg-primary/30" : "bg-violet-500/30"
                                                     )}>
-                                                        <motion.div
+                                                        <m.div
                                                             animate={{ x: requireApproval ? 20 : 0 }}
                                                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                                             className={cn(
@@ -292,7 +292,7 @@ export function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomMo
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 </>
             )}
         </AnimatePresence>

@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     X, Shield, TrendingDown, Minus, RefreshCw,
@@ -80,7 +80,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
             {isOpen && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     {/* Backdrop */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -89,7 +89,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
                     />
 
                     {/* Modal */}
-                    <motion.div
+                    <m.div
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -140,7 +140,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
                                                     strokeWidth="8"
                                                     className="text-white/5"
                                                 />
-                                                <motion.circle
+                                                <m.circle
                                                     cx="50" cy="50" r="42"
                                                     fill="none"
                                                     stroke={`url(#gradient-${config.color})`}
@@ -187,7 +187,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
                                                 : 0;
 
                                             return (
-                                                <motion.div
+                                                <m.div
                                                     key={factor.name}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
@@ -211,7 +211,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
                                                     </div>
                                                     {factor.maxScore > 0 && (
                                                         <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                            <motion.div
+                                                            <m.div
                                                                 className={cn(
                                                                     "h-full rounded-full",
                                                                     isPositive ? "bg-gradient-to-r from-indigo-500 to-emerald-500" : "bg-red-500"
@@ -223,7 +223,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
                                                         </div>
                                                     )}
                                                     <p className="text-slate-500 text-xs mt-1.5">{factor.description}</p>
-                                                </motion.div>
+                                                </m.div>
                                             );
                                         })}
                                     </div>
@@ -242,7 +242,7 @@ export function TrustScoreBreakdown({ isOpen, onClose }: TrustScoreBreakdownProp
                                 {recalculateMutation.isPending ? 'Recalculating...' : 'Recalculate Score'}
                             </button>
                         </div>
-                    </motion.div>
+                    </m.div>
                 </div>
             )}
         </AnimatePresence>

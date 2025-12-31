@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useProfile, useUserPosts, useUserLikedPosts, useFollowUser, useUnfollowUser, useUserShorts, useCancelFollowRequest } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FollowersModal } from "@/components/modals/FollowersModal";
 import { MediaPreviewModal } from "@/components/modals/MediaPreviewModal";
@@ -263,7 +263,7 @@ export default function ProfilePage() {
             <div className="max-w-6xl mx-auto pb-24 lg:pb-8 relative">
                 {/* Header / Cover Area */}
                 <div className="relative mb-16 px-4 md:px-0">
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="h-40 sm:h-56 md:h-72 lg:h-80 rounded-2xl sm:rounded-[2rem] md:rounded-[2.5rem] relative overflow-hidden group shadow-[0_32px_80px_-20px_rgba(0,0,0,0.6)]"
@@ -373,11 +373,11 @@ export default function ProfilePage() {
                                 </div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
 
                     {/* Avatar Section */}
                     <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-3 sm:left-6 md:left-12 z-40">
-                        <motion.div
+                        <m.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.2 }}
@@ -405,7 +405,7 @@ export default function ProfilePage() {
                                     <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                                 </button>
                             )}
-                        </motion.div>
+                        </m.div>
                     </div>
                 </div>
 
@@ -433,7 +433,7 @@ export default function ProfilePage() {
                                 </div>
 
                                 {/* Trust Level Card */}
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] p-4 sm:p-5 md:p-7 group relative overflow-hidden"
@@ -456,16 +456,16 @@ export default function ProfilePage() {
                                         <span className="text-xs sm:text-sm font-bold text-slate-500 mb-1 sm:mb-2">/ 100</span>
                                     </div>
                                     <div className="h-1.5 sm:h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                        <motion.div
+                                        <m.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${trustScore}%` }}
                                             transition={{ duration: 1.2, ease: "easeOut" }}
                                             className={cn("h-full rounded-full relative", trustScore >= 80 ? "bg-gradient-to-r from-emerald-500 to-primary" : "bg-primary")}
                                         >
                                             <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                                        </motion.div>
+                                        </m.div>
                                     </div>
-                                </motion.div>
+                                </m.div>
 
                                 {/* Bio & Links */}
                                 <div className="space-y-4 sm:space-y-6 px-1 sm:px-2">
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                         <div className="lg:col-span-8">
                             {isContentLocked ? (
                                 /* Locked Content Overlay */
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 md:p-16 text-center relative overflow-hidden"
@@ -544,14 +544,14 @@ export default function ProfilePage() {
                                     <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-primary/10 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none" />
 
                                     <div className="relative z-10">
-                                        <motion.div
+                                        <m.div
                                             initial={{ scale: 0.8 }}
                                             animate={{ scale: 1 }}
                                             transition={{ type: "spring", bounce: 0.3 }}
                                             className="w-20 h-20 sm:w-28 sm:h-28 mx-auto mb-5 sm:mb-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white/5 border border-white/10 flex items-center justify-center"
                                         >
                                             <Lock className="w-8 h-8 sm:w-12 sm:h-12 text-slate-500" />
-                                        </motion.div>
+                                        </m.div>
 
                                         <h3 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white mb-2 sm:mb-4 tracking-tight italic uppercase">
                                             Profile Locked
@@ -587,7 +587,7 @@ export default function ProfilePage() {
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             ) : (
                                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                                     <TabsList className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl p-1.5 flex h-auto mb-10">
@@ -615,7 +615,7 @@ export default function ProfilePage() {
                                     </TabsList>
 
                                     <TabsContent value="posts" className="mt-0 outline-none">
-                                        <motion.div
+                                        <m.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                         >
@@ -641,7 +641,7 @@ export default function ProfilePage() {
                                                         const isVideo = firstMedia?.type === 'video';
 
                                                         return (
-                                                            <motion.div
+                                                            <m.div
                                                                 key={post._id}
                                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                                 whileInView={{ opacity: 1, scale: 1 }}
@@ -707,16 +707,16 @@ export default function ProfilePage() {
                                                                         <span className="text-sm font-bold">{post.commentsCount || 0}</span>
                                                                     </div>
                                                                 </div>
-                                                            </motion.div>
+                                                            </m.div>
                                                         );
                                                     })}
                                                 </div>
                                             )}
-                                        </motion.div>
+                                        </m.div>
                                     </TabsContent>
 
                                     <TabsContent value="shorts" className="mt-0 outline-none">
-                                        <motion.div
+                                        <m.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                         >
@@ -737,7 +737,7 @@ export default function ProfilePage() {
                                             ) : (
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
                                                     {userShorts.map((short: any, index: number) => (
-                                                        <motion.div
+                                                        <m.div
                                                             key={short._id}
                                                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                                             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -780,15 +780,15 @@ export default function ProfilePage() {
                                                                     <Play className="w-7 h-7 text-white fill-white ml-1.5" />
                                                                 </div>
                                                             </div>
-                                                        </motion.div>
+                                                        </m.div>
                                                     ))}
                                                 </div>
                                             )}
-                                        </motion.div>
+                                        </m.div>
                                     </TabsContent>
 
                                     <TabsContent value="likes" className="mt-0 outline-none">
-                                        <motion.div
+                                        <m.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                         >
@@ -824,7 +824,7 @@ export default function ProfilePage() {
                                                         const isVideo = firstMedia?.type === 'video';
 
                                                         return (
-                                                            <motion.div
+                                                            <m.div
                                                                 key={post._id}
                                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                                 whileInView={{ opacity: 1, scale: 1 }}
@@ -886,12 +886,12 @@ export default function ProfilePage() {
                                                                         <span className="text-sm font-bold">{post.commentsCount || 0}</span>
                                                                     </div>
                                                                 </div>
-                                                            </motion.div>
+                                                            </m.div>
                                                         );
                                                     })}
                                                 </div>
                                             )}
-                                        </motion.div>
+                                        </m.div>
                                     </TabsContent>
                                 </Tabs>
                             )}

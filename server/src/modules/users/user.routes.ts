@@ -12,6 +12,7 @@ import { AIReport } from '../posts/AIReport.model.js';
 import { Post } from '../posts/Post.model.js';
 import { Short } from '../shorts/Short.model.js';
 import { Story } from '../stories/Story.model.js';
+import { Block } from './Block.model.js';
 
 
 const router = Router();
@@ -43,6 +44,41 @@ router.post('/follow-requests/:id/reject', authenticate, userController.rejectFo
 // Protected routes with :id parameter (must come AFTER specific routes)
 router.patch('/me', authenticate, validateBody(updateProfileSchema), userController.updateProfile);
 router.put('/settings', authenticate, validateBody(updateSettingsSchema), userController.updateSettings);
+
+// Get blocked users list
+router.get('/blocked', authenticate, async (req, res, next) => {
+    try {
+        const userId = req.user!.userId;
+
+        // Get all blocks where current user is the blocker
+        const blocks = await Block.find({ blockerId: userId }).sort({ createdAt: -1 }).lean();
+
+        // Get profile info for blocked users
+        const blockedUserIds = blocks.map(b => b.blockedId);
+        const profiles = await Profile.find({ userId: { $in: blockedUserIds } })
+            .select('userId username displayName avatarUrl')
+            .lean();
+
+        // Create a map for quick lookup
+        const profileMap = new Map(profiles.map(p => [p.userId, p]));
+
+        // Combine block data with profile info
+        const blockedUsers = blocks.map(block => ({
+            _id: block._id,
+            userId: block.blockedId,
+            reason: block.reason,
+            blockedAt: block.createdAt,
+            profile: profileMap.get(block.blockedId) || null,
+        }));
+
+        res.json({
+            success: true,
+            data: blockedUsers,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 
 // Get all user's AI reports (posts, shorts, and stories)
 router.get('/me/reports', authenticate, async (req, res, next) => {

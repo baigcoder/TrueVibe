@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
     Globe,
     Users,
@@ -121,7 +121,7 @@ export function PrivacyControlsSection() {
                 </div>
 
                 {hasChanges && (
-                    <motion.button
+                    <m.button
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         onClick={handleSave}
@@ -134,7 +134,7 @@ export function PrivacyControlsSection() {
                             <Save className="w-4 h-4" />
                         )}
                         Save Changes
-                    </motion.button>
+                    </m.button>
                 )}
             </div>
 
@@ -229,7 +229,7 @@ export function PrivacyControlsSection() {
                         className={`w-12 h-7 rounded-full p-1 transition-colors ${settings.showTrustScore ? 'bg-purple-500' : 'bg-neutral-700'
                             }`}
                     >
-                        <motion.div
+                        <m.div
                             className="w-5 h-5 rounded-full bg-white shadow-sm"
                             animate={{ x: settings.showTrustScore ? 20 : 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}

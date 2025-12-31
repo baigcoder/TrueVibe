@@ -7,7 +7,7 @@ import {
     Eye, MessageCircle, Share2, Play, Image as ImageIcon, Video, BarChart2,
     Calendar, Zap, Award, Target, Activity, FileText, Download, CheckCircle, AlertTriangle, XCircle
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -51,7 +51,7 @@ function StatCard({ title, value, change, icon, color = 'primary', delay = 0 }: 
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay, type: "spring", damping: 20 }}
@@ -87,7 +87,7 @@ function StatCard({ title, value, change, icon, color = 'primary', delay = 0 }: 
             {/* Decorative elements */}
             <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors duration-500" />
             <div className="absolute top-0 right-0 w-20 h-[1px] bg-gradient-to-l from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -108,7 +108,7 @@ function ContentItem({ type, content, thumbnail, views, likes, comments, shares 
     const date = new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/[0.05] transition-all group"
@@ -177,7 +177,7 @@ function ContentItem({ type, content, thumbnail, views, likes, comments, shares 
                     </div>
                 )}
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -289,7 +289,7 @@ export default function AnalyticsPage() {
     return (
         <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-24 md:pb-10 px-2 xs:px-3 md:px-0">
             {/* Premium Header Banner */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative bg-gradient-to-r from-primary/10 via-purple-500/5 to-secondary/10 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 overflow-hidden"
@@ -317,7 +317,7 @@ export default function AnalyticsPage() {
                     {/* Period Selector */}
                     <div className="flex bg-white/[0.05] border border-white/10 p-1 rounded-xl sm:rounded-2xl backdrop-blur-md self-start sm:self-auto">
                         {(['7d', '30d', '90d'] as PeriodType[]).map((p) => (
-                            <motion.button
+                            <m.button
                                 key={p}
                                 onClick={() => setPeriod(p)}
                                 whileTap={{ scale: 0.95 }}
@@ -329,18 +329,18 @@ export default function AnalyticsPage() {
                                 )}
                             >
                                 {period === p && (
-                                    <motion.div
+                                    <m.div
                                         layoutId="periodPill"
                                         className="absolute inset-0 bg-primary rounded-lg sm:rounded-xl shadow-lg shadow-primary/30"
                                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                                     />
                                 )}
                                 <span className="relative z-10">{p === '7d' ? '7D' : p === '30d' ? '30D' : '90D'}</span>
-                            </motion.button>
+                            </m.button>
                         ))}
                     </div>
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Tab Navigation */}
             <div className="flex gap-1.5 md:gap-2 border-b border-white/5 pb-3 md:pb-4 overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
@@ -366,7 +366,7 @@ export default function AnalyticsPage() {
 
             <AnimatePresence mode="wait">
                 {activeTab === 'overview' && (
-                    <motion.div
+                    <m.div
                         key="overview"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -428,7 +428,7 @@ export default function AnalyticsPage() {
                         {/* Charts Row */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Engagement Chart */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
@@ -469,10 +469,10 @@ export default function AnalyticsPage() {
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
-                            </motion.div>
+                            </m.div>
 
                             {/* Content Distribution */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 }}
@@ -515,13 +515,13 @@ export default function AnalyticsPage() {
                                         </div>
                                     ))}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         </div>
 
                         {/* Trust & Top Content */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Trust Score */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
@@ -575,10 +575,10 @@ export default function AnalyticsPage() {
                                         ))}
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
 
                             {/* Top Performing Content */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.6 }}
@@ -624,13 +624,13 @@ export default function AnalyticsPage() {
                                         <p className="text-center text-slate-500 py-8">No content yet</p>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {activeTab === 'posts' && (
-                    <motion.div
+                    <m.div
                         key="posts"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -656,11 +656,11 @@ export default function AnalyticsPage() {
                                 <p className="text-slate-500">No posts yet. Create your first post!</p>
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {activeTab === 'shorts' && (
-                    <motion.div
+                    <m.div
                         key="shorts"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -686,11 +686,11 @@ export default function AnalyticsPage() {
                                 <p className="text-slate-500">No shorts yet. Create your first short!</p>
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {activeTab === 'reports' && (
-                    <motion.div
+                    <m.div
                         key="reports"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -699,7 +699,7 @@ export default function AnalyticsPage() {
                     >
                         {/* Reports Summary Stats */}
                         <div className="grid grid-cols-3 gap-2 md:gap-4">
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-xl md:rounded-2xl p-3 md:p-6"
@@ -711,9 +711,9 @@ export default function AnalyticsPage() {
                                 <p className="text-xl md:text-3xl font-heading font-extrabold text-white">
                                     {(reportsData as any)?.data?.summary?.totalReports || 0}
                                 </p>
-                            </motion.div>
+                            </m.div>
 
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.05 }}
@@ -726,9 +726,9 @@ export default function AnalyticsPage() {
                                 <p className="text-xl md:text-3xl font-heading font-extrabold text-white">
                                     {(reportsData as any)?.data?.summary?.avgConfidence || 0}%
                                 </p>
-                            </motion.div>
+                            </m.div>
 
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
@@ -746,7 +746,7 @@ export default function AnalyticsPage() {
                                         / {(reportsData as any)?.data?.summary?.totalReports || 0}
                                     </span>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         </div>
 
                         {/* Reports List */}
@@ -766,7 +766,7 @@ export default function AnalyticsPage() {
                             ) : ((reportsData as any)?.data?.reports?.length || 0) > 0 ? (
                                 <div className="space-y-3 md:space-y-4">
                                     {((reportsData as any)?.data?.reports || []).map((report: any, index: number) => (
-                                        <motion.div
+                                        <m.div
                                             key={report._id}
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -882,7 +882,7 @@ export default function AnalyticsPage() {
                                                 <Download className="w-4 h-4" />
                                                 <span className="hidden sm:inline text-xs font-bold">PDF</span>
                                             </Button>
-                                        </motion.div>
+                                        </m.div>
                                     ))}
                                 </div>
                             ) : (
@@ -895,7 +895,7 @@ export default function AnalyticsPage() {
                                 </div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

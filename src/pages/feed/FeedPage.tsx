@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingUp, Users, Eye, Plus, Play, X, Upload, Loader2, Image, Video, Heart } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useFeed, useStoriesFeed, useViewStory, useCreateStory } from "@/api/hooks";
 import { StoryViewer } from "@/components/stories/StoryViewer";
 import { toast } from "sonner";
@@ -172,7 +172,7 @@ export default function FeedPage() {
                     />
 
                     {/* Your Vibe / My Story Card - ULTIMATE PREMIUM DESIGN */}
-                    <motion.div
+                    <m.div
                         whileHover={{ y: -8, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => myStoryGroup ? handleStoryClick(myStoryGroup) : storyFileInputRef.current?.click()}
@@ -222,7 +222,7 @@ export default function FeedPage() {
                         <div className="absolute inset-0 flex flex-col items-center justify-between p-3 sm:p-4 lg:p-5 py-5 sm:py-6 lg:py-8">
                             <div className="flex justify-between w-full items-start">
                                 {myStoryGroup ? (
-                                    <motion.div
+                                    <m.div
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         className="px-2.5 py-1 rounded-xl bg-white/10 backdrop-blur-2xl border border-white/10 flex items-center gap-1.5 transition-all group-hover/vibe:bg-white/20"
@@ -231,10 +231,10 @@ export default function FeedPage() {
                                         <span className="text-[10px] font-black text-white uppercase tracking-tighter">
                                             {myStoryGroup.stories.reduce((acc: number, s: any) => acc + (s.viewers?.length || 0), 0)}
                                         </span>
-                                    </motion.div>
+                                    </m.div>
                                 ) : <div />}
 
-                                <motion.div
+                                <m.div
                                     whileHover={{ scale: 1.1, rotate: 90 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={(e) => {
@@ -246,7 +246,7 @@ export default function FeedPage() {
                                     {/* Inner Glow for Plus Button */}
                                     <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-md opacity-0 group-hover/plus:opacity-100 transition-opacity" />
                                     <Plus className="w-5 h-5 text-white relative z-10" />
-                                </motion.div>
+                                </m.div>
                             </div>
 
                             <div className="flex flex-col items-center gap-3 w-full">
@@ -286,11 +286,11 @@ export default function FeedPage() {
                         {myStoryGroup?.hasUnwatched && (
                             <div className="absolute top-4 right-4 w-2 h-2 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)] z-20" />
                         )}
-                    </motion.div>
+                    </m.div>
 
                     {/* Community Stories - PREMIUM CARDS */}
                     {otherStories.map((storyGroup: any) => (
-                        <motion.div
+                        <m.div
                             key={storyGroup.user._id || storyGroup.user.supabaseId}
                             whileHover={{ y: -8, scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -369,7 +369,7 @@ export default function FeedPage() {
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
             </div>
@@ -380,7 +380,7 @@ export default function FeedPage() {
                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-grid-pattern" />
 
                 {feedTabs.map((tab, index) => (
-                    <motion.button
+                    <m.button
                         key={tab.id}
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -395,7 +395,7 @@ export default function FeedPage() {
                     >
                         {/* Active Background Pill */}
                         {activeFeed === tab.id && (
-                            <motion.div
+                            <m.div
                                 layoutId="activeTabPill"
                                 className="absolute inset-0 bg-white/[0.07] border border-white/10 rounded-[1.6rem]"
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
@@ -404,7 +404,7 @@ export default function FeedPage() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/5" />
                                 {/* Bottom Indicator */}
                                 <div className="absolute bottom-0 inset-x-4 h-[1.5px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Hover Overlay */}
@@ -423,20 +423,20 @@ export default function FeedPage() {
                         )}>
                             {tab.label}
                         </span>
-                    </motion.button>
+                    </m.button>
                 ))}
             </div>
 
             {/* Create Post Component - Only show on main feed */}
             {activeFeed === 'main' && (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     className="relative"
                 >
                     <CreatePost />
-                </motion.div>
+                </m.div>
             )}
 
             {/* Tab Content */}
@@ -457,7 +457,7 @@ export default function FeedPage() {
                     <p className="mt-8 text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px] animate-pulse">Synchronizing Vibe...</p>
                 </div>
             ) : posts.length === 0 ? (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="bg-[#0c0c0e]/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-12 lg:p-20 text-center relative overflow-hidden group mx-3 sm:mx-0"
@@ -476,12 +476,12 @@ export default function FeedPage() {
                             Launch Content
                         </Button>
                     </div>
-                </motion.div>
+                </m.div>
             ) : (
                 <AnimatePresence mode="popLayout">
                     <div className="space-y-8">
                         {posts.map((post, index) => (
-                            <motion.div
+                            <m.div
                                 key={post._id}
                                 initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
                                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -489,7 +489,7 @@ export default function FeedPage() {
                                 transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                             >
                                 <PostCard post={post} />
-                            </motion.div>
+                            </m.div>
                         ))}
                     </div>
                 </AnimatePresence>
@@ -508,14 +508,14 @@ export default function FeedPage() {
             {/* Story Upload Dialog */}
             <AnimatePresence>
                 {storyUploadOpen && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
                         onClick={() => setStoryUploadOpen(false)}
                     >
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
@@ -600,8 +600,8 @@ export default function FeedPage() {
                                     )}
                                 </Button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </m.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

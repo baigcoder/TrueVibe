@@ -16,7 +16,7 @@ import {
     UserX, Trash2, LogOut, Check, Moon, Sun, FileText, ShieldOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/api/client";
 import { SpotifyConnect } from "@/components/spotify/SpotifyConnect";
@@ -358,7 +358,7 @@ export default function SettingsPage() {
         <div className="max-w-5xl mx-auto pb-24 lg:pb-8 relative z-10 px-4">
             <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
                 {/* Sidebar Navigation */}
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="lg:col-span-3"
@@ -391,10 +391,10 @@ export default function SettingsPage() {
                             </button>
                         </div>
                     </div>
-                </motion.div>
+                </m.div>
 
                 {/* Content Area */}
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="lg:col-span-9"
@@ -402,7 +402,7 @@ export default function SettingsPage() {
                     <AnimatePresence mode="wait">
                         {/* Profile Section */}
                         {activeSection === 'profile' && (
-                            <motion.div
+                            <m.div
                                 key="profile"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -528,12 +528,12 @@ export default function SettingsPage() {
                                         </Button>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Account Security Section */}
                         {activeSection === 'account' && (
-                            <motion.div
+                            <m.div
                                 key="account"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -612,12 +612,12 @@ export default function SettingsPage() {
                                         <Check className="w-5 h-5 text-emerald-500" />
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Sessions Section */}
                         {activeSection === 'sessions' && (
-                            <motion.div
+                            <m.div
                                 key="sessions"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -625,12 +625,12 @@ export default function SettingsPage() {
                                 className="bg-white/5 border border-white/10 rounded-2xl p-6"
                             >
                                 <SessionsSection />
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Blocked Users Section */}
                         {activeSection === 'blocked' && (
-                            <motion.div
+                            <m.div
                                 key="blocked"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -638,12 +638,12 @@ export default function SettingsPage() {
                                 className="bg-white/5 border border-white/10 rounded-2xl p-6"
                             >
                                 <BlockedUsersSection />
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Notifications Section */}
                         {activeSection === 'notifications' && (
-                            <motion.div
+                            <m.div
                                 key="notifications"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -704,12 +704,12 @@ export default function SettingsPage() {
                                         Save Notifications
                                     </Button>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Privacy Section */}
                         {activeSection === 'privacy' && (
-                            <motion.div
+                            <m.div
                                 key="privacy"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -750,12 +750,12 @@ export default function SettingsPage() {
                                         Save Privacy
                                     </Button>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Appearance Section */}
                         {activeSection === 'appearance' && (
-                            <motion.div
+                            <m.div
                                 key="appearance"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -825,12 +825,12 @@ export default function SettingsPage() {
                                         Save Appearance
                                     </Button>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Drafts & Scheduled Section */}
                         {activeSection === 'drafts' && (
-                            <motion.div
+                            <m.div
                                 key="drafts"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -838,12 +838,12 @@ export default function SettingsPage() {
                                 className="bg-white/5 border border-white/10 rounded-2xl p-6"
                             >
                                 <DraftsScheduledSection />
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Spotify Section */}
                         {activeSection === 'spotify' && (
-                            <motion.div
+                            <m.div
                                 key="spotify"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -859,14 +859,14 @@ export default function SettingsPage() {
                                         <SpotifyConnect />
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
 
 
                         {/* Trust Score Section */}
                         {activeSection === 'trust' && (
-                            <motion.div
+                            <m.div
                                 key="trust"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -903,12 +903,12 @@ export default function SettingsPage() {
                                         <p className="text-slate-500 text-xs">Complete your profile, engage authentically, and avoid flagged content.</p>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Data & Export Section */}
                         {activeSection === 'data' && (
-                            <motion.div
+                            <m.div
                                 key="data"
                                 initial={{ opacity: 0, x: 10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -949,10 +949,10 @@ export default function SettingsPage() {
                                         Delete Account
                                     </Button>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
-                </motion.div>
+                </m.div>
             </div>
         </div>
     );

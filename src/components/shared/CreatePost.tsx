@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -738,7 +738,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
     const hasVideo = filePreviews.some(f => f.type === 'video');
 
     return (
-        <motion.div
+        <m.div
             className={cn(
                 "bg-[#030712]/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] group/create transition-all duration-700 border border-white/10",
                 isExpanded && "bg-[#030712]/80",
@@ -756,7 +756,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
             <div className="p-3 sm:p-6 md:p-8 relative">
                 <div className="flex gap-4 sm:gap-6">
                     <div className="relative pt-1 flex-shrink-0">
-                        <motion.div
+                        <m.div
                             animate={{
                                 scale: isExpanded ? [1, 1.2, 1] : 1,
                                 opacity: isExpanded ? 0.6 : 0.2
@@ -787,7 +787,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
 
                         <AnimatePresence>
                             {isExpanded && (
-                                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="absolute top-4 right-4 sm:top-6 sm:right-6">
+                                <m.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="absolute top-4 right-4 sm:top-6 sm:right-6">
                                     <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                                         <svg className="w-full h-full -rotate-90">
                                             <circle cx="16" cy="16" r="14" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2.5" className="sm:hidden" />
@@ -798,7 +798,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                         </svg>
                                         <span className={cn("absolute text-[7px] sm:text-[8px] font-black", isOverLimit ? "text-rose-500" : "text-white/40")}>{isOverLimit ? `-${characterCount - maxCharacters}` : `${maxCharacters - characterCount}`}</span>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             )}
                         </AnimatePresence>
 
@@ -823,7 +823,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
 
                         <AnimatePresence>
                             {filePreviews.length > 0 && (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 sm:mt-6 grid gap-3 sm:gap-4 justify-center items-center", filePreviews.length === 1 ? "grid-cols-1 max-w-[500px] mx-auto" : "grid-cols-2")}>
+                                <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("mt-4 sm:mt-6 grid gap-3 sm:gap-4 justify-center items-center", filePreviews.length === 1 ? "grid-cols-1 max-w-[500px] mx-auto" : "grid-cols-2")}>
                                     {filePreviews.map((preview, index) => {
                                         const file = selectedFiles[index];
                                         const fileSize = file ? (file.size < 1024 * 1024
@@ -926,7 +926,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                         );
                                     })
                                     }
-                                </motion.div >
+                                </m.div >
                             )}
                         </AnimatePresence >
                     </div >
@@ -936,7 +936,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 <AnimatePresence>
                     {
                         showEmojiPicker && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 bg-white/5 rounded-2xl p-4 border border-white/10">
+                            <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 bg-white/5 rounded-2xl p-4 border border-white/10">
                                 <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
                                     {Object.keys(EMOJI_CATEGORIES).map(cat => (
                                         <button key={cat} onClick={() => setActiveEmojiCategory(cat as keyof typeof EMOJI_CATEGORIES)} className={cn("px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors", activeEmojiCategory === cat ? "bg-primary text-white" : "bg-white/5 text-white/60 hover:text-white")}>
@@ -951,7 +951,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                         </button>
                                     ))}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )
                     }
                 </AnimatePresence >
@@ -960,11 +960,11 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 <AnimatePresence>
                     {
                         showHashtagInput && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 flex items-center gap-2 bg-white/5 rounded-2xl p-3 border border-white/10">
+                            <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 flex items-center gap-2 bg-white/5 rounded-2xl p-3 border border-white/10">
                                 <Hash className="w-4 h-4 text-emerald-400" />
                                 <input type="text" value={hashtagInput} onChange={(e) => setHashtagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addHashtag())} placeholder="Add hashtag..." className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none placeholder:text-white/30" />
                                 <Button size="sm" variant="ghost" onClick={addHashtag} className="text-emerald-400 h-8 px-3">Add</Button>
-                            </motion.div>
+                            </m.div>
                         )
                     }
                 </AnimatePresence >
@@ -973,7 +973,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 <AnimatePresence>
                     {
                         showScheduler && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 bg-white/5 rounded-2xl p-4 border border-white/10">
+                            <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4 bg-white/5 rounded-2xl p-4 border border-white/10">
                                 <div className="flex items-center gap-3 mb-4">
                                     <Clock className="w-4 h-4 text-rose-400" />
                                     <span className="text-xs font-bold text-white/70 uppercase tracking-wider">Schedule Post</span>
@@ -995,7 +995,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                         </Button>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )
                     }
                 </AnimatePresence >
@@ -1021,7 +1021,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 <AnimatePresence>
                     {
                         showAICopilot && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
@@ -1176,7 +1176,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                         </div>
                                     </div>
                                 )}
-                            </motion.div>
+                            </m.div>
                         )
                     }
                 </AnimatePresence >
@@ -1186,7 +1186,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 <AnimatePresence>
                     {
                         isExpanded && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="flex flex-wrap gap-2 mt-4 sm:mt-6">
+                            <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="flex flex-wrap gap-2 mt-4 sm:mt-6">
                                 <div className="flex items-center gap-1.5 px-2 sm:px-4 py-1 sm:py-2 rounded-2xl bg-white/[0.03] border border-white/5">
                                     <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden sm:inline">Trust_Verified</span>
@@ -1197,7 +1197,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden sm:inline">Neural_Boost</span>
                                     <span className="text-[9px] font-black text-white/50 uppercase tracking-widest sm:hidden">BOOST</span>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )
                     }
                 </AnimatePresence >
@@ -1209,7 +1209,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     <input ref={imageInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
                     <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(99,102,241,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => imageInputRef.current?.click()}
@@ -1222,9 +1222,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <Image className="w-5 h-5 text-indigo-400 group-hover/icon:scale-110 transition-transform" />
                         <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(244,63,94,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => videoInputRef.current?.click()}
@@ -1237,9 +1237,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <Video className="w-5 h-5 text-rose-400 group-hover/icon:scale-110 transition-transform" />
                         <div className="absolute inset-0 bg-rose-500/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(245,158,11,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowHashtagInput(false); setShowLocationInput(false); }}
@@ -1248,9 +1248,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <Smile className={cn("w-5 h-5 text-amber-400 transition-all group-hover/icon:scale-110", showEmojiPicker && "text-amber-300")} />
                         <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(16,185,129,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowHashtagInput(!showHashtagInput); setShowEmojiPicker(false); setShowLocationInput(false); setShowPollCreator(false); }}
@@ -1258,9 +1258,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         title="Add hashtag"
                     >
                         <Hash className={cn("w-5 h-5 text-emerald-400 transition-all group-hover/icon:scale-110", showHashtagInput && "text-emerald-300")} />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(14,165,233,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowLocationInput(!showLocationInput); setShowEmojiPicker(false); setShowHashtagInput(false); setShowPollCreator(false); }}
@@ -1269,9 +1269,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <MapPin className={cn("w-5 h-5 text-sky-400 transition-all group-hover/icon:scale-110", showLocationInput && "text-sky-300")} />
                         <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(139,92,246,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowPollCreator(!showPollCreator); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowScheduler(false); }}
@@ -1284,9 +1284,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <BarChart3 className={cn("w-5 h-5 text-violet-400 transition-all group-hover/icon:scale-110", showPollCreator && "text-violet-300")} />
                         <div className="absolute inset-0 bg-violet-500/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(244,63,94,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowScheduler(!showScheduler); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowPollCreator(false); }}
@@ -1295,9 +1295,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <Calendar className={cn("w-5 h-5 text-rose-400 transition-all group-hover/icon:scale-110", showScheduler && "text-rose-300")} />
                         <div className="absolute inset-0 bg-rose-500/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.05)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setShowDraftsManager(true)}
@@ -1306,9 +1306,9 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     >
                         <History className="w-5 h-5 text-slate-400 transition-all group-hover/icon:scale-110" />
                         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, backgroundColor: "rgba(129,140,248,0.1)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => { setShowAICopilot(!showAICopilot); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); setShowPollCreator(false); setShowScheduler(false); }}
@@ -1324,14 +1324,14 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/icon:opacity-100 transition-opacity" />
                         {/* Sonic Pulse Ring */}
                         {showAICopilot && (
-                            <motion.div
+                            <m.div
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1.5, opacity: 0 }}
                                 transition={{ duration: 2, repeat: Infinity }}
                                 className="absolute inset-0 border-2 border-primary/30 rounded-2xl"
                             />
                         )}
-                    </motion.button>
+                    </m.button>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -1344,7 +1344,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     <AnimatePresence>
                         {isExpanded && (
                             <div className="flex items-center gap-2 sm:gap-4">
-                                <motion.button
+                                <m.button
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     onClick={handleManualSave}
@@ -1353,15 +1353,15 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                     title="Save draft"
                                 >
                                     {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                                </motion.button>
-                                <motion.button
+                                </m.button>
+                                <m.button
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     onClick={() => { setIsExpanded(false); setShowEmojiPicker(false); setShowHashtagInput(false); setShowLocationInput(false); }}
                                     className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.1em] sm:tracking-[0.2em] hover:text-white transition-colors px-1 sm:px-2 py-1"
                                 >
                                     BACK
-                                </motion.button>
+                                </m.button>
                             </div>
                         )}
                     </AnimatePresence>
@@ -1442,6 +1442,6 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 onClose={() => setShowDraftsManager(false)}
                 onEditDraft={handleEditDraft}
             />
-        </motion.div >
+        </m.div >
     );
 }

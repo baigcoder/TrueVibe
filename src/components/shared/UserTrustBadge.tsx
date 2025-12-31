@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, ChevronRight, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TrustScoreBreakdown } from './TrustScoreBreakdown';
@@ -33,7 +33,7 @@ export function UserTrustBadge({
     if (compact) {
         return (
             <>
-                <motion.button
+                <m.button
                     whileHover={interactive ? { scale: 1.05 } : undefined}
                     whileTap={interactive ? { scale: 0.95 } : undefined}
                     onClick={() => interactive && setShowBreakdown(true)}
@@ -50,7 +50,7 @@ export function UserTrustBadge({
                 >
                     <Shield className="w-3 h-3" />
                     <span>{score}</span>
-                </motion.button>
+                </m.button>
                 {interactive && (
                     <TrustScoreBreakdown isOpen={showBreakdown} onClose={() => setShowBreakdown(false)} />
                 )}
@@ -60,7 +60,7 @@ export function UserTrustBadge({
 
     return (
         <>
-            <motion.button
+            <m.button
                 whileHover={interactive ? { scale: 1.02 } : undefined}
                 whileTap={interactive ? { scale: 0.98 } : undefined}
                 onClick={() => interactive && setShowBreakdown(true)}
@@ -113,7 +113,7 @@ export function UserTrustBadge({
                 {interactive && (
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                 )}
-            </motion.button>
+            </m.button>
             {interactive && (
                 <TrustScoreBreakdown isOpen={showBreakdown} onClose={() => setShowBreakdown(false)} />
             )}

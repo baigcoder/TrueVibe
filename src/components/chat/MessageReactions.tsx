@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { SmilePlus } from 'lucide-react';
 
 interface Reaction {
@@ -72,7 +72,7 @@ export function MessageReactions({
             {mergedReactions.map((reaction) => {
                 const hasReacted = reaction.users.includes(currentUserId);
                 return (
-                    <motion.button
+                    <m.button
                         key={reaction.emoji}
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -91,25 +91,25 @@ export function MessageReactions({
                     >
                         <span className="text-sm">{reaction.emoji}</span>
                         <span className="font-medium">{reaction.users.length}</span>
-                    </motion.button>
+                    </m.button>
                 );
             })}
 
             {/* Add reaction button */}
             <div className="relative" ref={pickerRef}>
-                <motion.button
+                <m.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPicker(!showPicker)}
                     className="p-1.5 rounded-full text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/50 transition-colors"
                 >
                     <SmilePlus className="w-4 h-4" />
-                </motion.button>
+                </m.button>
 
                 {/* Emoji picker */}
                 <AnimatePresence>
                     {showPicker && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -127,7 +127,7 @@ export function MessageReactions({
                                     </button>
                                 ))}
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </div>

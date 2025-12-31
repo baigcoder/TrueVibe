@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
     Clock,
     FileText,
@@ -163,7 +163,7 @@ export function DraftsScheduledSection() {
             ) : (
                 <div className="space-y-3">
                     {posts.map((post, index) => (
-                        <motion.div
+                        <m.div
                             key={post._id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -252,7 +252,7 @@ export function DraftsScheduledSection() {
                                     </button>
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
             )}
@@ -261,14 +261,14 @@ export function DraftsScheduledSection() {
             <AnimatePresence>
                 {postToDelete && (
                     <>
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setPostToDelete(null)}
                             className="fixed inset-0 bg-black/60 z-50"
                         />
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
@@ -295,7 +295,7 @@ export function DraftsScheduledSection() {
                                     </button>
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     </>
                 )}
             </AnimatePresence>

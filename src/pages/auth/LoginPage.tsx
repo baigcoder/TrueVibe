@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ const BackgroundAtmosphere = () => {
     return (
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.3]" />
-            <motion.div
+            <m.div
                 animate={{
                     opacity: [0.1, 0.2, 0.1],
                     scale: [1, 1.05, 1],
@@ -23,7 +23,7 @@ const BackgroundAtmosphere = () => {
             >
                 <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/20 blur-[100px] rounded-full" />
                 <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-secondary/15 blur-[120px] rounded-full" />
-            </motion.div>
+            </m.div>
         </div>
     );
 };
@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 selection:bg-primary/30 overflow-x-hidden bg-[#030712] mesh-bg noise-bg">
             <BackgroundAtmosphere />
 
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
@@ -135,13 +135,13 @@ export default function LoginPage() {
                         {/* Form */}
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {error && (
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, scale: 0.98 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-bold uppercase tracking-widest text-center"
                                 >
                                     ACCESS_DENIED: {error}
-                                </motion.div>
+                                </m.div>
                             )}
 
                             <div className="space-y-1.5">
@@ -229,7 +229,7 @@ export default function LoginPage() {
                     </div>
                     <span className="text-[6px] sm:text-[7px] font-black text-slate-700 uppercase tracking-[0.2em] sm:tracking-[0.4em]">STABLE_v1.0.42</span>
                 </div>
-            </motion.div>
+            </m.div>
         </div>
     );
 }

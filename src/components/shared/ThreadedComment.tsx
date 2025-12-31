@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -98,7 +98,7 @@ export function ThreadedComment({
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
@@ -146,7 +146,7 @@ export function ThreadedComment({
 
                                     <AnimatePresence>
                                         {showMenu && (
-                                            <motion.div
+                                            <m.div
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
@@ -164,7 +164,7 @@ export function ThreadedComment({
                                                     )}
                                                     Delete
                                                 </button>
-                                            </motion.div>
+                                            </m.div>
                                         )}
                                     </AnimatePresence>
                                 </div>
@@ -226,7 +226,7 @@ export function ThreadedComment({
                 {/* Reply Input */}
                 <AnimatePresence>
                     {showReplyInput && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
@@ -253,7 +253,7 @@ export function ThreadedComment({
                                     )}
                                 </Button>
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </div>
@@ -261,7 +261,7 @@ export function ThreadedComment({
             {/* Nested Replies */}
             <AnimatePresence>
                 {showReplies && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -293,10 +293,10 @@ export function ThreadedComment({
                                 )}
                             </>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </m.div>
     );
 }
 
