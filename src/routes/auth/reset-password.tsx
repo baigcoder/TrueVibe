@@ -1,6 +1,22 @@
-import { createFileRoute } from '@tanstack/react-router';
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import { createFileRoute } from '@tanstack/react-router'
+import { lazy, Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
 
-export const Route = createFileRoute('/auth/reset-password' as any)({
-    component: ResetPasswordPage,
-});
+// Lazy load for better initial bundle
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+
+function AuthLoading() {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+    )
+}
+
+export const Route = createFileRoute('/auth/reset-password')({
+    component: () => (
+        <Suspense fallback={<AuthLoading />}>
+            <ResetPasswordPage />
+        </Suspense>
+    ),
+})

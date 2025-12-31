@@ -4,6 +4,7 @@ import { User } from './User.model.js';
 import { Profile } from './Profile.model.js';
 import { Follow } from './Follow.model.js';
 import { FollowRequest } from './FollowRequest.model.js';
+import { Block } from './Block.model.js';
 import { Post } from '../posts/Post.model.js';
 import { NotFoundError, ForbiddenError, ConflictError } from '../../shared/middleware/error.middleware.js';
 import { createNotification } from '../notifications/notification.service.js';
@@ -700,6 +701,170 @@ export const getFollowing = async (
                 cursor: hasMore ? results[results.length - 1]._id : null,
                 hasMore,
                 total: await Follow.countDocuments({ followerId: targetProfile.userId }),
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Block a user
+export const blockUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const blockerId = req.user!.userId;
+        const { id: blockedId } = req.params;
+        const { reason } = req.body;
+
+        if (blockerId === blockedId) {
+            throw new ForbiddenError('Cannot block yourself');
+        }
+
+        // Check if user exists
+        const userToBlock = await Profile.findOne({ userId: blockedId });
+        if (!userToBlock) {
+            throw new NotFoundError('User to block');
+        }
+
+        // Check if already blocked
+        const existingBlock = await Block.findOne({ blockerId, blockedId });
+        if (existingBlock) {
+            throw new ConflictError('User is already blocked');
+        }
+
+        // Create block
+        await Block.create({
+            blockerId,
+            blockedId,
+            reason: reason?.substring(0, 500),
+        });
+
+        // Also remove any follow relationships
+        await Promise.all([
+            Follow.findOneAndDelete({ followerId: blockerId, followingId: blockedId }),
+            Follow.findOneAndDelete({ followerId: blockedId, followingId: blockerId }),
+            FollowRequest.deleteMany({
+                $or: [
+                    { requesterId: blockerId, targetId: blockedId },
+                    { requesterId: blockedId, targetId: blockerId },
+                ],
+            }),
+        ]);
+
+        // Update follower counts
+        await Promise.all([
+            Profile.findOneAndUpdate({ userId: blockerId }, { $inc: { following: -1, followers: -1 } }),
+            Profile.findOneAndUpdate({ userId: blockedId }, { $inc: { following: -1, followers: -1 } }),
+        ]);
+
+        res.json({
+            success: true,
+            message: 'User blocked successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Unblock a user
+export const unblockUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const blockerId = req.user!.userId;
+        const { id: blockedId } = req.params;
+
+        const block = await Block.findOneAndDelete({ blockerId, blockedId });
+
+        if (!block) {
+            throw new NotFoundError('Block relationship');
+        }
+
+        res.json({
+            success: true,
+            message: 'User unblocked successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Get blocked users
+export const getBlockedUsers = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const { cursor, limit = '20' } = req.query;
+
+        const query: Record<string, unknown> = { blockerId: userId };
+        if (cursor) {
+            query._id = { $lt: cursor };
+        }
+
+        const blocks = await Block.find(query)
+            .sort({ _id: -1 })
+            .limit(parseInt(limit as string, 10) + 1);
+
+        const hasMore = blocks.length > parseInt(limit as string, 10);
+        const results = hasMore ? blocks.slice(0, -1) : blocks;
+
+        // Get profiles for blocked users
+        const blockedIds = results.map(b => b.blockedId);
+        const profiles = await Profile.find({ userId: { $in: blockedIds } })
+            .select('userId name handle avatar');
+
+        const profileMap = new Map(profiles.map(p => [p.userId.toString(), p]));
+
+        const blockedUsers = results.map(block => ({
+            _id: block._id,
+            user: profileMap.get(block.blockedId.toString()),
+            reason: block.reason,
+            blockedAt: block.createdAt,
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                blockedUsers,
+                cursor: hasMore ? results[results.length - 1]._id : null,
+                hasMore,
+                total: await Block.countDocuments({ blockerId: userId }),
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Check if user is blocked by or has blocked another user
+export const checkBlockStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const { id: targetId } = req.params;
+
+        const [blockedByMe, blockedMe] = await Promise.all([
+            Block.exists({ blockerId: userId, blockedId: targetId }),
+            Block.exists({ blockerId: targetId, blockedId: userId }),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                blockedByMe: !!blockedByMe,
+                blockedMe: !!blockedMe,
+                isBlocked: !!blockedByMe || !!blockedMe,
             },
         });
     } catch (error) {

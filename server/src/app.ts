@@ -35,6 +35,9 @@ import audioRoutes from './modules/shorts/audio.routes.js';
 import livestreamRoutes from './modules/streaming/livestream.routes.js';
 import encryptionRoutes from './modules/encryption/encryption.routes.js';
 import projectRoutes from './modules/projects/project.routes.js';
+import collectionRoutes from './modules/posts/collection.routes.js';
+import scheduledPostsRoutes from './modules/posts/scheduledPosts.routes.js';
+import trustRoutes from './modules/trust/trust.routes.js';
 
 export const createApp = (): Application => {
     const app = express();
@@ -155,6 +158,9 @@ export const createApp = (): Application => {
     app.use('/api/v1/livestream', livestreamRoutes);
     app.use('/api/v1/encryption', encryptionRoutes);
     app.use('/api/v1/projects', projectRoutes);
+    app.use('/api/v1/collections', collectionRoutes);
+    app.use('/api/v1/posts', scheduledPostsRoutes); // Additional scheduled posts routes
+    app.use('/api/v1/trust', trustRoutes);
 
     // Error handling
     app.use(notFoundHandler);

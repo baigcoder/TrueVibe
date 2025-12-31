@@ -99,6 +99,10 @@ const startServer = async (): Promise<void> => {
         debugLog('🔌 Connecting to MongoDB...');
         await connectDatabase();
 
+        // Start scheduled posts processor
+        const { startScheduledPostsProcessor } = await import('./modules/posts/scheduledPosts.service.js');
+        startScheduledPostsProcessor();
+
         debugLog('✅ All services initialized successfully.');
 
         // Graceful shutdown

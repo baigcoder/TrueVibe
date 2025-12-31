@@ -66,3 +66,66 @@ export const aiLimiter = rateLimit({
     },
 });
 
+// Session management rate limiter (prevent session enumeration attacks)
+export const sessionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 30, // 30 requests per 15 minutes
+    message: {
+        success: false,
+        error: {
+            code: 'SESSION_RATE_LIMIT_EXCEEDED',
+            message: 'Too many session management requests, please try again later',
+        },
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.userId || req.ip || 'unknown',
+});
+
+// Block/unblock rate limiter (prevent abuse)
+export const blockLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 50, // 50 block/unblock actions per hour
+    message: {
+        success: false,
+        error: {
+            code: 'BLOCK_RATE_LIMIT_EXCEEDED',
+            message: 'Too many block/unblock actions, please try again later',
+        },
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.userId || req.ip || 'unknown',
+});
+
+// Scheduled posts rate limiter
+export const scheduledPostsLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 100, // 100 scheduling actions per hour
+    message: {
+        success: false,
+        error: {
+            code: 'SCHEDULE_RATE_LIMIT_EXCEEDED',
+            message: 'Too many scheduling requests, please try again later',
+        },
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.userId || req.ip || 'unknown',
+});
+
+// Collection management rate limiter
+export const collectionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 60, // 60 collection operations per 15 minutes
+    message: {
+        success: false,
+        error: {
+            code: 'COLLECTION_RATE_LIMIT_EXCEEDED',
+            message: 'Too many collection operations, please try again later',
+        },
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.userId || req.ip || 'unknown',
+});

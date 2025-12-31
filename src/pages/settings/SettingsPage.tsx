@@ -13,7 +13,7 @@ import {
     Loader2, Save, User, Bell, Lock, Palette, Shield,
     Camera, MapPin, Link as LinkIcon, ChevronRight, Smartphone,
     ShieldCheck, Eye, Monitor, KeyRound, Globe, Download,
-    UserX, Trash2, LogOut, Check, Moon, Sun
+    UserX, Trash2, LogOut, Check, Moon, Sun, FileText, ShieldOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,9 @@ import { supabase } from "@/lib/supabase";
 import { api } from "@/api/client";
 import { SpotifyConnect } from "@/components/spotify/SpotifyConnect";
 import { Music } from "lucide-react";
+import { SessionsSection } from "./SessionsSection";
+import { BlockedUsersSection } from "./BlockedUsersSection";
+import { DraftsScheduledSection } from "./DraftsScheduledSection";
 
 interface SettingsSection {
     id: string;
@@ -32,9 +35,12 @@ interface SettingsSection {
 const settingsSections: SettingsSection[] = [
     { id: 'profile', label: 'Profile', icon: User, description: 'Manage your public presence' },
     { id: 'account', label: 'Account Security', icon: KeyRound, description: 'Passwords and authentication' },
+    { id: 'sessions', label: 'Active Sessions', icon: Monitor, description: 'Manage logged-in devices' },
+    { id: 'blocked', label: 'Blocked Users', icon: ShieldOff, description: 'Manage blocked accounts' },
     { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Control alert preferences' },
     { id: 'privacy', label: 'Privacy', icon: Lock, description: 'Secure your account data' },
     { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Customize your experience' },
+    { id: 'drafts', label: 'Drafts & Scheduled', icon: FileText, description: 'Manage unpublished posts' },
     { id: 'spotify', label: 'Spotify', icon: Music, description: 'Sync your music vibe' },
     { id: 'trust', label: 'Trust Score', icon: Shield, description: 'Verify your authenticity' },
     { id: 'data', label: 'Data & Export', icon: Download, description: 'Download your data' },
@@ -609,6 +615,32 @@ export default function SettingsPage() {
                             </motion.div>
                         )}
 
+                        {/* Sessions Section */}
+                        {activeSection === 'sessions' && (
+                            <motion.div
+                                key="sessions"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="bg-white/5 border border-white/10 rounded-2xl p-6"
+                            >
+                                <SessionsSection />
+                            </motion.div>
+                        )}
+
+                        {/* Blocked Users Section */}
+                        {activeSection === 'blocked' && (
+                            <motion.div
+                                key="blocked"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="bg-white/5 border border-white/10 rounded-2xl p-6"
+                            >
+                                <BlockedUsersSection />
+                            </motion.div>
+                        )}
+
                         {/* Notifications Section */}
                         {activeSection === 'notifications' && (
                             <motion.div
@@ -793,6 +825,19 @@ export default function SettingsPage() {
                                         Save Appearance
                                     </Button>
                                 </div>
+                            </motion.div>
+                        )}
+
+                        {/* Drafts & Scheduled Section */}
+                        {activeSection === 'drafts' && (
+                            <motion.div
+                                key="drafts"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="bg-white/5 border border-white/10 rounded-2xl p-6"
+                            >
+                                <DraftsScheduledSection />
                             </motion.div>
                         )}
 

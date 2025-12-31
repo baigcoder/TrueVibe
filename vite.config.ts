@@ -26,16 +26,20 @@ export default defineConfig({
       'lucide-react',
       '@supabase/supabase-js',
     ],
+    // Exclude heavy dependencies from pre-bundling to enable better tree-shaking
+    exclude: ['@firebase/app'],
   },
   build: {
     // Disable source maps for smaller production bundles
     sourcemap: false,
-    // Target modern browsers for smaller bundles
-    target: 'es2020',
+    // Target modern browsers for smaller bundles (Vercel Edge supports ES2022)
+    target: 'es2022',
     // Optimize CSS
     cssCodeSplit: true,
-    // Minification settings
+    // Minification settings - esbuild is fastest
     minify: 'esbuild',
+    // Enable CSS minification
+    cssMinify: true,
     // Rollup options for code splitting
     rollupOptions: {
       output: {
@@ -56,23 +60,45 @@ export default defineConfig({
             '@radix-ui/react-tabs',
             '@radix-ui/react-scroll-area',
           ],
-          // Animation
+          // Animation - keep separate for lazy loading
           'vendor-motion': ['framer-motion'],
           // Real-time & Auth
           'vendor-realtime': ['socket.io-client', '@supabase/supabase-js'],
+          // Charts - keep separate as they're heavy
+          'vendor-charts': ['recharts'],
           // Utilities
           'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'zod'],
         },
-        // Asset file naming for better caching
+        // Asset file naming for better caching with content hash
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        assetFileNames: (assetInfo) => {
+          // Organize assets by type for better caching
+          const extType = assetInfo.name?.split('.').pop() || 'misc';
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp|avif/i.test(extType)) {
+            return 'assets/images/[name]-[hash][extname]';
+          }
+          if (/woff2?|ttf|eot|otf/i.test(extType)) {
+            return 'assets/fonts/[name]-[hash][extname]';
+          }
+          if (/css/i.test(extType)) {
+            return 'assets/css/[name]-[hash][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+      // Tree-shake unused exports
+      treeshake: {
+        moduleSideEffects: 'no-external',
+        propertyReadSideEffects: false,
       },
     },
     // Increase chunk size warning limit
     chunkSizeWarningLimit: 1000,
-    // Optimize assets
+    // Inline small assets for fewer requests
     assetsInlineLimit: 4096,
+    // Report compressed size for better build insights
+    reportCompressedSize: true,
   },
   // Preview server configuration
   preview: {
@@ -89,5 +115,12 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
+  },
+  // Enable esbuild optimizations
+  esbuild: {
+    // Drop console.log in production
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    // Use legal comments for license info
+    legalComments: 'none',
   },
 })

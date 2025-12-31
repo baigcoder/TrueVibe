@@ -1,6 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router'
-import AdminProjectsPage from '@/pages/admin/projects/AdminProjectsPage'
+import { lazy, Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
+
+// Lazy load for better initial bundle
+const AdminProjectsPage = lazy(() => import('@/pages/admin/projects/AdminProjectsPage'))
+
+function AdminLoading() {
+    return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+    )
+}
 
 export const Route = createFileRoute('/app/admin/projects')({
-    component: AdminProjectsPage,
+    component: () => (
+        <Suspense fallback={<AdminLoading />}>
+            <AdminProjectsPage />
+        </Suspense>
+    ),
 })

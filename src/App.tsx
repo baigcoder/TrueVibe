@@ -12,6 +12,8 @@ import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
 import { NotificationManager } from "@/components/NotificationManager";
 import ErrorBoundary from "@/components/shared/ErrorBoundary";
+// LazyMotion for optimized framer-motion bundle loading
+import { LazyMotion, domAnimation } from "framer-motion";
 // Import logger to silence console in production
 import "@/lib/logger";
 
@@ -113,20 +115,22 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <RealtimeProvider>
-          <SocketProvider>
-            <AuthProvider>
-              <CallProvider>
-                <VoiceRoomProvider>
-                  <AppContent />
-                </VoiceRoomProvider>
-              </CallProvider>
-            </AuthProvider>
-          </SocketProvider>
-        </RealtimeProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <LazyMotion features={domAnimation} strict>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <RealtimeProvider>
+            <SocketProvider>
+              <AuthProvider>
+                <CallProvider>
+                  <VoiceRoomProvider>
+                    <AppContent />
+                  </VoiceRoomProvider>
+                </CallProvider>
+              </AuthProvider>
+            </SocketProvider>
+          </RealtimeProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </LazyMotion>
   );
 }

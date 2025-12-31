@@ -5,6 +5,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import * as userController from './user.controller.js';
 import { authenticate, optionalAuth } from '../../shared/middleware/auth.middleware.js';
 import { validateBody } from '../../shared/middleware/validate.middleware.js';
+import { blockLimiter } from '../../shared/middleware/rateLimit.middleware.js';
 import { updateProfileSchema, updateSettingsSchema } from './user.schema.js';
 import { Profile } from './Profile.model.js';
 import { AIReport } from '../posts/AIReport.model.js';
@@ -323,5 +324,12 @@ router.delete('/:id/follow-request', authenticate, userController.cancelFollowRe
 router.get('/:id/followers', optionalAuth, userController.getFollowers);
 router.get('/:id/following', optionalAuth, userController.getFollowing);
 
+// Block/Unblock routes
+router.get('/blocked', authenticate, userController.getBlockedUsers);
+router.post('/:id/block', authenticate, blockLimiter, userController.blockUser);
+router.delete('/:id/block', authenticate, blockLimiter, userController.unblockUser);
+router.get('/:id/block-status', authenticate, userController.checkBlockStatus);
+
 
 export default router;
+
