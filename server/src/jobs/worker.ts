@@ -11,6 +11,7 @@ import { emitToUser } from '../socket/index.js';
 import { config } from '../config/index.js';
 import { fetchWithRetry, withCircuitBreaker } from '../shared/utils/http.utils.js';
 import { securityConfig } from '../config/security.config.js';
+import { broadcastAIAnalysisComplete } from '../shared/utils/supabaseRealtime.js';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -374,6 +375,28 @@ const aiAnalysisWorker = new Worker(
                         isRead: false,
                     });
                 }
+            }
+
+            // Broadcast to ALL clients via Supabase Realtime for real-time TrustBadge updates
+            // This allows any user viewing the post to see the updated TrustBadge immediately
+            if (postId) {
+                await broadcastAIAnalysisComplete({
+                    postId,
+                    trustLevel: trustLevel as 'authentic' | 'suspicious' | 'fake' | 'likely_fake',
+                    fakeScore: result.fakeScore,
+                    realScore: result.realScore,
+                    classification,
+                    processingTimeMs: result.processingTimeMs,
+                    facesDetected: result.analysisDetails?.facesDetected as number | undefined,
+                    avgFaceScore: result.analysisDetails?.avgFaceScore as number | undefined,
+                    avgFftScore: result.analysisDetails?.avgFftScore as number | undefined,
+                    avgEyeScore: result.analysisDetails?.avgEyeScore as number | undefined,
+                    fftBoost: result.analysisDetails?.fftBoost as number | undefined,
+                    eyeBoost: result.analysisDetails?.eyeBoost as number | undefined,
+                    temporalBoost: result.analysisDetails?.temporalBoost as number | undefined,
+                    mediaType: result.analysisDetails?.mediaType as 'image' | 'video' | undefined,
+                    framesAnalyzed: result.analysisDetails?.framesAnalyzed as number | undefined,
+                });
             }
 
             debugLog(`AI analysis completed for ${contentType}: ${mediaId} - ${classification}`);

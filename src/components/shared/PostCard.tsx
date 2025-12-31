@@ -31,7 +31,7 @@ import {
     DialogContent,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
-import { useAIAnalysisUpdate } from "@/context/SocketContext";
+import { useAIAnalysisRealtime, type AIAnalysisData } from "@/context/RealtimeContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback } from "react";
 import { CommentSection } from "./CommentSection";
@@ -173,40 +173,40 @@ export function PostCard({ post }: PostCardProps) {
         }
     };
 
-    // Listen for AI analysis completion and refresh the post
-    useAIAnalysisUpdate(useCallback(({ postId: updatePostId, analysis }) => {
-        console.log(`📡 [Socket Event] ai:analysis-complete received:`, {
-            receivedPostId: updatePostId,
+    // Listen for AI analysis completion via Supabase Realtime
+    const handleAIAnalysisComplete = useCallback((data: AIAnalysisData) => {
+        console.log(`📡 [Supabase Realtime] ai:analysis-complete received:`, {
+            receivedPostId: data.postId,
             currentPostId: postId,
             currentPostInternalId: post._id,
-            match: updatePostId === post._id || updatePostId === postId
+            match: data.postId === post._id || data.postId === postId
         });
 
-        if (updatePostId === post._id || updatePostId === postId) {
-            console.log(`🔔 AI Analysis complete for post: ${updatePostId}, refetching...`);
+        if (data.postId === post._id || data.postId === postId) {
+            console.log(`🔔 AI Analysis complete for post: ${data.postId}, updating cache...`);
 
             // IMMEDIATELY update the post data in the cache with the new analysis
             // This ensures TrustBadge updates without waiting for refetch
-            queryClient.setQueryData(['posts', updatePostId], (oldData: any) => {
+            queryClient.setQueryData(['posts', data.postId], (oldData: any) => {
                 if (oldData) {
                     return {
                         ...oldData,
-                        trustLevel: analysis?.trustLevel,
+                        trustLevel: data.trustLevel,
                         aiAnalysis: {
                             ...oldData.aiAnalysis,
-                            fakeScore: analysis?.fakeScore,
-                            realScore: analysis?.realScore,
-                            classification: analysis?.classification,
-                            processingTimeMs: analysis?.processingTimeMs,
-                            facesDetected: analysis?.facesDetected,
-                            avgFaceScore: analysis?.avgFaceScore,
-                            avgFftScore: analysis?.avgFftScore,
-                            avgEyeScore: analysis?.avgEyeScore,
-                            fftBoost: analysis?.fftBoost,
-                            eyeBoost: analysis?.eyeBoost,
-                            temporalBoost: analysis?.temporalBoost,
-                            framesAnalyzed: analysis?.framesAnalyzed,
-                            mediaType: analysis?.mediaType
+                            fakeScore: data.fakeScore,
+                            realScore: data.realScore,
+                            classification: data.classification,
+                            processingTimeMs: data.processingTimeMs,
+                            facesDetected: data.facesDetected,
+                            avgFaceScore: data.avgFaceScore,
+                            avgFftScore: data.avgFftScore,
+                            avgEyeScore: data.avgEyeScore,
+                            fftBoost: data.fftBoost,
+                            eyeBoost: data.eyeBoost,
+                            temporalBoost: data.temporalBoost,
+                            framesAnalyzed: data.framesAnalyzed,
+                            mediaType: data.mediaType
                         }
                     };
                 }
@@ -221,24 +221,24 @@ export function PostCard({ post }: PostCardProps) {
                         pages: oldData.pages.map((page: any) => ({
                             ...page,
                             posts: page.posts?.map((p: any) =>
-                                (p._id === updatePostId || p.id === updatePostId) ? {
+                                (p._id === data.postId || p.id === data.postId) ? {
                                     ...p,
-                                    trustLevel: analysis?.trustLevel,
+                                    trustLevel: data.trustLevel,
                                     aiAnalysis: {
                                         ...p.aiAnalysis,
-                                        fakeScore: analysis?.fakeScore,
-                                        realScore: analysis?.realScore,
-                                        classification: analysis?.classification,
-                                        processingTimeMs: analysis?.processingTimeMs,
-                                        facesDetected: analysis?.facesDetected,
-                                        avgFaceScore: analysis?.avgFaceScore,
-                                        avgFftScore: analysis?.avgFftScore,
-                                        avgEyeScore: analysis?.avgEyeScore,
-                                        fftBoost: analysis?.fftBoost,
-                                        eyeBoost: analysis?.eyeBoost,
-                                        temporalBoost: analysis?.temporalBoost,
-                                        framesAnalyzed: analysis?.framesAnalyzed,
-                                        mediaType: analysis?.mediaType
+                                        fakeScore: data.fakeScore,
+                                        realScore: data.realScore,
+                                        classification: data.classification,
+                                        processingTimeMs: data.processingTimeMs,
+                                        facesDetected: data.facesDetected,
+                                        avgFaceScore: data.avgFaceScore,
+                                        avgFftScore: data.avgFftScore,
+                                        avgEyeScore: data.avgEyeScore,
+                                        fftBoost: data.fftBoost,
+                                        eyeBoost: data.eyeBoost,
+                                        temporalBoost: data.temporalBoost,
+                                        framesAnalyzed: data.framesAnalyzed,
+                                        mediaType: data.mediaType
                                     }
                                 } : p
                             )
@@ -252,13 +252,13 @@ export function PostCard({ post }: PostCardProps) {
             queryClient.refetchQueries({ queryKey: ['feed'], type: 'active' });
 
             // Show toast notification with scroll-to-post action
-            const trustLevel = analysis?.trustLevel || 'authentic';
+            const trustLevel = data.trustLevel || 'authentic';
             const statusLabel = trustLevel === 'authentic' ? '✓ Verified' :
                 trustLevel === 'suspicious' ? '⚠ Review Needed' :
                     trustLevel === 'likely_fake' ? '⚠ High Risk' : '⛔ Manipulated';
 
             const scrollToPost = () => {
-                const postElement = document.getElementById(`post-${updatePostId}`);
+                const postElement = document.getElementById(`post-${data.postId}`);
                 if (postElement) {
                     postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     // Add highlight effect
@@ -278,7 +278,10 @@ export function PostCard({ post }: PostCardProps) {
                 duration: 6000
             });
         }
-    }, [post._id, postId, queryClient]));
+    }, [post._id, postId, queryClient]);
+
+    // Subscribe to Supabase Realtime for AI analysis updates
+    useAIAnalysisRealtime(handleAIAnalysisComplete);
 
     const handleLike = async () => {
         if (!postId) return;
