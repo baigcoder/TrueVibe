@@ -177,10 +177,72 @@ export function PostCard({ post }: PostCardProps) {
     useAIAnalysisUpdate(useCallback(({ postId: updatePostId, analysis }) => {
         if (updatePostId === post._id || updatePostId === postId) {
             console.log(`🔔 AI Analysis complete for post: ${updatePostId}, refetching...`);
-            // Force immediate refetch to get updated aiAnalysis data
-            queryClient.invalidateQueries({ queryKey: ['posts', updatePostId], refetchType: 'all' });
-            queryClient.invalidateQueries({ queryKey: ['feed'], refetchType: 'all' });
-            queryClient.invalidateQueries({ queryKey: ['hashtags'], refetchType: 'all' });
+
+            // IMMEDIATELY update the post data in the cache with the new analysis
+            // This ensures TrustBadge updates without waiting for refetch
+            queryClient.setQueryData(['posts', updatePostId], (oldData: any) => {
+                if (oldData) {
+                    return {
+                        ...oldData,
+                        trustLevel: analysis?.trustLevel,
+                        aiAnalysis: {
+                            ...oldData.aiAnalysis,
+                            fakeScore: analysis?.fakeScore,
+                            realScore: analysis?.realScore,
+                            classification: analysis?.classification,
+                            processingTimeMs: analysis?.processingTimeMs,
+                            facesDetected: analysis?.facesDetected,
+                            avgFaceScore: analysis?.avgFaceScore,
+                            avgFftScore: analysis?.avgFftScore,
+                            avgEyeScore: analysis?.avgEyeScore,
+                            fftBoost: analysis?.fftBoost,
+                            eyeBoost: analysis?.eyeBoost,
+                            temporalBoost: analysis?.temporalBoost,
+                            framesAnalyzed: analysis?.framesAnalyzed,
+                            mediaType: analysis?.mediaType
+                        }
+                    };
+                }
+                return oldData;
+            });
+
+            // Also update feed cache entries
+            queryClient.setQueriesData({ queryKey: ['feed'] }, (oldData: any) => {
+                if (oldData?.pages) {
+                    return {
+                        ...oldData,
+                        pages: oldData.pages.map((page: any) => ({
+                            ...page,
+                            posts: page.posts?.map((p: any) =>
+                                (p._id === updatePostId || p.id === updatePostId) ? {
+                                    ...p,
+                                    trustLevel: analysis?.trustLevel,
+                                    aiAnalysis: {
+                                        ...p.aiAnalysis,
+                                        fakeScore: analysis?.fakeScore,
+                                        realScore: analysis?.realScore,
+                                        classification: analysis?.classification,
+                                        processingTimeMs: analysis?.processingTimeMs,
+                                        facesDetected: analysis?.facesDetected,
+                                        avgFaceScore: analysis?.avgFaceScore,
+                                        avgFftScore: analysis?.avgFftScore,
+                                        avgEyeScore: analysis?.avgEyeScore,
+                                        fftBoost: analysis?.fftBoost,
+                                        eyeBoost: analysis?.eyeBoost,
+                                        temporalBoost: analysis?.temporalBoost,
+                                        framesAnalyzed: analysis?.framesAnalyzed,
+                                        mediaType: analysis?.mediaType
+                                    }
+                                } : p
+                            )
+                        }))
+                    };
+                }
+                return oldData;
+            });
+
+            // Also trigger a background refetch for freshest data
+            queryClient.refetchQueries({ queryKey: ['feed'], type: 'active' });
 
             // Show toast notification with scroll-to-post action
             const trustLevel = analysis?.trustLevel || 'authentic';

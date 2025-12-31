@@ -91,26 +91,33 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
         >
             <button
                 onClick={onToggle}
-                className="w-full p-2.5 sm:p-4 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors"
+                className="w-full p-3 sm:p-4 hover:bg-white/5 transition-colors"
             >
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="flex items-center gap-3">
+                    {/* Icon */}
                     <div className={cn(
-                        "w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0",
                         item.detected ? "bg-red-500/10" : "bg-slate-700/30"
                     )}>
-                        <Icon className={cn("w-3.5 h-3.5 sm:w-5 sm:h-5", item.detected ? "text-red-400" : "text-slate-400")} />
+                        <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", item.detected ? "text-red-400" : "text-slate-400")} />
                     </div>
-                    <span className="text-[8px] sm:text-[11px] font-black uppercase tracking-tight text-white/80 leading-tight break-words">
-                        {item.category.replace(" Analysis", "").replace(" Detection", "")}
-                    </span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                    {score !== null && (
-                        <span className={cn("text-sm sm:text-lg font-black italic whitespace-nowrap", getScoreColor(score))}>
-                            {score}%
+
+                    {/* Label + Score Column */}
+                    <div className="flex-1 min-w-0">
+                        <span className="block text-[10px] sm:text-xs font-black uppercase tracking-wide text-white/80 leading-tight">
+                            {item.category.replace(" Analysis", "").replace(" Detection", "")}
                         </span>
-                    )}
-                    <ChevronDown className={cn("w-3 h-3 text-slate-500 transition-transform duration-300", isExpanded && "rotate-180")} />
+                    </div>
+
+                    {/* Score + Chevron */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {score !== null && (
+                            <span className={cn("text-lg sm:text-xl font-black italic", getScoreColor(score))}>
+                                {score}%
+                            </span>
+                        )}
+                        <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-300", isExpanded && "rotate-180")} />
+                    </div>
                 </div>
             </button>
             <AnimatePresence>
