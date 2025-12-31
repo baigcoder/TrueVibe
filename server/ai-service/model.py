@@ -127,16 +127,17 @@ class MediaType:
 class FaceInfo:
     """Information about a detected face."""
     def __init__(self, bbox: Tuple[int, int, int, int], confidence: float, index: int):
-        self.bbox = bbox
-        self.confidence = confidence
-        self.index = index
+        # Convert to native Python types to avoid numpy serialization issues
+        self.bbox = tuple(int(x) for x in bbox)
+        self.confidence = float(confidence)
+        self.index = int(index)
         self.fake_score = 0.0
         self.real_score = 0.0
     
     @property
     def size(self) -> int:
         """Calculate face area (width * height) for size tracking."""
-        return self.bbox[2] * self.bbox[3]
+        return int(self.bbox[2] * self.bbox[3])
     
     @property
     def center(self) -> Tuple[float, float]:
