@@ -133,107 +133,107 @@ export default function SignupPage() {
                         ) : (
                             <>
                                 {/* Logo & Header */}
-                                <div className="text-center mb-6 sm:mb-10">
+                                <div className="text-center mb-6 sm:mb-8">
                                     <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group/logo">
-                                        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-glow-secondary transition-all group-hover/logo:rotate-6">
+                                        <div className="w-11 h-11 bg-gradient-to-br from-secondary to-secondary/80 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all group-hover/logo:rotate-6 group-hover/logo:scale-105">
                                             V
                                         </div>
                                         <span className="font-heading font-black text-xl italic uppercase tracking-tighter text-white group-hover/logo:text-secondary transition-colors">TRUEVIBE</span>
                                     </Link>
-                                    <h2 className="font-heading text-2xl sm:text-3xl font-black text-white italic uppercase tracking-tighter mb-2 leading-none">Create Account</h2>
-                                    <p className="text-slate-600 text-[8px] font-black uppercase tracking-[0.4em]">JOIN_TRUEVIBE</p>
+                                    <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-white italic uppercase tracking-tighter mb-3 leading-none">Create Account</h2>
+                                    <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.3em]">JOIN_TRUEVIBE</p>
                                 </div>
 
-                                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                                <div className="space-y-4 mb-6">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={handleGoogleSignIn}
                                         disabled={isGoogleLoading}
-                                        className="w-full h-12 rounded-xl bg-white/[0.02] border border-white/10 hover:bg-white/5 hover:border-white/20 text-white transition-all group/google"
+                                        className="w-full h-13 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/25 text-white transition-all group/google"
                                     >
                                         <div className="flex items-center justify-center gap-3 relative z-10">
                                             {isGoogleLoading ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <Loader2 className="w-5 h-5 animate-spin" />
                                             ) : (
-                                                <svg className="w-4 h-4 group-hover/google:scale-110 transition-transform" viewBox="0 0 24 24">
-                                                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" opacity="0.6" />
-                                                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" opacity="0.4" />
-                                                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" opacity="0.6" />
+                                                <svg className="w-5 h-5 group-hover/google:scale-110 transition-transform" viewBox="0 0 24 24">
+                                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                                 </svg>
                                             )}
-                                            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em]">CONTINUE WITH GOOGLE</span>
+                                            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em]">Continue with Google</span>
                                         </div>
                                     </Button>
 
-                                    <div className="flex items-center gap-3 px-1">
-                                        <div className="h-px flex-1 bg-white/5" />
-                                        <span className="text-[6px] sm:text-[7px] font-black text-slate-700 uppercase tracking-[0.2em] sm:tracking-[0.4em]">OR USE EMAIL</span>
-                                        <div className="h-px flex-1 bg-white/5" />
+                                    <div className="flex items-center gap-4 px-2">
+                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.25em]">or use email</span>
+                                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                                     </div>
                                 </div>
 
-                                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                                <form onSubmit={handleSubmit} className="space-y-4">
                                     {error && (
                                         <m.div
                                             initial={{ opacity: 0, scale: 0.98 }}
                                             animate={{ opacity: 1, scale: 1 }}
-                                            className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-bold uppercase tracking-widest text-center"
+                                            className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold text-center"
                                         >
-                                            FAIL: {error}
+                                            {error}
                                         </m.div>
                                     )}
 
-                                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.3em] ml-1">FULL NAME</Label>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Full Name</Label>
                                             <div className="relative group/input">
-                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within/input:text-secondary transition-colors" />
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-secondary transition-colors" />
                                                 <Input
                                                     type="text"
-                                                    placeholder="NAME_GIVEN"
+                                                    placeholder="John Doe"
                                                     value={name}
                                                     onChange={(e) => setName(e.target.value)}
-                                                    className="h-11 pl-11 bg-white/[0.02] border border-white/5 rounded-xl text-white placeholder:text-slate-800 transition-all focus:border-secondary/40 focus:ring-0 font-bold text-xs"
+                                                    className="h-12 pl-12 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder:text-slate-600 transition-all focus:border-secondary/50 focus:bg-white/[0.05] focus:ring-0 font-medium text-sm"
                                                     required
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.3em] ml-1">EMAIL</Label>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Email</Label>
                                             <div className="relative group/input">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within/input:text-secondary transition-colors" />
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-secondary transition-colors" />
                                                 <Input
                                                     type="email"
-                                                    placeholder="NODE@NET"
+                                                    placeholder="you@example.com"
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
-                                                    className="h-11 pl-11 bg-white/[0.02] border border-white/5 rounded-xl text-white placeholder:text-slate-800 transition-all focus:border-secondary/40 focus:ring-0 font-bold text-xs"
+                                                    className="h-12 pl-12 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder:text-slate-600 transition-all focus:border-secondary/50 focus:bg-white/[0.05] focus:ring-0 font-medium text-sm"
                                                     required
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.3em] ml-1">PASSWORD</Label>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Password</Label>
                                             <div className="relative group/input">
-                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within/input:text-secondary transition-colors" />
+                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-secondary transition-colors" />
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
-                                                    placeholder="••••••••"
+                                                    placeholder="Create a strong password"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    className="h-11 pl-11 pr-11 bg-white/[0.02] border border-white/5 rounded-xl text-white placeholder:text-slate-800 transition-all focus:border-secondary/40 focus:ring-0 font-bold text-xs"
+                                                    className="h-12 pl-12 pr-12 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder:text-slate-600 transition-all focus:border-secondary/50 focus:bg-white/[0.05] focus:ring-0 font-medium text-sm"
                                                     required
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-700 hover:text-white transition-colors"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                                                 >
                                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                 </button>
@@ -241,22 +241,22 @@ export default function SignupPage() {
                                             <PasswordStrength password={password} />
                                         </div>
 
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.3em] ml-1">CONFIRM PASSWORD</Label>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Confirm Password</Label>
                                             <div className="relative group/input">
-                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within/input:text-secondary transition-colors" />
+                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-secondary transition-colors" />
                                                 <Input
                                                     type={showConfirmPassword ? "text" : "password"}
-                                                    placeholder="••••••••"
+                                                    placeholder="Confirm your password"
                                                     value={confirmPassword}
                                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    className="h-11 pl-11 pr-11 bg-white/[0.02] border border-white/5 rounded-xl text-white placeholder:text-slate-800 transition-all focus:border-secondary/40 focus:ring-0 font-bold text-xs"
+                                                    className="h-12 pl-12 pr-12 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder:text-slate-600 transition-all focus:border-secondary/50 focus:bg-white/[0.05] focus:ring-0 font-medium text-sm"
                                                     required
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-700 hover:text-white transition-colors"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                                                 >
                                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                 </button>
@@ -265,29 +265,29 @@ export default function SignupPage() {
                                     </div>
 
                                     {/* Terms and Privacy */}
-                                    <div className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/10">
                                         <Checkbox
                                             id="terms"
                                             checked={acceptedTerms}
                                             onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
-                                            className="w-4 h-4 rounded-md border-white/10 data-[state=checked]:bg-secondary mt-0.5"
+                                            className="w-4 h-4 rounded-md border-white/20 data-[state=checked]:bg-secondary data-[state=checked]:border-secondary mt-0.5"
                                         />
-                                        <Label htmlFor="terms" className="text-[6.5px] sm:text-[7.5px] font-black text-slate-600 leading-relaxed cursor-pointer hover:text-slate-400 transition-colors uppercase tracking-[0.1em] sm:tracking-[0.2em]">
-                                            ACCEPT <a href="#" className="text-secondary/70 hover:text-secondary underline underline-offset-2">TERMS</a> & <a href="#" className="text-secondary/70 hover:text-secondary underline underline-offset-2">PRIVACY</a>.
+                                        <Label htmlFor="terms" className="text-[10px] font-medium text-slate-400 leading-relaxed cursor-pointer hover:text-slate-300 transition-colors">
+                                            I accept the <a href="#" className="text-secondary hover:underline">Terms of Service</a> and <a href="#" className="text-secondary hover:underline">Privacy Policy</a>
                                         </Label>
                                     </div>
 
                                     <Button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-heading font-black italic uppercase tracking-wider text-sm shadow-glow-secondary transition-all active:scale-95 border border-white/10 relative overflow-hidden group/submit"
+                                        className="w-full h-13 rounded-xl bg-gradient-to-r from-secondary to-secondary/90 hover:from-secondary/90 hover:to-secondary/80 text-white font-heading font-black italic uppercase tracking-wider text-sm shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all active:scale-[0.98] border border-white/10 relative overflow-hidden group/submit"
                                     >
                                         <div className="flex items-center justify-center gap-2 relative z-10">
                                             {isLoading ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <Loader2 className="w-5 h-5 animate-spin" />
                                             ) : (
                                                 <>
-                                                    CREATE ACCOUNT
+                                                    Create Account
                                                     <ArrowRight className="w-4 h-4 group-hover/submit:translate-x-1 transition-transform" />
                                                 </>
                                             )}
@@ -299,9 +299,9 @@ export default function SignupPage() {
 
                         {!success && (
                             <div className="mt-8 text-center">
-                                <p className="text-slate-700 text-[7px] sm:text-[8px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em]">
-                                    HAVE AN ACCOUNT?{" "}
-                                    <Link to="/auth/login" className="text-primary/70 hover:text-primary font-black transition-colors underline-offset-4 hover:underline">SIGN IN</Link>
+                                <p className="text-slate-500 text-xs font-medium">
+                                    Already have an account?{" "}
+                                    <Link to="/auth/login" className="text-primary font-semibold hover:text-primary/80 transition-colors">Sign in</Link>
                                 </p>
                             </div>
                         )}
