@@ -57,6 +57,18 @@ except ImportError:
     VIDEO_ANALYSIS_AVAILABLE = False
     print("⚠️ Video analysis module not available")
 
+# NEW: Stylization detector for 3D renders, cartoons, animated content
+try:
+    from stylization_detector import (
+        detect_stylization,
+        quick_stylization_check,
+        StyleType
+    )
+    STYLIZATION_DETECTION_AVAILABLE = True
+except ImportError:
+    STYLIZATION_DETECTION_AVAILABLE = False
+    print("⚠️ Stylization detection module not available")
+
 # Debug images directory (for PDF reports)
 DEBUG_DIR = os.path.join(os.path.dirname(__file__), "debug_images")
 os.makedirs(DEBUG_DIR, exist_ok=True)
