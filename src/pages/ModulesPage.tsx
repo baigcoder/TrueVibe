@@ -243,12 +243,12 @@ export default function ModulesPage() {
                         SYSTEM_ARCHIVE_CORE_v4
                     </m.div>
 
-                    <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl lg:text-7xl xl:text-8xl font-black text-white italic uppercase tracking-tighter mb-6 sm:mb-8 leading-none">
-                        DETAILED_ <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent animate-gradient">MODULES_SPEC</span>
+                    <h1 className="font-heading text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white italic uppercase tracking-tighter mb-6 sm:mb-8 leading-[0.9] px-2">
+                        <span className="block">DETAILED_</span>
+                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent animate-gradient">MODULES_SPEC</span>
                     </h1>
 
-                    <p className="text-[10px] sm:text-xs md:text-sm text-slate-500 max-w-2xl mx-auto font-bold uppercase tracking-[0.2em] sm:tracking-[0.4em] leading-relaxed opacity-70 px-4">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-slate-500 max-w-2xl mx-auto font-bold uppercase tracking-[0.15em] sm:tracking-[0.3em] leading-relaxed opacity-80 px-4">
                         DEEP DIVE INTO THE NEURAL INFRASTRUCTURE. <br className="hidden sm:block" />
                         EXPLORE THE COMPONENTS OF THE TRUEVIBE MESH.
                     </p>
@@ -271,43 +271,43 @@ export default function ModulesPage() {
                                     viewport={{ once: true }}
                                     transition={{ delay: idx * 0.05 }}
                                     whileHover={{ y: -5 }}
-                                    className="group relative bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between overflow-hidden hover:border-white/20 transition-all duration-500"
+                                    className="group relative bg-white/[0.02] border border-white/5 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 flex flex-col justify-between overflow-hidden hover:border-white/20 transition-all duration-500"
                                 >
                                     <div className="relative z-10">
-                                        <div className="flex items-center justify-between mb-10">
+                                        <div className="flex items-center justify-between gap-3 mb-6 sm:mb-10">
                                             <div className={cn(
-                                                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-xl",
+                                                "w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl flex-shrink-0",
                                                 "bg-white/[0.05] text-white group-hover:bg-white group-hover:text-black"
                                             )}>
-                                                <module.icon className="w-7 h-7" />
+                                                <module.icon className="w-5 h-5 sm:w-7 sm:h-7" />
                                             </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">{module.tag}</span>
-                                                <div className="w-12 h-0.5 bg-primary/20 mt-2 group-hover:w-full transition-all duration-700" />
+                                            <div className="flex flex-col items-end min-w-0">
+                                                <span className="text-[8px] sm:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] sm:tracking-[0.3em] truncate max-w-full">{module.tag}</span>
+                                                <div className="w-10 sm:w-12 h-0.5 bg-primary/20 mt-2 group-hover:w-full transition-all duration-700" />
                                             </div>
                                         </div>
 
-                                        <h3 className="font-heading text-lg sm:text-xl md:text-2xl font-black italic uppercase tracking-tighter mb-4 text-white group-hover:text-primary transition-colors break-words leading-tight">
-                                            {module.title}
+                                        <h3 className="font-heading text-base sm:text-xl md:text-2xl font-black italic uppercase tracking-tighter mb-3 sm:mb-4 text-white group-hover:text-primary transition-colors leading-tight">
+                                            {module.title.replace(/_/g, ' ')}
                                         </h3>
 
-                                        <p className="font-bold uppercase tracking-[0.2em] text-[10px] leading-relaxed text-slate-500 mb-8 border-l-2 border-white/5 pl-4">
+                                        <p className="font-bold uppercase tracking-[0.1em] sm:tracking-[0.15em] text-[9px] sm:text-[10px] leading-relaxed text-slate-500 mb-6 sm:mb-8 border-l-2 border-white/10 pl-3 sm:pl-4">
                                             {module.desc}
                                         </p>
 
-                                        <div className="space-y-3 mb-10">
+                                        <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-10">
                                             {module.details.map((detail, i) => (
-                                                <div key={i} className="flex items-center gap-3 text-slate-400 group/item">
-                                                    <div className="w-1 h-1 rounded-full bg-primary/40 group-hover/item:bg-primary transition-colors" />
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest">{detail}</span>
+                                                <div key={i} className="flex items-center gap-2 sm:gap-3 text-slate-400 group/item">
+                                                    <div className="w-1 h-1 rounded-full bg-primary/40 group-hover/item:bg-primary transition-colors flex-shrink-0" />
+                                                    <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide sm:tracking-widest">{detail}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <Button className="relative z-10 w-full bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-[0.3em] py-6 rounded-xl border border-white/10 text-slate-300 hover:text-white group-hover:border-primary/50 transition-all">
-                                        ANALYZE_PROTOCOL
-                                        <Sparkles className="w-3 h-3 ml-3 text-primary" />
+                                    <Button className="relative z-10 w-full bg-white/10 hover:bg-white/20 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] py-4 sm:py-6 rounded-lg sm:rounded-xl border border-white/10 text-slate-300 hover:text-white group-hover:border-primary/50 transition-all">
+                                        ANALYZE PROTOCOL
+                                        <Sparkles className="w-3 h-3 ml-2 sm:ml-3 text-primary" />
                                     </Button>
 
                                     {/* Decorative background glow */}
