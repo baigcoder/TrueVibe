@@ -272,7 +272,7 @@ export function AIReportModal({
                                                     "w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl border bg-black/40",
                                                     verdictInfo?.borderColor
                                                 )}>
-                                                    <verdictInfo.icon className={cn("w-8 h-8", verdictInfo?.color)} />
+                                                    {verdictInfo?.icon && <verdictInfo.icon className={cn("w-8 h-8", verdictInfo?.color)} />}
                                                 </div>
                                                 <div>
                                                     <div className={cn("inline-flex px-3 py-1 rounded-full bg-black/40 border text-[10px] font-black tracking-[0.2em] mb-2 uppercase", verdictInfo?.color, verdictInfo?.borderColor)}>
