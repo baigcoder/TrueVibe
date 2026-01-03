@@ -230,7 +230,9 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
                             bytes: data.bytes,
                             duration: data.duration,
                             thumbnailUrl: isVideo
-                                ? data.secure_url.replace(/\.[^.]+$/, '.jpg')
+                                // Use Cloudinary transformation to get video thumbnail:
+                                // Insert 'so_0,f_jpg,w_640,h_360,c_fill/' after '/upload/' to get first frame as JPG
+                                ? data.secure_url.replace('/upload/', '/upload/so_0,f_jpg,w_640,h_360,c_fill/')
                                 : undefined,
                         };
                         resolve(result);
