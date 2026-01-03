@@ -191,10 +191,14 @@ export const getCompressedVideoUrl = (
 ): string => {
     const videoOptions = VideoPresets[preset];
 
+    // Destructure format out of videoOptions since it needs to be top-level
+    const { format, ...transformationOptions } = videoOptions;
+
     return cloudinary.url(publicId, {
         secure: true,
         resource_type: 'video',
-        transformation: [videoOptions],
+        format: format, // format must be top-level for proper URL generation
+        transformation: [transformationOptions],
     });
 };
 
