@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Plus, X, Clock, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,7 +86,7 @@ export function PollCreator({ onPollChange, poll }: PollCreatorProps) {
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -111,7 +111,7 @@ export function PollCreator({ onPollChange, poll }: PollCreatorProps) {
             {/* Options */}
             <div className="space-y-2">
                 {options.map((option, index) => (
-                    <motion.div
+                    <m.div
                         key={index}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -137,7 +137,7 @@ export function PollCreator({ onPollChange, poll }: PollCreatorProps) {
                                 <X className="w-4 h-4" />
                             </Button>
                         )}
-                    </motion.div>
+                    </m.div>
                 ))}
             </div>
 
@@ -170,7 +170,7 @@ export function PollCreator({ onPollChange, poll }: PollCreatorProps) {
                     
                     <AnimatePresence>
                         {showDuration && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
@@ -190,7 +190,7 @@ export function PollCreator({ onPollChange, poll }: PollCreatorProps) {
                                         {d.label}
                                     </button>
                                 ))}
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>
@@ -212,7 +212,7 @@ export function PollCreator({ onPollChange, poll }: PollCreatorProps) {
                     Multiple choice
                 </button>
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -263,7 +263,7 @@ export function PollDisplay({ poll, hasVoted, userVotes = [], onVote, isVoting }
                         >
                             {/* Background bar */}
                             {showResults && (
-                                <motion.div
+                                <m.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${percentage}%` }}
                                     transition={{ duration: 0.5, ease: 'easeOut' }}

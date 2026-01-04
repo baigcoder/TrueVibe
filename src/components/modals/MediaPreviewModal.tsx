@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -71,7 +71,7 @@ export function MediaPreviewModal({
     return (
         <AnimatePresence>
             {isOpen && currentMedia && (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -106,7 +106,7 @@ export function MediaPreviewModal({
                     )}
 
                     {/* Media content */}
-                    <motion.div
+                    <m.div
                         key={currentIndex}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -159,8 +159,8 @@ export function MediaPreviewModal({
                                 ))}
                             </div>
                         )}
-                    </motion.div>
-                </motion.div>
+                    </m.div>
+                </m.div>
             )}
         </AnimatePresence>
     );

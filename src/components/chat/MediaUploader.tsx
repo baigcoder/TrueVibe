@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Image, Video, FileText, Mic, X, Camera, Users, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -106,7 +106,7 @@ export function MediaUploader({
             {isOpen && (
                 <>
                     {/* Backdrop */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -115,7 +115,7 @@ export function MediaUploader({
                     />
 
                     {/* Menu */}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -144,7 +144,7 @@ export function MediaUploader({
 
                             <div className="grid grid-cols-2 gap-3 relative z-10">
                                 {menuItems.map((item, index) => (
-                                    <motion.button
+                                    <m.button
                                         key={item.id}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -170,7 +170,7 @@ export function MediaUploader({
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-white transition-colors tech-font">
                                             {item.label}
                                         </span>
-                                    </motion.button>
+                                    </m.button>
                                 ))}
                             </div>
 
@@ -184,7 +184,7 @@ export function MediaUploader({
                                 </p>
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
 
                     {/* Hidden file input */}
                     <input

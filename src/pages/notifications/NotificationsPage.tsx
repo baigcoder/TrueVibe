@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -144,28 +144,29 @@ export default function NotificationsPage() {
 
             <AnimatePresence mode="wait">
                 {mainTab === 'alerts' && (
-                    <motion.div
+                    <m.div
                         key="alerts"
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <h1 className="text-xl sm:text-3xl font-black text-white uppercase tracking-tight italic aether-font">
-                                    System_Notifications
+                        {/* Header Row - Stacks on mobile */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                            <div className="min-w-0">
+                                <h1 className="text-lg sm:text-3xl font-black text-white uppercase tracking-tight italic aether-font truncate">
+                                    Notifications
                                 </h1>
-                                <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-widest tech-font mt-1">
-                                    {unreadCount} unread activities detected
+                                <p className="text-[9px] sm:text-xs text-slate-500 font-bold uppercase tracking-widest tech-font mt-0.5 sm:mt-1">
+                                    {unreadCount} unread
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => refetch()}
-                                    className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
+                                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
                                 >
                                     <RefreshCw className="w-4 h-4" />
                                 </Button>
@@ -173,30 +174,31 @@ export default function NotificationsPage() {
                                     <Button
                                         onClick={handleMarkAllAsRead}
                                         disabled={markAllAsRead.isPending}
-                                        className="h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 font-black text-[10px] uppercase tracking-widest"
+                                        className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-primary hover:bg-primary/90 font-black text-[9px] sm:text-[10px] uppercase tracking-wider sm:tracking-widest"
                                     >
-                                        <CheckCheck className="w-4 h-4 mr-2" />
-                                        Clear All
+                                        <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                                        <span className="hidden xs:inline">Clear</span> All
                                     </Button>
                                 )}
                             </div>
                         </div>
 
-                        {/* Sub-Filters for Alerts */}
-                        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+                        {/* Sub-Filters for Alerts - Scrollable on mobile */}
+                        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 sm:pb-4 scrollbar-hide -mx-1 px-1">
                             {filterTabs.map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setFilter(tab.id as NotificationType)}
                                     className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border mt-1",
+                                        "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all whitespace-nowrap border",
                                         filter === tab.id
                                             ? "bg-white/10 text-white border-white/20 shadow-lg"
                                             : "bg-transparent text-slate-500 border-white/5 hover:border-white/10 hover:text-slate-300"
                                     )}
                                 >
-                                    <tab.icon className="w-3.5 h-3.5" />
-                                    {tab.label}
+                                    <tab.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                    <span className="hidden xs:inline">{tab.label}</span>
+                                    <span className="xs:hidden">{tab.label.slice(0, 3)}</span>
                                 </button>
                             ))}
                         </div>
@@ -212,7 +214,7 @@ export default function NotificationsPage() {
                                     <span className="text-xs sm:text-sm text-slate-400 font-medium">Loading notifications...</span>
                                 </div>
                             ) : filteredNotifications.length === 0 ? (
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="text-center py-16 sm:py-24 bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] backdrop-blur-xl"
@@ -224,7 +226,7 @@ export default function NotificationsPage() {
                                     <p className="text-slate-400 text-xs sm:text-sm mt-2 max-w-[260px] sm:max-w-[280px] mx-auto px-4">
                                         When you get likes, comments, or new followers, they'll show up here.
                                     </p>
-                                </motion.div>
+                                </m.div>
                             ) : (
                                 <AnimatePresence mode="popLayout">
                                     {filteredNotifications.map((notification: any, index: number) => {
@@ -241,7 +243,7 @@ export default function NotificationsPage() {
                                         const senderInitial = senderName.charAt(0).toUpperCase();
 
                                         return (
-                                            <motion.div
+                                            <m.div
                                                 key={notification._id}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -316,7 +318,7 @@ export default function NotificationsPage() {
                                                 {!notification.isRead && (
                                                     <div className="absolute top-2 right-2 sm:hidden w-2 h-2 rounded-full bg-primary animate-pulse" />
                                                 )}
-                                            </motion.div>
+                                            </m.div>
                                         );
                                     })}
                                 </AnimatePresence>
@@ -341,11 +343,11 @@ export default function NotificationsPage() {
                                 </div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {mainTab === 'requests' && (
-                    <motion.div
+                    <m.div
                         key="requests"
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -402,11 +404,11 @@ export default function NotificationsPage() {
                                 ))}
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {mainTab === 'suggestions' && (
-                    <motion.div
+                    <m.div
                         key="suggestions"
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -461,7 +463,7 @@ export default function NotificationsPage() {
                                 ))}
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

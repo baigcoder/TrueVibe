@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Play, Pause, SkipForward, Music } from 'lucide-react';
 import { useSpotify } from '@/hooks/useSpotify';
 import { useState, useEffect, useRef } from 'react';
@@ -84,7 +84,7 @@ export const SpotifyPlayer = () => {
     // Not playing - show idle state
     if (!hasTrack) {
         return (
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="w-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl p-4 relative group shadow-2xl transition-all duration-700 hover:border-white/20"
@@ -111,12 +111,12 @@ export const SpotifyPlayer = () => {
                         ))}
                     </div>
                 </div>
-            </motion.div>
+            </m.div>
         );
     }
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -126,7 +126,7 @@ export const SpotifyPlayer = () => {
             }}
         >
             {/* Animated Glow Overlay with dynamic color */}
-            <motion.div
+            <m.div
                 animate={{
                     opacity: [0.1, 0.25, 0.1],
                     scale: [1, 1.05, 1]
@@ -141,7 +141,7 @@ export const SpotifyPlayer = () => {
             <div className="flex items-center gap-3 relative z-10">
                 {/* Album Art */}
                 <div className="relative shrink-0">
-                    <motion.div
+                    <m.div
                         animate={isPlaying ? { rotate: 360 } : {}}
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                         className="w-12 h-12 rounded-full overflow-hidden border-2 shadow-lg"
@@ -152,7 +152,7 @@ export const SpotifyPlayer = () => {
                             alt={track.album}
                             className="w-full h-full object-cover"
                         />
-                    </motion.div>
+                    </m.div>
                     <div
                         className="absolute inset-0 rounded-full border pointer-events-none"
                         style={{ borderColor: `${dominantColor}20` }}
@@ -161,11 +161,11 @@ export const SpotifyPlayer = () => {
 
                 <div className="flex-1 min-w-0">
                     <div className="flex flex-col">
-                        <motion.h4
+                        <m.h4
                             className="text-[11px] font-black text-white uppercase tracking-tight truncate aether-font italic"
                         >
                             {track.name}
-                        </motion.h4>
+                        </m.h4>
                         <p
                             className="text-[9px] font-bold uppercase tracking-widest truncate tech-font opacity-80"
                             style={{ color: dominantColor }}
@@ -177,7 +177,7 @@ export const SpotifyPlayer = () => {
                     {/* Progress Bar */}
                     <div className="mt-2 space-y-1">
                         <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                            <motion.div
+                            <m.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(track.progress / track.duration) * 100}%` }}
                                 className="h-full shadow-lg"
@@ -215,6 +215,6 @@ export const SpotifyPlayer = () => {
                     </button>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 };

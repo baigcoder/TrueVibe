@@ -290,3 +290,65 @@ export function usePresence() {
 
     return { onlineUsers, isOnline };
 }
+
+// AI Analysis Realtime hook - for TrustBadge updates
+export interface AIAnalysisData {
+    postId: string;
+    trustLevel: 'authentic' | 'suspicious' | 'fake' | 'likely_fake';
+    fakeScore: number;
+    realScore: number;
+    classification: string;
+    processingTimeMs?: number;
+    facesDetected?: number;
+    avgFaceScore?: number;
+    avgFftScore?: number;
+    avgEyeScore?: number;
+    fftBoost?: number;
+    eyeBoost?: number;
+    temporalBoost?: number;
+    mediaType?: 'image' | 'video';
+    framesAnalyzed?: number;
+}
+
+export function useAIAnalysisRealtime(onAnalysisComplete?: (data: AIAnalysisData) => void) {
+    const { subscribeToChannel, unsubscribeFromChannel } = useRealtime();
+    const callbackRef = useRef(onAnalysisComplete);
+
+    // Keep callback ref updated
+    useEffect(() => {
+        callbackRef.current = onAnalysisComplete;
+    }, [onAnalysisComplete]);
+
+    useEffect(() => {
+        const channelName = 'ai-analysis-updates';
+        console.log('[Realtime] Subscribing to AI analysis channel:', channelName);
+
+        const channel = subscribeToChannel(channelName);
+
+        // Handle AI analysis complete events
+        channel.on('broadcast', { event: 'ai:analysis-complete' }, ({ payload }) => {
+            console.log('📡 [Supabase Realtime] AI Analysis complete received:', payload);
+
+            if (callbackRef.current && payload) {
+                callbackRef.current(payload as AIAnalysisData);
+            }
+        });
+
+        return () => {
+            console.log('[Realtime] Unsubscribing from AI analysis channel:', channelName);
+            unsubscribeFromChannel(channelName);
+        };
+    }, [subscribeToChannel, unsubscribeFromChannel]);
+}
+
+// Broadcast AI analysis complete (to be called from backend or after API response)
+export function useBroadcastAIAnalysis() {
+    const { broadcast } = useRealtime();
+
+    const broadcastAnalysisComplete = useCallback(async (data: AIAnalysisData) => {
+        console.log('📡 [Supabase Realtime] Broadcasting AI analysis complete:', data);
+        await broadcast('ai-analysis-updates', 'ai:analysis-complete', data);
+    }, [broadcast]);
+
+    return { broadcastAnalysisComplete };
+}

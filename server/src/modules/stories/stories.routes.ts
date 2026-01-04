@@ -248,6 +248,12 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
 
         const story = await Story.findOne({ _id: id, userId });
         if (story) {
+            // Delete media from Cloudinary
+            if (story.mediaUrl) {
+                const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
+                await deleteCloudinaryByUrl(story.mediaUrl);
+            }
+
             story.isDeleted = true;
             await story.save();
         }

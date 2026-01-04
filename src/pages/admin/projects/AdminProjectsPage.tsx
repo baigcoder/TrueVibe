@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '@/api/client';
 import {
@@ -199,7 +199,7 @@ const ProjectList: React.FC<{
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -232,7 +232,7 @@ const ProjectList: React.FC<{
             ) : (
                 <div className={styles.projectGrid}>
                     {projects.map((project) => (
-                        <motion.div
+                        <m.div
                             key={project._id}
                             className={styles.projectCard}
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -285,11 +285,11 @@ const ProjectList: React.FC<{
                                     <Trash2 size={16} />
                                 </Button>
                             </div>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
             )}
-        </motion.div>
+        </m.div>
     );
 };
 
@@ -442,7 +442,7 @@ const ProjectForm: React.FC<{
     };
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -687,7 +687,7 @@ const ProjectForm: React.FC<{
                     </Button>
                 </div>
             </form>
-        </motion.div>
+        </m.div>
     );
 };
 

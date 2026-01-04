@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from '@tanstack/react-router';
 import { projectsApi } from '@/api/client';
@@ -156,24 +156,24 @@ const ProjectDetailPage: React.FC = () => {
                     <div className={styles.heroOverlay} />
                 </div>
                 <div className={styles.heroContent}>
-                    <motion.h1
+                    <m.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={styles.title}
                     >
                         {project.title}
-                    </motion.h1>
+                    </m.h1>
                     {project.shortDescription && (
-                        <motion.p
+                        <m.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
                             className={styles.subtitle}
                         >
                             {project.shortDescription}
-                        </motion.p>
+                        </m.p>
                     )}
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
@@ -186,7 +186,7 @@ const ProjectDetailPage: React.FC = () => {
                             <Calendar size={14} />
                             {formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}
                         </span>
-                    </motion.div>
+                    </m.div>
                 </div>
             </section>
 
@@ -211,7 +211,7 @@ const ProjectDetailPage: React.FC = () => {
                         </h2>
                         <div className={styles.techStack}>
                             {project.techStack.map((tech, idx) => (
-                                <motion.span
+                                <m.span
                                     key={idx}
                                     className={styles.techBadge}
                                     initial={{ opacity: 0, scale: 0.8 }}
@@ -219,7 +219,7 @@ const ProjectDetailPage: React.FC = () => {
                                     transition={{ delay: idx * 0.05 }}
                                 >
                                     {tech}
-                                </motion.span>
+                                </m.span>
                             ))}
                         </div>
                     </section>
@@ -231,7 +231,7 @@ const ProjectDetailPage: React.FC = () => {
                         <h2 className={styles.sectionTitle}>Screenshots</h2>
                         <div className={styles.screenshotGrid}>
                             {project.screenshots.map((screenshot, idx) => (
-                                <motion.div
+                                <m.div
                                     key={idx}
                                     className={styles.screenshotItem}
                                     initial={{ opacity: 0, y: 20 }}
@@ -245,7 +245,7 @@ const ProjectDetailPage: React.FC = () => {
                                     <div className={styles.screenshotOverlay}>
                                         <span>View Full Size</span>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             ))}
                         </div>
                     </section>
@@ -257,7 +257,7 @@ const ProjectDetailPage: React.FC = () => {
                         <h2 className={styles.sectionTitle}>Videos</h2>
                         <div className={styles.videoGrid}>
                             {project.videos.map((video, idx) => (
-                                <motion.div
+                                <m.div
                                     key={idx}
                                     className={styles.videoItem}
                                     initial={{ opacity: 0, y: 20 }}
@@ -276,7 +276,7 @@ const ProjectDetailPage: React.FC = () => {
                                             <Play size={32} />
                                         </div>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             ))}
                         </div>
                     </section>
@@ -288,7 +288,7 @@ const ProjectDetailPage: React.FC = () => {
                         <h2 className={styles.sectionTitle}>Links</h2>
                         <div className={styles.links}>
                             {project.links.map((link, idx) => (
-                                <motion.a
+                                <m.a
                                     key={idx}
                                     href={link.url}
                                     target="_blank"
@@ -302,7 +302,7 @@ const ProjectDetailPage: React.FC = () => {
                                     {getLinkIcon(link.icon)}
                                     {link.label}
                                     <ExternalLink size={14} className={styles.linkExternal} />
-                                </motion.a>
+                                </m.a>
                             ))}
                         </div>
                     </section>
@@ -325,7 +325,7 @@ const ProjectDetailPage: React.FC = () => {
             {/* Lightbox */}
             <AnimatePresence>
                 {lightboxOpen && (
-                    <motion.div
+                    <m.div
                         className={styles.lightbox}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -354,7 +354,7 @@ const ProjectDetailPage: React.FC = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             {lightboxType === 'screenshot' ? (
-                                <motion.img
+                                <m.img
                                     key={lightboxIndex}
                                     src={project.screenshots[lightboxIndex]?.url}
                                     alt={`Screenshot ${lightboxIndex + 1}`}
@@ -363,7 +363,7 @@ const ProjectDetailPage: React.FC = () => {
                                     exit={{ opacity: 0, scale: 0.9 }}
                                 />
                             ) : (
-                                <motion.video
+                                <m.video
                                     key={lightboxIndex}
                                     src={project.videos[lightboxIndex]?.url}
                                     controls
@@ -391,7 +391,7 @@ const ProjectDetailPage: React.FC = () => {
                                 ? project.screenshots?.length
                                 : project.videos?.length}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

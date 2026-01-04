@@ -11,7 +11,8 @@ import { useState, useCallback } from 'react';
 import imageCompression from 'browser-image-compression';
 
 // Cloudinary configuration - using unsigned preset for direct upload
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dkluke6zh';
+// IMPORTANT: Must match backend cloud name (CLOUDINARY_CLOUD_NAME env var)
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dbqmh24nd';
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'truevibe_unsigned';
 
 interface UploadResult {
@@ -85,6 +86,18 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
     }, [maxSizeMB, maxWidthOrHeight]);
 
     /**
+     * Video compression DISABLED - Browser-based compression strips audio!
+     * Cloudinary handles server-side compression with proper audio preservation.
+     * Keep this function for future use if we implement audio-preserving compression.
+     */
+    const compressVideo = useCallback(async (file: File): Promise<File> => {
+        // IMPORTANT: Browser-based canvas compression strips audio tracks!
+        // Always upload original video - Cloudinary compresses server-side with audio
+        console.log('🎬 Uploading video directly (browser compression disabled to preserve audio)');
+        return file;
+    }, []);
+
+    /**
      * Direct upload to Cloudinary (no backend needed!)
      */
     const uploadDirect = useCallback(async (
@@ -127,7 +140,9 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
                             bytes: data.bytes,
                             duration: data.duration,
                             thumbnailUrl: isVideo
-                                ? data.secure_url.replace(/\.[^.]+$/, '.jpg')
+                                // Use Cloudinary transformation to get video thumbnail:
+                                // Insert 'so_0,f_jpg,w_640,h_360,c_fill/' after '/upload/' to get first frame as JPG
+                                ? data.secure_url.replace('/upload/', '/upload/so_0,f_jpg,w_640,h_360,c_fill/')
                                 : undefined,
                         };
                         resolve(result);
@@ -150,32 +165,32 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
     }, [folder, onProgress]);
 
     /**
-     * Main upload function - compress + direct upload
+     * Main upload function - compress + direct upload (PARALLEL for speed!)
      */
     const upload = useCallback(async (files: File[]): Promise<UploadResult[]> => {
         setIsUploading(true);
         setProgress(0);
         setUploads([]);
 
-        const results: UploadResult[] = [];
-
         try {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const preview = URL.createObjectURL(file);
+            // Initialize upload states for all files
+            const initialUploads = files.map(file => ({
+                file,
+                progress: 0,
+                status: 'compressing' as const,
+                preview: URL.createObjectURL(file),
+            }));
+            setUploads(initialUploads);
 
-                // Update upload state
-                setUploads(prev => [...prev, {
-                    file,
-                    progress: 0,
-                    status: 'compressing',
-                    preview,
-                }]);
-
-                // Step 1: Compress (for images)
-                const processedFile = file.type.startsWith('image/')
-                    ? await compressImage(file)
-                    : file;
+            // Process all files in parallel for maximum speed
+            const uploadPromises = files.map(async (file, i) => {
+                // Step 1: Compress images and videos
+                let processedFile = file;
+                if (file.type.startsWith('image/')) {
+                    processedFile = await compressImage(file);
+                } else if (file.type.startsWith('video/')) {
+                    processedFile = await compressVideo(file);
+                }
 
                 // Update to uploading status
                 setUploads(prev => prev.map((u, idx) =>
@@ -184,11 +199,16 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
 
                 // Step 2: Direct upload to Cloudinary
                 const result = await uploadDirect(processedFile, (percent) => {
-                    const overallProgress = ((i * 100) + percent) / files.length;
-                    setProgress(Math.round(overallProgress));
-                    setUploads(prev => prev.map((u, idx) =>
-                        idx === i ? { ...u, progress: percent } : u
-                    ));
+                    // Update individual file progress
+                    setUploads(prev => {
+                        const updated = prev.map((u, idx) =>
+                            idx === i ? { ...u, progress: percent } : u
+                        );
+                        // Calculate overall progress
+                        const totalProgress = updated.reduce((sum, u) => sum + u.progress, 0) / files.length;
+                        setProgress(Math.round(totalProgress));
+                        return updated;
+                    });
                 });
 
                 // Mark as done
@@ -196,10 +216,12 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
                     idx === i ? { ...u, status: 'done' as const, result } : u
                 ));
 
-                results.push(result);
                 onComplete?.(result);
-            }
+                return result;
+            });
 
+            // Wait for all uploads to complete in parallel
+            const results = await Promise.all(uploadPromises);
             return results;
         } catch (err) {
             const error = err as Error;

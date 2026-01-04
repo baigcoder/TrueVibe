@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
@@ -36,14 +36,14 @@ export default function SearchPage() {
     return (
         <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col overflow-hidden">
             {/* Header / Search Hero Section */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative pt-2 sm:pt-6 pb-4 sm:pb-8 flex-shrink-0"
             >
                 {/* Immersive Background Effects */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] pointer-events-none -z-10 overflow-hidden">
-                    <motion.div
+                    <m.div
                         animate={{
                             scale: [1, 1.1, 1],
                             opacity: [0.2, 0.4, 0.2],
@@ -52,7 +52,7 @@ export default function SearchPage() {
                         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                         className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[120px]"
                     />
-                    <motion.div
+                    <m.div
                         animate={{
                             scale: [1, 1.2, 1],
                             opacity: [0.15, 0.3, 0.15],
@@ -64,7 +64,7 @@ export default function SearchPage() {
                 </div>
 
                 <div className="flex flex-col items-center text-center space-y-1 mb-2 sm:mb-8">
-                    <motion.div
+                    <m.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.1 }}
@@ -72,7 +72,7 @@ export default function SearchPage() {
                     >
                         <Sparkles className="w-3 h-3 text-primary animate-pulse" />
                         <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Discover the Vibe</span>
-                    </motion.div>
+                    </m.div>
 
                     <h1 className="text-xl sm:text-4xl md:text-6xl font-black text-white tracking-tighter italic uppercase">
                         Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-emerald-400">Everything</span>
@@ -107,7 +107,7 @@ export default function SearchPage() {
                         />
                         <AnimatePresence>
                             {query && (
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
@@ -121,7 +121,7 @@ export default function SearchPage() {
                                     >
                                         <X className="w-3 h-3" />
                                     </Button>
-                                </motion.div>
+                                </m.div>
                             )}
                         </AnimatePresence>
                         <Button className="bg-gradient-to-br from-primary via-blue-500 to-secondary hover:brightness-110 text-white font-black uppercase italic tracking-wider rounded-xl sm:rounded-2xl px-3 sm:px-8 h-8 sm:h-12 shadow-lg shadow-primary/20 transition-all active:scale-95 flex-shrink-0 text-[8px] sm:text-sm">
@@ -138,7 +138,7 @@ export default function SearchPage() {
                 {/* Tab Navigation */}
                 <div className="flex justify-center flex-wrap gap-1 sm:gap-1.5 mt-3 sm:mt-6">
                     {tabs.map((tab) => (
-                        <motion.button
+                        <m.button
                             key={tab.id}
                             whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.08)" }}
                             whileTap={{ scale: 0.95 }}
@@ -151,7 +151,7 @@ export default function SearchPage() {
                             )}
                         >
                             {activeTab === tab.id && (
-                                <motion.div
+                                <m.div
                                     layoutId="search-tab-bg"
                                     className="absolute inset-0 bg-gradient-to-r from-primary/20 via-blue-500/10 to-emerald-500/20 -z-10"
                                 />
@@ -161,16 +161,16 @@ export default function SearchPage() {
                                 activeTab === tab.id ? "text-primary scale-110" : "group-hover/tab:text-primary"
                             )} />
                             {tab.label}
-                        </motion.button>
+                        </m.button>
                     ))}
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Results Grid - Scrollable Area */}
             <div className="relative flex-1 overflow-y-auto pr-1 pb-10 scroll-smooth custom-scrollbar">
                 <AnimatePresence mode="wait">
                     {!debouncedQuery ? (
-                        <motion.div
+                        <m.div
                             key="empty"
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -178,7 +178,7 @@ export default function SearchPage() {
                             className="flex flex-col items-center justify-center h-full text-center py-8"
                         >
                             <div className="relative mb-4 group">
-                                <motion.div
+                                <m.div
                                     animate={{
                                         scale: [1, 1.15, 1],
                                         opacity: [0.3, 0.6, 0.3],
@@ -188,7 +188,7 @@ export default function SearchPage() {
                                     className="absolute inset-0 w-16 h-16 sm:w-28 sm:h-28 rounded-full bg-primary/30 blur-2xl opacity-50 mx-auto"
                                 />
                                 <div className="w-16 h-16 sm:w-28 sm:h-28 bg-white/[0.03] border border-white/10 rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center relative shadow-2xl backdrop-blur-3xl group-hover:scale-110 group-hover:border-primary/40 transition-all duration-700 overflow-hidden">
-                                    <motion.div
+                                    <m.div
                                         animate={{
                                             rotate: 360,
                                             opacity: [0.1, 0.3, 0.1]
@@ -198,7 +198,7 @@ export default function SearchPage() {
                                     />
                                     <div className="relative z-10">
                                         <Scan className="w-6 h-6 sm:w-10 sm:h-10 text-white/10 group-hover:text-primary/50 transition-all duration-700" />
-                                        <motion.div
+                                        <m.div
                                             animate={{
                                                 scale: [1, 1.2, 1],
                                                 opacity: [0, 1, 0]
@@ -207,17 +207,17 @@ export default function SearchPage() {
                                             className="absolute inset-0 flex items-center justify-center"
                                         >
                                             <Orbit className="w-8 h-8 sm:w-14 sm:h-14 text-primary/20" />
-                                        </motion.div>
+                                        </m.div>
                                     </div>
                                     {/* Scanning Line */}
-                                    <motion.div
+                                    <m.div
                                         animate={{ y: [-32, 32] }}
                                         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                                         className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent z-0"
                                     />
                                 </div>
                             </div>
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
@@ -225,31 +225,31 @@ export default function SearchPage() {
                             >
                                 <h2 className="text-base sm:text-2xl font-black text-white italic uppercase tracking-tighter">Initiate Bridge</h2>
                                 <p className="text-[7px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-[0.1em] sm:tracking-[0.25em] max-w-[160px] sm:max-w-[280px] mx-auto leading-relaxed">Scanning network for premium vibes</p>
-                            </motion.div>
-                        </motion.div>
+                            </m.div>
+                        </m.div>
                     ) : isLoading ? (
-                        <motion.div
+                        <m.div
                             key="loading"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="flex flex-col items-center justify-center py-20"
                         >
                             <div className="relative scale-75">
-                                <motion.div
+                                <m.div
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                                     className="w-14 h-14 border-t-2 border-r-2 border-primary rounded-full shadow-[0_0_20px_rgba(129,140,248,0.3)]"
                                 />
-                                <motion.div
+                                <m.div
                                     animate={{ rotate: -360 }}
                                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                                     className="absolute inset-2 border-b-2 border-l-2 border-blue-400 rounded-full opacity-50"
                                 />
                             </div>
                             <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.4em] mt-6 animate-pulse italic">Scanning...</p>
-                        </motion.div>
+                        </m.div>
                     ) : (data?.data?.users?.length || data?.data?.posts?.length || data?.data?.shorts?.length) ? (
-                        <motion.div
+                        <m.div
                             key="results"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -275,7 +275,7 @@ export default function SearchPage() {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                                         {data.data.users.map((item: any, idx: number) => (
-                                            <motion.div
+                                            <m.div
                                                 key={item.userId || item._id || idx}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -316,7 +316,7 @@ export default function SearchPage() {
 
                                                     <ArrowUpRight className="w-5 h-5 text-slate-700 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-500 self-start mr-1 mt-1" />
                                                 </Link>
-                                            </motion.div>
+                                            </m.div>
                                         ))}
                                     </div>
                                 </section>
@@ -339,7 +339,7 @@ export default function SearchPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {data.data.posts.map((post: any, idx: number) => (
-                                            <motion.div
+                                            <m.div
                                                 key={post._id || idx}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -386,7 +386,7 @@ export default function SearchPage() {
                                                         </div>
                                                     </div>
                                                 </Link>
-                                            </motion.div>
+                                            </m.div>
                                         ))}
                                     </div>
                                 </section>
@@ -409,7 +409,7 @@ export default function SearchPage() {
 
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
                                         {data.data.shorts.map((short: any, idx: number) => (
-                                            <motion.div
+                                            <m.div
                                                 key={short._id || idx}
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
@@ -453,14 +453,14 @@ export default function SearchPage() {
                                                     {/* Glow Overlay */}
                                                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-orange-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                                                 </Link>
-                                            </motion.div>
+                                            </m.div>
                                         ))}
                                     </div>
                                 </section>
                             )}
-                        </motion.div>
+                        </m.div>
                     ) : (
-                        <motion.div
+                        <m.div
                             key="no-results"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -481,7 +481,7 @@ export default function SearchPage() {
                             >
                                 Force Reset
                             </Button>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </div>

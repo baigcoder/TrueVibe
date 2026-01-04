@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
     Eye, ShieldAlert, AlertTriangle, CheckCircle,
     Info, Lightbulb, Flag, Shield,
@@ -64,7 +64,7 @@ export function TrustWatchTab() {
     return (
         <div className="space-y-6">
             {/* Trust Watch Header */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/20 rounded-2xl p-5 overflow-hidden"
@@ -81,10 +81,10 @@ export function TrustWatchTab() {
                         <p className="text-white/60 text-sm">AI-powered content verification alerts</p>
                     </div>
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Stats Cards */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
@@ -111,10 +111,10 @@ export function TrustWatchTab() {
                     <p className="text-2xl font-black text-white">{fakeCount}</p>
                     <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Flagged</p>
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Verification Tips */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
@@ -128,7 +128,7 @@ export function TrustWatchTab() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                     {VERIFICATION_TIPS.map((tip, index) => (
-                        <motion.div
+                        <m.div
                             key={tip.title}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -140,14 +140,14 @@ export function TrustWatchTab() {
                                 <h4 className="font-bold text-white text-xs">{tip.title}</h4>
                             </div>
                             <p className="text-white/40 text-[11px] leading-relaxed">{tip.description}</p>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
-            </motion.div>
+            </m.div>
 
             {/* Flagged Content Section */}
             {posts.length > 0 ? (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.25 }}
@@ -161,7 +161,7 @@ export function TrustWatchTab() {
                     </div>
                     <div className="space-y-4">
                         {posts.map((post, index) => (
-                            <motion.div
+                            <m.div
                                 key={post._id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -181,12 +181,12 @@ export function TrustWatchTab() {
                                         : 'Suspicious'}
                                 </div>
                                 <PostCard post={post} />
-                            </motion.div>
+                            </m.div>
                         ))}
                     </div>
-                </motion.div>
+                </m.div>
             ) : (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.25 }}
@@ -199,11 +199,11 @@ export function TrustWatchTab() {
                     <p className="text-white/50 text-sm max-w-xs mx-auto">
                         No suspicious content detected in your feed. Our AI is continuously monitoring for misinformation.
                     </p>
-                </motion.div>
+                </m.div>
             )}
 
             {/* Info Banner */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.35 }}
@@ -217,7 +217,7 @@ export function TrustWatchTab() {
                         Content flagged here requires additional scrutiny before sharing.
                     </p>
                 </div>
-            </motion.div>
+            </m.div>
         </div>
     );
 }

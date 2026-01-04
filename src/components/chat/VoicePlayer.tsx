@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -132,7 +132,7 @@ export function VoicePlayer({ src, duration: initialDuration, className }: Voice
                 {waveformData.map((height, index) => {
                     const isPlayed = (index / waveformData.length) * 100 <= progress;
                     return (
-                        <motion.div
+                        <m.div
                             key={index}
                             className={cn(
                                 "w-[3px] rounded-full transition-colors",

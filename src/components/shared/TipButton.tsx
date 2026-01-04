@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Coins, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ export function TipButton({ authorName }: TipButtonProps) {
         <div className="relative">
             <AnimatePresence>
                 {showOptions && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 10, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.9 }}
@@ -54,7 +54,7 @@ export function TipButton({ authorName }: TipButtonProps) {
                                 <span className="text-[10px] font-black tracking-tighter text-white">{opt.label}</span>
                             </button>
                         ))}
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
 
@@ -74,7 +74,7 @@ export function TipButton({ authorName }: TipButtonProps) {
                 {isHovered && (
                     <div className="absolute inset-0 pointer-events-none">
                         {[...Array(3)].map((_, i) => (
-                            <motion.div
+                            <m.div
                                 key={i}
                                 initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
                                 animate={{
@@ -92,12 +92,12 @@ export function TipButton({ authorName }: TipButtonProps) {
 
                 <div className="relative">
                     {isTipping ? (
-                        <motion.div
+                        <m.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         >
                             <Sparkles className="w-4.5 h-4.5" />
-                        </motion.div>
+                        </m.div>
                     ) : (
                         <Gift className={cn("w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform", isHovered && "scale-110")} />
                     )}

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Lock, Eye, Database, Share2, Cookie, Mail, Shield } from "lucide-react";
 
@@ -6,7 +6,7 @@ const BackgroundAtmosphere = () => {
     return (
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.15]" />
-            <motion.div
+            <m.div
                 animate={{
                     opacity: [0.05, 0.1, 0.05],
                     scale: [1, 1.1, 1],
@@ -16,7 +16,7 @@ const BackgroundAtmosphere = () => {
             >
                 <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-secondary/10 blur-[150px] rounded-full" />
                 <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent/10 blur-[120px] rounded-full" />
-            </motion.div>
+            </m.div>
         </div>
     );
 };
@@ -136,14 +136,14 @@ export default function PrivacyProtocolPage() {
             <main className="pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 max-w-5xl mx-auto relative z-10">
                 {/* Hero */}
                 <div className="mb-20 text-center">
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-secondary/5 border border-secondary/10 text-secondary text-[9px] font-bold uppercase tracking-[0.5em] mb-8"
                     >
                         <Lock className="w-3 h-3" />
                         PRIVACY_POLICY
-                    </motion.div>
+                    </m.div>
 
                     <h1 className="font-heading text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white italic uppercase tracking-tighter mb-4 sm:mb-6 leading-none">
                         PRIVACY_<br />
@@ -158,7 +158,7 @@ export default function PrivacyProtocolPage() {
                 {/* Sections */}
                 <div className="space-y-8">
                     {sections.map((section, idx) => (
-                        <motion.div
+                        <m.div
                             key={section.title}
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -177,7 +177,7 @@ export default function PrivacyProtocolPage() {
                             <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-line">
                                 {section.content}
                             </p>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
 

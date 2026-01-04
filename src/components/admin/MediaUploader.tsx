@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Upload, X, Image, Video, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useDirectUpload } from '@/hooks/useDirectUpload';
 import type { UploadResult } from '@/hooks/useDirectUpload';
@@ -190,7 +190,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
                         [styles.grid16x9]: aspectRatio === '16:9',
                     })}>
                         {value.map((file) => (
-                            <motion.div
+                            <m.div
                                 key={file.id}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -244,7 +244,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
                                 >
                                     <X size={14} />
                                 </button>
-                            </motion.div>
+                            </m.div>
                         ))}
                     </div>
                 )}
@@ -252,7 +252,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
 
             {/* Upload zone */}
             {canAddMore && (
-                <motion.div
+                <m.div
                     className={cn(styles.dropzone, {
                         [styles.dragging]: isDragging,
                         [styles.compact]: value.length > 0,
@@ -279,7 +279,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
                             </span>
                         )}
                     </div>
-                </motion.div>
+                </m.div>
             )}
         </div>
     );

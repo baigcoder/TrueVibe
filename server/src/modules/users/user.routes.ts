@@ -5,12 +5,14 @@ import { v2 as cloudinary } from 'cloudinary';
 import * as userController from './user.controller.js';
 import { authenticate, optionalAuth } from '../../shared/middleware/auth.middleware.js';
 import { validateBody } from '../../shared/middleware/validate.middleware.js';
+import { blockLimiter } from '../../shared/middleware/rateLimit.middleware.js';
 import { updateProfileSchema, updateSettingsSchema } from './user.schema.js';
 import { Profile } from './Profile.model.js';
 import { AIReport } from '../posts/AIReport.model.js';
 import { Post } from '../posts/Post.model.js';
 import { Short } from '../shorts/Short.model.js';
 import { Story } from '../stories/Story.model.js';
+import { Block } from './Block.model.js';
 
 
 const router = Router();
@@ -42,6 +44,41 @@ router.post('/follow-requests/:id/reject', authenticate, userController.rejectFo
 // Protected routes with :id parameter (must come AFTER specific routes)
 router.patch('/me', authenticate, validateBody(updateProfileSchema), userController.updateProfile);
 router.put('/settings', authenticate, validateBody(updateSettingsSchema), userController.updateSettings);
+
+// Get blocked users list
+router.get('/blocked', authenticate, async (req, res, next) => {
+    try {
+        const userId = req.user!.userId;
+
+        // Get all blocks where current user is the blocker
+        const blocks = await Block.find({ blockerId: userId }).sort({ createdAt: -1 }).lean();
+
+        // Get profile info for blocked users
+        const blockedUserIds = blocks.map(b => b.blockedId);
+        const profiles = await Profile.find({ userId: { $in: blockedUserIds } })
+            .select('userId username displayName avatarUrl')
+            .lean();
+
+        // Create a map for quick lookup
+        const profileMap = new Map(profiles.map(p => [p.userId, p]));
+
+        // Combine block data with profile info
+        const blockedUsers = blocks.map(block => ({
+            _id: block._id,
+            userId: block.blockedId,
+            reason: block.reason,
+            blockedAt: block.createdAt,
+            profile: profileMap.get(block.blockedId) || null,
+        }));
+
+        res.json({
+            success: true,
+            data: blockedUsers,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 
 // Get all user's AI reports (posts, shorts, and stories)
 router.get('/me/reports', authenticate, async (req, res, next) => {
@@ -225,6 +262,96 @@ router.patch('/me/cover', authenticate, upload.single('coverImage'), async (req,
     }
 });
 
+// Export user data
+router.get('/me/export', authenticate, async (req, res, next) => {
+    try {
+        const userId = req.user!.userId;
+
+        // Fetch all user data in parallel - cast to any[] to avoid TypeScript issues
+        const [profileDoc, postsDoc, shortsDoc, storiesDoc, aiReportsDoc] = await Promise.all([
+            Profile.findOne({ $or: [{ userId }, { supabaseId: userId }] }).lean(),
+            Post.find({ userId }).select('content likesCount commentsCount sharesCount trustLevel createdAt').lean(),
+            Short.find({ userId }).select('caption likesCount commentsCount trustLevel createdAt').lean(),
+            Story.find({ userId }).select('caption mediaType trustLevel createdAt viewers').lean(),
+            AIReport.find({ userId }).select('contentType report generatedAt').lean(),
+        ]);
+
+        const profile = profileDoc as any;
+        const posts = postsDoc as any[];
+        const shorts = shortsDoc as any[];
+        const stories = storiesDoc as any[];
+        const aiReports = aiReportsDoc as any[];
+
+        // Calculate stats
+        const totalLikesReceived = posts.reduce((sum, p) => sum + (p.likesCount || 0), 0) +
+            shorts.reduce((sum, s) => sum + (s.likesCount || 0), 0);
+        const totalCommentsReceived = posts.reduce((sum, p) => sum + (p.commentsCount || 0), 0) +
+            shorts.reduce((sum, s) => sum + (s.commentsCount || 0), 0);
+
+        // Trust distribution
+        const allContent = [...posts, ...shorts, ...stories];
+        const trustDistribution = {
+            authentic: allContent.filter(c => c.trustLevel === 'authentic').length,
+            suspicious: allContent.filter(c => c.trustLevel === 'suspicious').length,
+            unverified: allContent.filter(c => !c.trustLevel || c.trustLevel === 'pending').length,
+        };
+
+        // Build export data
+        const exportData = {
+            exportedAt: new Date().toISOString(),
+            account: {
+                name: profile?.name || 'Unknown',
+                handle: profile?.handle || 'unknown',
+                bio: profile?.bio || '',
+                avatar: profile?.avatar || '',
+                joinedAt: profile?.createdAt,
+            },
+            statistics: {
+                followers: profile?.followers?.length || 0,
+                following: profile?.following?.length || 0,
+                totalPosts: posts.length,
+                totalShorts: shorts.length,
+                totalStories: stories.length,
+                totalLikesReceived,
+                totalCommentsReceived,
+                totalAIReports: aiReports.length,
+            },
+            trustAnalysis: {
+                contentDistribution: trustDistribution,
+                aiReportsCount: aiReports.length,
+            },
+            content: {
+                posts: posts.slice(0, 50).map(post => ({
+                    content: post.content?.substring(0, 200) || '',
+                    likes: post.likesCount || 0,
+                    comments: post.commentsCount || 0,
+                    trustLevel: post.trustLevel || 'pending',
+                    createdAt: post.createdAt,
+                })),
+                shorts: shorts.slice(0, 50).map(short => ({
+                    caption: short.caption?.substring(0, 200) || '',
+                    likes: short.likesCount || 0,
+                    trustLevel: short.trustLevel || 'pending',
+                    createdAt: short.createdAt,
+                })),
+            },
+            aiReports: aiReports.slice(0, 50).map(report => ({
+                contentType: report.contentType || 'post',
+                verdict: report.report?.verdict || 'unknown',
+                confidence: Math.round((report.report?.confidence || 0) * 100),
+                generatedAt: report.generatedAt,
+            })),
+        };
+
+        res.json({
+            success: true,
+            data: exportData,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // These routes have :id wildcard, so they must come LAST
 router.get('/:id', optionalAuth, userController.getUserById);
 router.post('/:id/follow', authenticate, userController.followUser);
@@ -233,5 +360,12 @@ router.delete('/:id/follow-request', authenticate, userController.cancelFollowRe
 router.get('/:id/followers', optionalAuth, userController.getFollowers);
 router.get('/:id/following', optionalAuth, userController.getFollowing);
 
+// Block/Unblock routes
+router.get('/blocked', authenticate, userController.getBlockedUsers);
+router.post('/:id/block', authenticate, blockLimiter, userController.blockUser);
+router.delete('/:id/block', authenticate, blockLimiter, userController.unblockUser);
+router.get('/:id/block-status', authenticate, userController.checkBlockStatus);
+
 
 export default router;
+

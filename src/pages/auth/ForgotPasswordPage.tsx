@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="h-full flex items-center justify-center p-4 overflow-hidden selection:bg-primary/30">
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -55,14 +55,14 @@ export default function ForgotPasswordPage() {
 
                     {success ? (
                         <div className="text-center py-4 relative z-10">
-                            <motion.div
+                            <m.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ type: "spring", stiffness: 200, damping: 10 }}
                                 className="w-20 h-20 mx-auto mb-8 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-lg shadow-emerald-500/10"
                             >
                                 <CheckCircle className="w-10 h-10 text-emerald-500" />
-                            </motion.div>
+                            </m.div>
                             <h2 className="font-heading text-2xl sm:text-3xl font-extrabold mb-4 text-white uppercase italic tracking-tighter drop-shadow-glow">Transmission Sent</h2>
                             <p className="text-slate-400 font-medium mb-8 leading-relaxed">
                                 Link dispatched to <br /><span className="text-white font-bold italic">@{email.split('@')[0]}</span>
@@ -92,13 +92,13 @@ export default function ForgotPasswordPage() {
 
                             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                                 {error && (
-                                    <motion.div
+                                    <m.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest text-center"
                                     >
                                         {error}
-                                    </motion.div>
+                                    </m.div>
                                 )}
 
                                 <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function ForgotPasswordPage() {
                     <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                     Back to Portal
                 </Link>
-            </motion.div>
+            </m.div>
         </div>
     );
 }

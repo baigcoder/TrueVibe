@@ -46,7 +46,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   useServers,
   useDiscoverServers,
@@ -858,7 +858,7 @@ export default function ChatPage() {
       <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/[0.03] bg-black/10 backdrop-blur-3xl shadow-2xl">
         {/* PRIMARY SIDEBAR - Server / DM selection */}
         <div className="hidden lg:flex w-24 bg-transparent flex-col items-center py-8 gap-6 relative z-20 border-r border-white/[0.03] px-3">
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
@@ -874,12 +874,12 @@ export default function ChatPage() {
           >
             <MessageCircle className="w-6 h-6 z-10 transition-transform group-hover:scale-110" />
             {view === "dms" && (
-              <motion.div
+              <m.div
                 layoutId="active-server-indicator"
                 className="absolute -left-1 w-1.5 h-8 bg-primary rounded-r-full shadow-[0_0_20px_rgba(0,243,255,0.8)] z-20"
               />
             )}
-          </motion.button>
+          </m.button>
 
           <div className="w-10 h-[1px] bg-white/10 my-1 flex justify-center items-center">
             <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
@@ -898,7 +898,7 @@ export default function ChatPage() {
                 </div>
               ) : (
                 servers.map((server: Server) => (
-                  <motion.button
+                  <m.button
                     key={server._id}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -930,7 +930,7 @@ export default function ChatPage() {
                         </span>
                       )}
                       {selectedServerId === server._id && (
-                        <motion.div
+                        <m.div
                           layoutId="active-server-indicator"
                           className="absolute -left-1 w-1.5 h-8 bg-primary rounded-r-full shadow-[0_0_20px_rgba(0,243,255,0.8)] z-20"
                         />
@@ -943,7 +943,7 @@ export default function ChatPage() {
                         {server.name}
                       </span>
                     </div>
-                  </motion.button>
+                  </m.button>
                 ))
               )}
             </div>
@@ -951,7 +951,7 @@ export default function ChatPage() {
 
           <div className="mt-auto flex flex-col items-center gap-4">
             <div className="relative">
-              <motion.button
+              <m.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowPlusMenu(!showPlusMenu)}
@@ -968,11 +968,11 @@ export default function ChatPage() {
                     showPlusMenu && "rotate-45",
                   )}
                 />
-              </motion.button>
+              </m.button>
 
               <AnimatePresence>
                 {showPlusMenu && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, x: -10, scale: 0.95 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: -10, scale: 0.95 }}
@@ -1039,12 +1039,12 @@ export default function ChatPage() {
                         </button>
                       ))}
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
 
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setView("discover")}
@@ -1056,7 +1056,7 @@ export default function ChatPage() {
               )}
             >
               <Compass className="w-5 h-5" />
-            </motion.button>
+            </m.button>
           </div>
         </div>
 
@@ -1119,7 +1119,7 @@ export default function ChatPage() {
                             const isCreatingConv = createConversation.isPending;
 
                             return (
-                              <motion.button
+                              <m.button
                                 key={user._id}
                                 whileHover={{
                                   x: 4,
@@ -1206,7 +1206,7 @@ export default function ChatPage() {
                                 ) : (
                                   <ArrowUpRight className="w-4 h-4 text-primary/40 group-hover:text-primary transition-colors" />
                                 )}
-                              </motion.button>
+                              </m.button>
                             );
                           },
                         )}
@@ -1258,7 +1258,7 @@ export default function ChatPage() {
                         conv.type === "group" ? conv.groupName : other?.name;
                       const isActive = selectedConversationId === conv._id;
                       return (
-                        <motion.button
+                        <m.button
                           key={conv._id}
                           whileHover={{ x: 4 }}
                           onClick={() => {
@@ -1332,7 +1332,7 @@ export default function ChatPage() {
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                        </motion.button>
+                        </m.button>
                       );
                     }).filter(Boolean)
                   )}
@@ -1366,7 +1366,7 @@ export default function ChatPage() {
                     {channels
                       .filter((c: Channel) => c.type !== "voice")
                       .map((ch: Channel) => (
-                        <motion.button
+                        <m.button
                           key={ch._id}
                           whileHover={{ x: 4 }}
                           onClick={() => setSelectedChannelId(ch._id)}
@@ -1383,7 +1383,7 @@ export default function ChatPage() {
                           {selectedChannelId === ch._id && (
                             <div className="ml-auto w-1 h-4 bg-primary rounded-full shadow-[0_0_10px_rgba(129,140,248,0.6)]" />
                           )}
-                        </motion.button>
+                        </m.button>
                       ))}
                   </div>
                   {channels.some((c: Channel) => c.type === "voice") && (
@@ -1396,7 +1396,7 @@ export default function ChatPage() {
                         .map((ch: Channel) => {
                           const isActive = roomId === ch._id;
                           return (
-                            <motion.button
+                            <m.button
                               key={ch._id}
                               whileHover={{ x: 4 }}
                               onClick={() => {
@@ -1424,7 +1424,7 @@ export default function ChatPage() {
                               {isActive && (
                                 <div className="ml-auto w-2 h-2 rounded-full bg-primary animate-ping shadow-[0_0_10px_rgba(129,140,248,0.8)]" />
                               )}
-                            </motion.button>
+                            </m.button>
                           );
                         })}
                     </div>
@@ -1495,7 +1495,7 @@ export default function ChatPage() {
                     </span>
                   </Button>
                   {discoverServers.map((s: Server) => (
-                    <motion.div
+                    <m.div
                       key={s._id}
                       whileHover={{ scale: 1.02, y: -2 }}
                       onClick={() => joinServer.mutate({ serverId: s._id })}
@@ -1514,7 +1514,7 @@ export default function ChatPage() {
                           </p>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
               </ScrollArea>
@@ -1649,7 +1649,7 @@ export default function ChatPage() {
 
               <div className="flex items-center gap-4">
                 {view === "server" && (
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowMembers(!showMembers)}
@@ -1661,11 +1661,11 @@ export default function ChatPage() {
                     )}
                   >
                     <Users className="w-4 h-4 lg:w-5 lg:h-5 transition-transform hover:scale-110" />
-                  </motion.button>
+                  </m.button>
                 )}
 
                 {/* Help Button - Always visible */}
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowFeaturesGuide(true)}
@@ -1673,7 +1673,7 @@ export default function ChatPage() {
                   title="Chat Features Guide"
                 >
                   <HelpCircle className="w-4 h-4 lg:w-5 lg:h-5" />
-                </motion.button>
+                </m.button>
 
                 <div className="hidden sm:flex items-center gap-4">
                   <Button
@@ -1695,7 +1695,7 @@ export default function ChatPage() {
 
                 {/* Delete Conversation Button - Mobile visible */}
                 {selectedConversationId && selectedConversation && view === "dms" && (
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={(e) => handleDeleteConversation(
@@ -1709,7 +1709,7 @@ export default function ChatPage() {
                     title="Delete conversation"
                   >
                     <Trash2 className="w-4 h-4 lg:w-5 lg:h-5" />
-                  </motion.button>
+                  </m.button>
                 )}
               </div>
             </div>
@@ -1738,7 +1738,7 @@ export default function ChatPage() {
                     {/* Control panel background effects */}
                     <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
 
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1, y: -4 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={toggleMute}
@@ -1758,9 +1758,9 @@ export default function ChatPage() {
                       <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">
                         {isMuted ? "MIC_OFF" : "MIC_ON"}
                       </span>
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1, y: -4 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={toggleVideo}
@@ -1780,9 +1780,9 @@ export default function ChatPage() {
                       <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">
                         {isVideoOff ? "CAM_OFF" : "CAM_ON"}
                       </span>
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1, y: -4 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={
@@ -1804,11 +1804,11 @@ export default function ChatPage() {
                       <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font">
                         {isScreenSharing ? "STREAMING" : "SHARE_SCR"}
                       </span>
-                    </motion.button>
+                    </m.button>
 
                     <div className="w-px h-12 bg-white/10 mx-2" />
 
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1, rotate: 90 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={leaveRoom}
@@ -1818,7 +1818,7 @@ export default function ChatPage() {
                       <span className="text-[7px] mt-1.5 font-black tracking-widest tech-font relative z-10">
                         DISCONNECT
                       </span>
-                    </motion.button>
+                    </m.button>
                   </div>
                 </div>
               ) : (view === "server" && selectedChannelId) ||
@@ -1840,7 +1840,7 @@ export default function ChatPage() {
                         </div>
                       ) : currentMessages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 select-none flex-1 relative">
-                          <motion.div
+                          <m.div
                             initial={{ scale: 0.8, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             className="relative mb-8"
@@ -1848,7 +1848,7 @@ export default function ChatPage() {
                             <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full flex items-center justify-center relative border border-white/10 bg-white/5">
                               <MessageCircle className="w-10 h-10 lg:w-14 lg:h-14 text-slate-500 opacity-40" />
                             </div>
-                          </motion.div>
+                          </m.div>
                           <h3 className="font-semibold text-xl lg:text-3xl text-white mb-2">
                             No messages yet
                           </h3>
@@ -1875,7 +1875,7 @@ export default function ChatPage() {
                           // Avatar grouping logic available if needed
 
                           return (
-                            <motion.div
+                            <m.div
                               key={msg._id}
                               initial={{
                                 opacity: 0,
@@ -2005,7 +2005,7 @@ export default function ChatPage() {
                                         )}
                                       >
                                         {msg.reactions.map((r) => (
-                                          <motion.button
+                                          <m.button
                                             key={r.emoji}
                                             whileHover={{ scale: 1.1, y: -2 }}
                                             onClick={() =>
@@ -2032,13 +2032,13 @@ export default function ChatPage() {
                                             <span className="text-[10px] opacity-60 font-bold">
                                               {r.users.length}
                                             </span>
-                                          </motion.button>
+                                          </m.button>
                                         ))}
                                       </div>
                                     )}
                                 </div>
                               </div>
-                            </motion.div>
+                            </m.div>
                           );
                         })
                       )}
@@ -2111,14 +2111,14 @@ export default function ChatPage() {
                       />
 
                       <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-h-[44px] lg:min-h-[56px] px-2 sm:px-3">
-                        <motion.button
+                        <m.button
                           whileHover={{ scale: 1.1, rotate: 90 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => fileInputRef.current?.click()}
                           className="w-10 h-10 rounded-[0.85rem] glass-premium text-slate-400 hover:text-primary transition-all flex items-center justify-center shrink-0 shadow-lg"
                         >
                           <Plus className="w-5 h-5" />
-                        </motion.button>
+                        </m.button>
 
                         <div className="flex-1 flex flex-col justify-center relative">
                           <Input
@@ -2139,7 +2139,7 @@ export default function ChatPage() {
 
                         <div className="hidden sm:flex items-center gap-4 lg:gap-6 border-l border-white/5 pl-4 lg:pl-8 h-10">
                           {isRecordingVoice ? (
-                            <motion.div
+                            <m.div
                               initial={{ scale: 0.9, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               className="flex items-center gap-4 px-6 py-2 glass-aether border border-rose-500/30 rounded-2xl shadow-[0_0_30px_rgba(244,63,94,0.1)]"
@@ -2154,26 +2154,26 @@ export default function ChatPage() {
                               >
                                 <X className="w-5 h-5" />
                               </button>
-                            </motion.div>
+                            </m.div>
                           ) : (
-                            <motion.button
+                            <m.button
                               whileHover={{ scale: 1.1, color: "#F43F5E" }}
                               onClick={() => setIsRecordingVoice(true)}
                               className="w-10 h-10 flex items-center justify-center text-slate-500 transition-all hover:text-rose-400 opacity-60 hover:opacity-100"
                             >
                               <Mic className="w-5 h-5" />
-                            </motion.button>
+                            </m.button>
                           )}
 
-                          <motion.button
+                          <m.button
                             whileHover={{ scale: 1.1, color: "var(--primary)" }}
                             className="w-10 h-10 flex items-center justify-center text-slate-500 transition-all opacity-60 hover:opacity-100"
                           >
                             <Smile className="w-5 h-5" />
-                          </motion.button>
+                          </m.button>
                         </div>
 
-                        <motion.button
+                        <m.button
                           whileHover={{ scale: 1.05, x: 2 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={handleSendMessage}
@@ -2193,7 +2193,7 @@ export default function ChatPage() {
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover/send:opacity-100 transition-opacity" />
                           <Send className="w-4 h-4 lg:w-5 lg:h-5 relative z-10 transition-transform group-hover/send:translate-x-1 group-hover/send:-translate-y-1" />
-                        </motion.button>
+                        </m.button>
                       </div>
                     </div>
                   </div>
@@ -2206,7 +2206,7 @@ export default function ChatPage() {
                   <div className="relative flex flex-col items-center max-w-sm">
                     {/* Compact Premium Orb */}
                     <div className="relative mb-8">
-                      <motion.div
+                      <m.div
                         animate={{
                           scale: [1, 1.1, 1],
                           opacity: [0.08, 0.15, 0.08]
@@ -2214,20 +2214,20 @@ export default function ChatPage() {
                         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                         className="absolute inset-[-40px] bg-primary/20 blur-[60px] rounded-full"
                       />
-                      <motion.div
+                      <m.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 1, ease: "easeOut" }}
                         className="w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center relative z-10"
                       >
-                        <motion.div
+                        <m.div
                           animate={{ y: [0, -10, 0] }}
                           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                           className="p-6 lg:p-8 rounded-[2.5rem] glass-premium border border-white/10 shadow-2xl bg-white/[0.02]"
                         >
                           <Sparkles className="w-10 h-10 lg:w-14 lg:h-14 text-primary drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
-                        </motion.div>
-                      </motion.div>
+                        </m.div>
+                      </m.div>
                     </div>
 
                     <div className="space-y-4 relative z-10">
@@ -2267,7 +2267,7 @@ export default function ChatPage() {
                       {selectedServer.memberProfiles
                         .slice(0, 50)
                         .map((m: any, idx: number) => (
-                          <motion.div
+                          <m.div
                             key={m._id}
                             initial={{ opacity: 0, x: 10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -2306,7 +2306,7 @@ export default function ChatPage() {
                             <div className="absolute right-0 opacity-0 group-hover:opacity-40 transition-opacity translate-x-4 group-hover:translate-x-0 transition-all">
                               <div className="w-6 h-px bg-primary/40" />
                             </div>
-                          </motion.div>
+                          </m.div>
                         ))}
                     </div>
                   </ScrollArea>
@@ -2325,7 +2325,7 @@ export default function ChatPage() {
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative shadow-inner">
-                      <motion.div
+                      <m.div
                         animate={{
                           width: ["20%", "28%", "24%"],
                           opacity: [0.6, 1, 0.6],
@@ -2338,7 +2338,7 @@ export default function ChatPage() {
                         className="h-full bg-gradient-to-r from-primary to-primary/40 shadow-[0_0_15px_rgba(129,140,248,0.4)] relative"
                       >
                         {/* Scanning Line in Progress Bar */}
-                        <motion.div
+                        <m.div
                           animate={{ left: ["-100%", "100%"] }}
                           transition={{
                             duration: 1.5,
@@ -2347,7 +2347,7 @@ export default function ChatPage() {
                           }}
                           className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent"
                         />
-                      </motion.div>
+                      </m.div>
                     </div>
                     <div className="flex items-center justify-between mt-4">
                       <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.3em] italic tech-font">
@@ -2370,14 +2370,14 @@ export default function ChatPage() {
 
         <AnimatePresence>
           {showCreateServer && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/95 backdrop-blur-3xl flex items-center justify-center z-[100] p-4"
               onClick={() => setShowCreateServer(false)}
             >
-              <motion.div
+              <m.div
                 initial={{ scale: 0.9, y: 40, opacity: 0 }}
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 exit={{ scale: 0.9, y: 40, opacity: 0 }}
@@ -2462,21 +2462,21 @@ export default function ChatPage() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
           {showJoinServer && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[100] flex items-center justify-center p-4 lg:p-8"
             >
               <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
-              <motion.div
+              <m.div
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 className="w-full max-w-[500px] glass-aether border border-white/10 rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] relative overflow-hidden group"
@@ -2556,8 +2556,8 @@ export default function ChatPage() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -2592,14 +2592,14 @@ export default function ChatPage() {
         <AnimatePresence>
           {showFeaturesGuide && (
             <>
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowFeaturesGuide(false)}
                 className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]"
               />
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -2725,7 +2725,7 @@ export default function ChatPage() {
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </>
           )}
         </AnimatePresence>
@@ -2735,7 +2735,7 @@ export default function ChatPage() {
           {showMobileSidebar && (
             <>
               {/* Backdrop */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -2743,7 +2743,7 @@ export default function ChatPage() {
                 className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
               />
               {/* Sidebar */}
-              <motion.div
+              <m.div
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
@@ -3086,7 +3086,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </>
           )}
         </AnimatePresence>

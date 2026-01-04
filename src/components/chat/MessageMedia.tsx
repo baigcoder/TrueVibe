@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Download, FileText, X, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import VoicePlayer from './VoicePlayer';
@@ -24,7 +24,7 @@ interface ImageLightboxProps {
 
 function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -37,7 +37,7 @@ function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
             >
                 <X className="w-6 h-6" />
             </button>
-            <motion.img
+            <m.img
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -46,7 +46,7 @@ function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
                 onClick={(e) => e.stopPropagation()}
                 className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl"
             />
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -135,7 +135,7 @@ export function MessageMedia({ media, isOwn = false }: MessageMediaProps) {
                                 images.length >= 3 ? "grid-cols-2" : "grid-cols-1"
                     )}>
                         {images.map((img, idx) => (
-                            <motion.div
+                            <m.div
                                 key={idx}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -150,7 +150,7 @@ export function MessageMedia({ media, isOwn = false }: MessageMediaProps) {
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                                     <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
-                            </motion.div>
+                            </m.div>
                         ))}
                     </div>
                 )}

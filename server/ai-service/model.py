@@ -1,7 +1,7 @@
 """
-Advanced Deepfake Detection Model v7
+Advanced Deepfake Detection Model v8
 Enhanced with: FFT Frequency Analysis, Color Consistency, Noise Patterns, Multi-Scale Analysis
-NEW in v7: Visual annotations, AI art detection (DALL-E/Midjourney/SD), Video motion analysis
+NEW in v8: Accuracy improvements - multi-face consistency, filter compensation, GAN fingerprint boost
 """
 
 import os
@@ -57,6 +57,18 @@ except ImportError:
     VIDEO_ANALYSIS_AVAILABLE = False
     print("⚠️ Video analysis module not available")
 
+# NEW: Stylization detector for 3D renders, cartoons, animated content
+try:
+    from stylization_detector import (
+        detect_stylization,
+        quick_stylization_check,
+        StyleType
+    )
+    STYLIZATION_DETECTION_AVAILABLE = True
+except ImportError:
+    STYLIZATION_DETECTION_AVAILABLE = False
+    print("⚠️ Stylization detection module not available")
+
 # Debug images directory (for PDF reports)
 DEBUG_DIR = os.path.join(os.path.dirname(__file__), "debug_images")
 os.makedirs(DEBUG_DIR, exist_ok=True)
@@ -71,9 +83,11 @@ HUGGINGFACE_MODEL_ID = "prithivMLmods/deepfake-detector-model-v1"
 # Label mapping
 ID2LABEL = {0: "fake", 1: "real"}
 
-# Detection thresholds (calibrated for v5)
-FAKE_THRESHOLD = 0.52
-SUSPICIOUS_THRESHOLD = 0.42
+# Detection thresholds (calibrated for v8 accuracy)
+FAKE_THRESHOLD = 0.55           # Stricter threshold for fake classification
+SUSPICIOUS_THRESHOLD = 0.38     # Catch edge cases earlier
+AUTHENTIC_BOOST = 0.15          # Boost for natural content with no anomalies
+GAN_FINGERPRINT_BOOST = 0.12    # Extra boost when GAN patterns detected
 
 # Debug folder
 DEBUG_DIR = os.path.join(os.path.dirname(__file__), "debug_images")
@@ -113,16 +127,17 @@ class MediaType:
 class FaceInfo:
     """Information about a detected face."""
     def __init__(self, bbox: Tuple[int, int, int, int], confidence: float, index: int):
-        self.bbox = bbox
-        self.confidence = confidence
-        self.index = index
+        # Convert to native Python types to avoid numpy serialization issues
+        self.bbox = tuple(int(x) for x in bbox)
+        self.confidence = float(confidence)
+        self.index = int(index)
         self.fake_score = 0.0
         self.real_score = 0.0
     
     @property
     def size(self) -> int:
         """Calculate face area (width * height) for size tracking."""
-        return self.bbox[2] * self.bbox[3]
+        return int(self.bbox[2] * self.bbox[3])
     
     @property
     def center(self) -> Tuple[float, float]:
@@ -911,6 +926,36 @@ class DeepfakeDetector:
             return image.crop((x1, y1, x2, y2))
         except:
             return None
+    
+    def assess_image_quality(self, image: Image.Image) -> float:
+        """
+        Assess image quality (0-1). Low quality = less reliable detection.
+        Used to adjust confidence in final scoring.
+        """
+        try:
+            gray = np.array(image.convert('L'))
+            
+            # Check for blur (Laplacian variance) - higher = sharper
+            blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+            blur_quality = min(1.0, blur_score / 150.0)  # Normalize to 0-1
+            
+            # Check resolution - larger = more detail
+            w, h = image.size
+            resolution_score = min(1.0, (w * h) / (512 * 512))
+            
+            # Check for JPEG artifacts (high compression = low quality)
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+            noise = gray.astype(float) - blurred.astype(float)
+            noise_std = np.std(noise)
+            compression_quality = min(1.0, noise_std / 10.0) if noise_std < 25 else 0.5
+            
+            # Combined quality score
+            quality = (blur_quality * 0.4 + resolution_score * 0.3 + compression_quality * 0.3)
+            return round(quality, 3)
+            
+        except Exception as e:
+            print(f"   ⚠️ Quality assessment failed: {e}")
+            return 0.5  # Default to medium quality
 
     # ==================== PHASE 1: ADVANCED DETECTION v7 ====================
 
@@ -2055,23 +2100,58 @@ class DeepfakeDetector:
                 print(f"⚡ Temporal inconsistency: +{temporal_boost*100:.1f}%")
                 avg_fake += temporal_boost
         
-        # ✨ CRITICAL FIX: No-face content should default to AUTHENTIC
-        # If no faces detected AND all analysis scores are near zero, this is likely 
-        # a landscape/desk/scenery video - NOT a deepfake attempt
+        # ========== v8 ACCURACY IMPROVEMENTS ==========
+        
+        # 1. Multi-face consistency check
+        face_consistency_boost = 0.0
+        if len(face_scores) > 1:
+            face_variance = np.var(face_scores)
+            if face_variance > 0.15:
+                # High variance across faces = possible selective manipulation
+                face_consistency_boost = min(0.12, face_variance * 0.5)
+                print(f"⚠️ Face score variance: {face_variance:.3f} → +{face_consistency_boost*100:.1f}%")
+                avg_fake += face_consistency_boost
+        
+        # 2. Filter compensation (reduce false positives on filtered selfies)
+        filter_compensation = 0.0
+        if content_info and content_info.get('filter_intensity', 0) > 0.5:
+            filter_compensation = content_info['filter_intensity'] * 0.06
+            avg_fake = max(0.08, avg_fake - filter_compensation)
+            print(f"🎨 Heavy filter detected → -{filter_compensation*100:.1f}% compensation")
+        
+        # 3. GAN fingerprint boost (from FFT analysis)
+        gan_boost = 0.0
+        if fft_scores and max(fft_scores) > FAKE_THRESHOLD:
+            gan_boost = GAN_FINGERPRINT_BOOST
+            avg_fake += gan_boost
+            print(f"🔬 GAN fingerprint detected → +{gan_boost*100:.1f}%")
+        
+        # ✨ CRITICAL FIX v8.1: No-face content scoring
+        # Only boost to AUTHENTIC if both:
+        # 1. No faces detected AND
+        # 2. Frame scores are genuinely low (not just analysis scores)
         if len(faces) == 0:
             avg_face = sum(face_scores) / len(face_scores) if face_scores else 0
             avg_fft = sum(fft_scores) / len(fft_scores) if fft_scores else 0
             avg_eye = sum(eye_scores) / len(eye_scores) if eye_scores else 0
             
-            # If all scores are low (< 10%), this is genuine non-face content
-            if avg_face < 0.1 and avg_fft < 0.1 and avg_eye < 0.1:
+            # Check if frame-level analysis shows high fake probability
+            frame_based_avg = avg_fake  # This is the weighted average from all frames
+            
+            # If frames show HIGH fake scores (>50%), trust the frame analysis!
+            if frame_based_avg > 0.5:
+                # Keep the frame-based score - don't override it
+                print(f"⚠️ No faces BUT high frame scores ({frame_based_avg*100:.1f}%) → keeping as SUSPICIOUS")
+                # No modification to avg_fake - trust the weighted frame analysis
+            elif avg_face < 0.1 and avg_fft < 0.1 and avg_eye < 0.1:
+                # Low frame scores AND low analysis scores = genuine clean content
                 print(f"✅ No faces + clean scores → AUTHENTIC (not a deepfake)")
-                avg_fake = 0.10  # 10% fake = 90% real
-                avg_real = 0.90
+                avg_fake = 0.08  # 8% fake = 92% real
+                avg_real = 0.92
             else:
-                # Some anomalies but no faces - mark as slightly suspicious but not fake
-                print(f"⚠️ No faces but some anomalies detected - marking as low risk")
-                avg_fake = min(0.35, avg_fake)  # Cap at 35% even with anomalies
+                # Mixed signals - moderate suspicion, but don't cap too aggressively
+                print(f"⚠️ No faces, mixed signals (avg_fake={avg_fake*100:.1f}%) - moderate risk")
+                # Don't cap at 32% - let the frame analysis speak
                 avg_real = 1.0 - avg_fake
         
         # Final aggregation
@@ -2129,6 +2209,19 @@ class DeepfakeDetector:
         
         print(f"   👥 Multi-face analysis: {len(faces)} faces, sizes={[f.size for f in faces[:5]]}")
         
+        # Build frame breakdown for report
+        frame_breakdown = []
+        for i, (frame, name, weight) in enumerate(frames):
+            if i < len(results):
+                frame_breakdown.append({
+                    'index': i + 1,
+                    'name': name,
+                    'weight': round(float(weight), 2),
+                    'fake_score': round(float(results[i].get('fake', 0)), 4),
+                    'real_score': round(float(results[i].get('real', 0)), 4),
+                    'is_suspicious': results[i].get('fake', 0) > 0.5
+                })
+        
         # Create detailed metadata
         details = {
             'total_frames': total,
@@ -2143,6 +2236,14 @@ class DeepfakeDetector:
             'avg_fft_score': sum(fft_scores) / len(fft_scores) if fft_scores else None,
             'avg_eye_score': sum(eye_scores) / len(eye_scores) if eye_scores else None,
             'multi_face_analysis': multi_face_analysis,
+            'frame_breakdown': frame_breakdown,  # NEW: Individual frame analysis
+            # v8 accuracy improvements metadata
+            'v8_accuracy': {
+                'face_consistency_boost': face_consistency_boost,
+                'filter_compensation': filter_compensation,
+                'gan_fingerprint_boost': gan_boost,
+                'model_version': 'v8'
+            }
         }
         
         if content_info:
@@ -2259,6 +2360,25 @@ class DeepfakeDetector:
         
         print(f"🔬 DEEPFAKE ANALYSIS v7 (Advanced Detection)")
         
+        # NEW: Stylization Detection for 3D renders, cartoons, animated avatars
+        stylization_boost = 0.0
+        stylization_result = None
+        if STYLIZATION_DETECTION_AVAILABLE:
+            print(f"   🎨 Running stylization detection...")
+            stylization_result = detect_stylization(image)
+            
+            if stylization_result.is_stylized:
+                style_name = stylization_result.style_type.value
+                print(f"   🤖 STYLIZED CONTENT DETECTED: {style_name}")
+                print(f"      Confidence: {stylization_result.confidence*100:.1f}%")
+                print(f"      Indicators: {', '.join(stylization_result.indicators)}")
+                
+                # Apply fake boost for stylized content
+                stylization_boost = stylization_result.fake_boost
+                print(f"   ⚡ Stylization boost: +{stylization_boost*100:.1f}%")
+            else:
+                print(f"   ✅ Photorealistic content - no stylization detected")
+        
         # Phase 1: New advanced analyses
         print(f"   📊 Running advanced analyses...")
         
@@ -2302,6 +2422,16 @@ class DeepfakeDetector:
         if blending_details.get('boundary_artifacts_detected'):
             phase1_boost += 0.12
             print(f"   ⚡ Blending artifacts detected: +12%")
+        
+        # Apply stylization boost (3D renders, cartoons, animated content)
+        if stylization_boost > 0:
+            probs['fake'] = min(probs['fake'] + stylization_boost, 0.99)
+            probs['real'] = max(probs['real'] - stylization_boost, 0.01)
+            details['stylization_boost'] = stylization_boost
+            if stylization_result:
+                details['stylization_type'] = stylization_result.style_type.value
+                details['stylization_confidence'] = stylization_result.confidence
+                details['stylization_indicators'] = stylization_result.indicators
         
         # Apply Phase 1 boost to probabilities
         if phase1_boost > 0:

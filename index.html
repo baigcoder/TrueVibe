@@ -46,22 +46,31 @@
   <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
   <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
-  <!-- Preconnect to Google Fonts -->
+  <!-- Preconnect to critical third-party origins -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Load fonts with display swap for faster rendering -->
+  <!-- Preload critical fonts with reduced font families for faster load -->
+  <!-- Only load Inter (primary) and Space Grotesk (headings) initially -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     media="print" onload="this.media='all'" />
+
+  <!-- Load secondary fonts with lower priority -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    media="print" onload="this.media='all'" />
+
   <noscript>
     <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
   </noscript>
 
   <!-- Critical CSS for initial load -->
   <style>
-    /* Prevent FOUC */
+    /* Prevent FOUC and ensure smooth initial render */
     html {
       background-color: #030712;
     }
@@ -70,7 +79,7 @@
       min-height: 100vh;
     }
 
-    /* Loading state */
+    /* Optimized loading state */
     .app-loading {
       display: flex;
       align-items: center;
@@ -92,6 +101,11 @@
       to {
         transform: rotate(360deg);
       }
+    }
+
+    /* Font loading optimization - use system fonts as fallback */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
   </style>
 </head>

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
     X, Check, RotateCcw, ZoomIn, ZoomOut,
@@ -135,7 +135,7 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
 
     return createPortal(
         <AnimatePresence>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -313,7 +313,7 @@ export function ImageEditor({ imageUrl, onApply, onCancel }: ImageEditorProps) {
                         )}
                     </Button>
                 </div>
-            </motion.div>
+            </m.div>
         </AnimatePresence>,
         document.body
     );

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
     Mic, MicOff, Video, VideoOff, PhoneOff,
     Maximize2, Minimize2
@@ -54,7 +54,7 @@ export function CallScreen() {
     const remoteParticipant = participants.find((p) => p.id !== participants[0]?.id);
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -73,7 +73,7 @@ export function CallScreen() {
                         />
 
                         {/* Local Video (PiP) */}
-                        <motion.div
+                        <m.div
                             drag
                             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                             className="absolute bottom-24 right-4 w-40 h-56 rounded-2xl overflow-hidden bg-[#1a1a1a] border-2 border-white/20 shadow-xl"
@@ -98,12 +98,12 @@ export function CallScreen() {
                                     </Avatar>
                                 </div>
                             )}
-                        </motion.div>
+                        </m.div>
                     </>
                 ) : (
                     // Audio Call UI
                     <div className="w-full h-full flex flex-col items-center justify-center p-8">
-                        <motion.div
+                        <m.div
                             animate={{ scale: [1, 1.05, 1] }}
                             transition={{ duration: 2, repeat: Infinity }}
                             className="relative mb-8"
@@ -115,7 +115,7 @@ export function CallScreen() {
                                     {remoteParticipant?.name?.[0] || '?'}
                                 </AvatarFallback>
                             </Avatar>
-                        </motion.div>
+                        </m.div>
                         <h2 className="text-2xl font-bold text-white mb-2">{remoteParticipant?.name || 'Connecting...'}</h2>
                         <p className="text-gray-400">Audio Call</p>
                     </div>
@@ -169,7 +169,7 @@ export function CallScreen() {
                     </Button>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 

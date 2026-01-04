@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX, Heart, Send, Eye, BarChart2, Trash2, MessageCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -210,7 +210,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
 
     return (
         <AnimatePresence>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -227,7 +227,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                 </div>
 
                 {/* Story Container */}
-                <motion.div
+                <m.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
@@ -333,7 +333,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                         {/* Caption Overlay */}
                         {currentStory.caption && (
                             <div className="absolute bottom-32 left-0 right-0 px-6 z-20 pointer-events-none">
-                                <motion.div
+                                <m.div
                                     initial={{ y: 20, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-[24px] p-5 shadow-2xl"
@@ -341,7 +341,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                                     <p className="text-white text-[15px] font-medium leading-relaxed drop-shadow-md">
                                         {currentStory.caption}
                                     </p>
-                                </motion.div>
+                                </m.div>
                             </div>
                         )}
                     </div>
@@ -475,7 +475,7 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                     {/* Comments Sheet */}
                     <AnimatePresence>
                         {showComments && (
-                            <motion.div
+                            <m.div
                                 initial={{ y: '100%' }}
                                 animate={{ y: 0 }}
                                 exit={{ y: '100%' }}
@@ -548,14 +548,14 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                                         Dismiss
                                     </Button>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
 
                     {/* Viewers Sheet (Insights) */}
                     <AnimatePresence>
                         {showViewers && (
-                            <motion.div
+                            <m.div
                                 initial={{ y: '100%' }}
                                 animate={{ y: 0 }}
                                 exit={{ y: '100%' }}
@@ -615,11 +615,11 @@ export function StoryViewer({ stories, initialIndex = 0, onClose, onStoryViewed 
                                 >
                                     Dismiss
                                 </Button>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
-                </motion.div>
-            </motion.div>
+                </m.div>
+            </m.div>
         </AnimatePresence >
     );
 }

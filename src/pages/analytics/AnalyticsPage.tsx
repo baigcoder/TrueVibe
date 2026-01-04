@@ -7,7 +7,7 @@ import {
     Eye, MessageCircle, Share2, Play, Image as ImageIcon, Video, BarChart2,
     Calendar, Zap, Award, Target, Activity, FileText, Download, CheckCircle, AlertTriangle, XCircle
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -24,53 +24,70 @@ interface StatCardProps {
 
 function StatCard({ title, value, change, icon, color = 'primary', delay = 0 }: StatCardProps) {
     const colors = {
-        primary: 'from-indigo-500/20 to-indigo-500/5 border-indigo-500/30',
-        secondary: 'from-teal-500/20 to-teal-500/5 border-teal-500/30',
-        accent: 'from-rose-500/20 to-rose-500/5 border-rose-500/30',
-        emerald: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/30',
-        rose: 'from-rose-500/20 to-rose-500/5 border-rose-500/30',
-        amber: 'from-amber-500/20 to-amber-500/5 border-amber-500/30',
+        primary: 'from-indigo-500/20 via-indigo-500/10 to-transparent border-indigo-500/30 hover:border-indigo-500/50',
+        secondary: 'from-teal-500/20 via-teal-500/10 to-transparent border-teal-500/30 hover:border-teal-500/50',
+        accent: 'from-rose-500/20 via-rose-500/10 to-transparent border-rose-500/30 hover:border-rose-500/50',
+        emerald: 'from-emerald-500/20 via-emerald-500/10 to-transparent border-emerald-500/30 hover:border-emerald-500/50',
+        rose: 'from-rose-500/20 via-rose-500/10 to-transparent border-rose-500/30 hover:border-rose-500/50',
+        amber: 'from-amber-500/20 via-amber-500/10 to-transparent border-amber-500/30 hover:border-amber-500/50',
     };
 
     const iconColors = {
-        primary: 'text-indigo-400 bg-indigo-500/20',
-        secondary: 'text-teal-400 bg-teal-500/20',
-        accent: 'text-rose-400 bg-rose-500/20',
-        emerald: 'text-emerald-400 bg-emerald-500/20',
-        rose: 'text-rose-400 bg-rose-500/20',
-        amber: 'text-amber-400 bg-amber-500/20',
+        primary: 'text-indigo-400 bg-indigo-500/20 shadow-lg shadow-indigo-500/20',
+        secondary: 'text-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20',
+        accent: 'text-rose-400 bg-rose-500/20 shadow-lg shadow-rose-500/20',
+        emerald: 'text-emerald-400 bg-emerald-500/20 shadow-lg shadow-emerald-500/20',
+        rose: 'text-rose-400 bg-rose-500/20 shadow-lg shadow-rose-500/20',
+        amber: 'text-amber-400 bg-amber-500/20 shadow-lg shadow-amber-500/20',
+    };
+
+    const glowColors = {
+        primary: 'group-hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]',
+        secondary: 'group-hover:shadow-[0_0_30px_rgba(20,184,166,0.3)]',
+        accent: 'group-hover:shadow-[0_0_30px_rgba(244,63,94,0.3)]',
+        emerald: 'group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]',
+        rose: 'group-hover:shadow-[0_0_30px_rgba(244,63,94,0.3)]',
+        amber: 'group-hover:shadow-[0_0_30px_rgba(245,158,11,0.3)]',
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay }}
+        <m.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay, type: "spring", damping: 20 }}
             className={cn(
-                "relative bg-gradient-to-br border rounded-2xl p-5 backdrop-blur-xl overflow-hidden group hover:scale-[1.02] transition-transform",
-                colors[color]
+                "relative bg-gradient-to-br border rounded-2xl sm:rounded-3xl p-4 sm:p-5 backdrop-blur-xl overflow-hidden group",
+                "hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-default",
+                colors[color],
+                glowColors[color]
             )}
         >
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">{title}</p>
-                    <p className="text-2xl font-heading font-extrabold text-white tracking-tight">{value}</p>
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+            <div className="flex items-start justify-between relative z-10">
+                <div className="flex-1 min-w-0">
+                    <p className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 truncate">{title}</p>
+                    <p className="text-xl sm:text-2xl font-heading font-extrabold text-white tracking-tight">{value}</p>
                     {change !== undefined && (
                         <div className={cn(
-                            "flex items-center gap-1 mt-2 text-xs font-bold",
+                            "flex items-center gap-1 mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-bold",
                             change >= 0 ? "text-emerald-400" : "text-rose-400"
                         )}>
                             {change >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                            {Math.abs(change).toFixed(1)}%
+                            <span>{Math.abs(change).toFixed(1)}%</span>
                         </div>
                     )}
                 </div>
-                <div className={cn("p-3 rounded-xl", iconColors[color])}>
+                <div className={cn("p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-transform group-hover:scale-110 duration-300", iconColors[color])}>
                     {icon}
                 </div>
             </div>
-            <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors" />
-        </motion.div>
+
+            {/* Decorative elements */}
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors duration-500" />
+            <div className="absolute top-0 right-0 w-20 h-[1px] bg-gradient-to-l from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        </m.div>
     );
 }
 
@@ -91,7 +108,7 @@ function ContentItem({ type, content, thumbnail, views, likes, comments, shares 
     const date = new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/[0.05] transition-all group"
@@ -160,7 +177,7 @@ function ContentItem({ type, content, thumbnail, views, likes, comments, shares 
                     </div>
                 )}
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -270,34 +287,60 @@ export default function AnalyticsPage() {
     }
 
     return (
-        <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto pb-24 md:pb-10 px-3 md:px-0">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
-                <div>
-                    <h1 className="font-heading font-extrabold text-2xl md:text-4xl text-white tracking-tighter uppercase italic">
-                        Analytics <span className="text-primary">Dashboard</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium mt-1 text-sm md:text-base">Track your content performance and engagement</p>
-                </div>
+        <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto pb-24 md:pb-10 px-2 xs:px-3 md:px-0">
+            {/* Premium Header Banner */}
+            <m.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative bg-gradient-to-r from-primary/10 via-purple-500/5 to-secondary/10 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 overflow-hidden"
+            >
+                {/* Background effects */}
+                <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+                <div className="absolute -right-20 -top-20 w-60 h-60 bg-primary/20 rounded-full blur-[80px]" />
+                <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-secondary/20 rounded-full blur-[60px]" />
 
-                {/* Period Selector */}
-                <div className="flex bg-white/[0.03] border border-white/5 p-1 rounded-xl backdrop-blur-md self-start md:self-auto">
-                    {(['7d', '30d', '90d'] as PeriodType[]).map((p) => (
-                        <button
-                            key={p}
-                            onClick={() => setPeriod(p)}
-                            className={cn(
-                                "px-3 md:px-5 py-1.5 md:py-2 text-[10px] md:text-xs font-bold rounded-lg transition-all duration-300 uppercase tracking-widest",
-                                period === p
-                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                    : "text-slate-500 hover:text-white"
-                            )}
-                        >
-                            {p === '7d' ? '7D' : p === '30d' ? '30D' : '90D'}
-                        </button>
-                    ))}
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <div className="p-2 sm:p-2.5 rounded-xl bg-primary/20 border border-primary/30">
+                                <BarChart2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                            </div>
+                            <h1 className="font-heading font-extrabold text-xl sm:text-2xl md:text-3xl text-white tracking-tighter uppercase italic">
+                                Analytics
+                            </h1>
+                        </div>
+                        <p className="text-slate-400 font-medium text-xs sm:text-sm max-w-md">
+                            Track your content performance, engagement metrics, and audience insights
+                        </p>
+                    </div>
+
+                    {/* Period Selector */}
+                    <div className="flex bg-white/[0.05] border border-white/10 p-1 rounded-xl sm:rounded-2xl backdrop-blur-md self-start sm:self-auto">
+                        {(['7d', '30d', '90d'] as PeriodType[]).map((p) => (
+                            <m.button
+                                key={p}
+                                onClick={() => setPeriod(p)}
+                                whileTap={{ scale: 0.95 }}
+                                className={cn(
+                                    "px-3 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black rounded-lg sm:rounded-xl transition-all duration-300 uppercase tracking-widest relative",
+                                    period === p
+                                        ? "text-white"
+                                        : "text-slate-500 hover:text-white"
+                                )}
+                            >
+                                {period === p && (
+                                    <m.div
+                                        layoutId="periodPill"
+                                        className="absolute inset-0 bg-primary rounded-lg sm:rounded-xl shadow-lg shadow-primary/30"
+                                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    />
+                                )}
+                                <span className="relative z-10">{p === '7d' ? '7D' : p === '30d' ? '30D' : '90D'}</span>
+                            </m.button>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            </m.div>
 
             {/* Tab Navigation */}
             <div className="flex gap-1.5 md:gap-2 border-b border-white/5 pb-3 md:pb-4 overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
@@ -323,7 +366,7 @@ export default function AnalyticsPage() {
 
             <AnimatePresence mode="wait">
                 {activeTab === 'overview' && (
-                    <motion.div
+                    <m.div
                         key="overview"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -385,7 +428,7 @@ export default function AnalyticsPage() {
                         {/* Charts Row */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Engagement Chart */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
@@ -426,10 +469,10 @@ export default function AnalyticsPage() {
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
-                            </motion.div>
+                            </m.div>
 
                             {/* Content Distribution */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 }}
@@ -472,13 +515,13 @@ export default function AnalyticsPage() {
                                         </div>
                                     ))}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         </div>
 
                         {/* Trust & Top Content */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Trust Score */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
@@ -532,10 +575,10 @@ export default function AnalyticsPage() {
                                         ))}
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
 
                             {/* Top Performing Content */}
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.6 }}
@@ -581,13 +624,13 @@ export default function AnalyticsPage() {
                                         <p className="text-center text-slate-500 py-8">No content yet</p>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {activeTab === 'posts' && (
-                    <motion.div
+                    <m.div
                         key="posts"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -613,11 +656,11 @@ export default function AnalyticsPage() {
                                 <p className="text-slate-500">No posts yet. Create your first post!</p>
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {activeTab === 'shorts' && (
-                    <motion.div
+                    <m.div
                         key="shorts"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -643,11 +686,11 @@ export default function AnalyticsPage() {
                                 <p className="text-slate-500">No shorts yet. Create your first short!</p>
                             </div>
                         )}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {activeTab === 'reports' && (
-                    <motion.div
+                    <m.div
                         key="reports"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -656,7 +699,7 @@ export default function AnalyticsPage() {
                     >
                         {/* Reports Summary Stats */}
                         <div className="grid grid-cols-3 gap-2 md:gap-4">
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-xl md:rounded-2xl p-3 md:p-6"
@@ -668,9 +711,9 @@ export default function AnalyticsPage() {
                                 <p className="text-xl md:text-3xl font-heading font-extrabold text-white">
                                     {(reportsData as any)?.data?.summary?.totalReports || 0}
                                 </p>
-                            </motion.div>
+                            </m.div>
 
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.05 }}
@@ -683,9 +726,9 @@ export default function AnalyticsPage() {
                                 <p className="text-xl md:text-3xl font-heading font-extrabold text-white">
                                     {(reportsData as any)?.data?.summary?.avgConfidence || 0}%
                                 </p>
-                            </motion.div>
+                            </m.div>
 
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
@@ -703,7 +746,7 @@ export default function AnalyticsPage() {
                                         / {(reportsData as any)?.data?.summary?.totalReports || 0}
                                     </span>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         </div>
 
                         {/* Reports List */}
@@ -723,7 +766,7 @@ export default function AnalyticsPage() {
                             ) : ((reportsData as any)?.data?.reports?.length || 0) > 0 ? (
                                 <div className="space-y-3 md:space-y-4">
                                     {((reportsData as any)?.data?.reports || []).map((report: any, index: number) => (
-                                        <motion.div
+                                        <m.div
                                             key={report._id}
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -732,17 +775,35 @@ export default function AnalyticsPage() {
                                         >
                                             {/* Thumbnail */}
                                             <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden bg-slate-800 flex-shrink-0">
-                                                {report.post?.thumbnail ? (
-                                                    <img src={report.post.thumbnail} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        {report.post?.mediaType === 'video' ? (
-                                                            <Video className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
-                                                        ) : (
-                                                            <ImageIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
-                                                        )}
-                                                    </div>
-                                                )}
+                                                {(() => {
+                                                    // Try to get thumbnail from various sources
+                                                    const mediaUrl = report.post?.media?.[0]?.url ||
+                                                        report.post?.media?.[0]?.optimizedUrl ||
+                                                        report.post?.thumbnail ||
+                                                        report.post?.image;
+                                                    const videoUrl = report.post?.video ||
+                                                        (report.post?.media?.[0]?.type === 'video' ? report.post?.media?.[0]?.url : null);
+
+                                                    // For video, generate thumbnail from Cloudinary
+                                                    const thumbnailUrl = videoUrl && videoUrl.includes('cloudinary')
+                                                        ? videoUrl.replace('/upload/', '/upload/so_0,f_jpg,w_100,h_100,c_fill/')
+                                                        : mediaUrl;
+
+                                                    if (thumbnailUrl) {
+                                                        return <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />;
+                                                    }
+
+                                                    // Fallback icon
+                                                    return (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            {report.post?.mediaType === 'video' ? (
+                                                                <Video className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
+                                                            ) : (
+                                                                <ImageIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
                                                 <div className={cn(
                                                     "absolute top-0.5 left-0.5 md:top-1 md:left-1 px-1 md:px-1.5 py-0.5 rounded text-[6px] md:text-[8px] font-bold uppercase",
                                                     report.post?.mediaType === 'video' ? "bg-purple-500/80 text-white" : "bg-blue-500/80 text-white"
@@ -821,7 +882,7 @@ export default function AnalyticsPage() {
                                                 <Download className="w-4 h-4" />
                                                 <span className="hidden sm:inline text-xs font-bold">PDF</span>
                                             </Button>
-                                        </motion.div>
+                                        </m.div>
                                     ))}
                                 </div>
                             ) : (
@@ -834,7 +895,7 @@ export default function AnalyticsPage() {
                                 </div>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

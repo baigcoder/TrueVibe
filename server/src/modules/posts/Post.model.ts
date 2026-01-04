@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export type TrustLevel = 'authentic' | 'suspicious' | 'likely_fake' | 'pending';
 export type PostVisibility = 'public' | 'followers' | 'private';
+export type PostStatus = 'published' | 'draft' | 'scheduled';
 
 export interface IPollOption {
     _id: mongoose.Types.ObjectId;
@@ -32,6 +33,11 @@ export interface IPost extends Document {
     trustLevel: TrustLevel;
     aiAnalysisId?: mongoose.Types.ObjectId;
     isDeleted: boolean;
+    // Draft and scheduling support
+    status: PostStatus;
+    scheduledFor?: Date;
+    // Mentions
+    mentions: string[]; // User IDs mentioned in the post
     // Poll support
     poll?: IPoll;
     hasPoll: boolean;
@@ -107,6 +113,21 @@ const postSchema = new Schema<IPost>(
             type: Boolean,
             default: false,
         },
+        // Draft and scheduling support
+        status: {
+            type: String,
+            enum: ['published', 'draft', 'scheduled'],
+            default: 'published',
+            index: true,
+        },
+        scheduledFor: {
+            type: Date,
+            index: true,
+        },
+        // Mentions
+        mentions: [{
+            type: String,
+        }],
         // Poll support
         poll: {
             options: [{
@@ -158,6 +179,8 @@ postSchema.index({ trustLevel: 1 });
 postSchema.index({ visibility: 1, createdAt: -1 });
 postSchema.index({ hashtags: 1 }); // For hashtag search
 postSchema.index({ hasPoll: 1, createdAt: -1 }); // For polls feed
+postSchema.index({ status: 1, scheduledFor: 1 }); // For scheduled posts
+postSchema.index({ mentions: 1 }); // For mentions lookup
 
 // Virtual for checking if liked by a user
 postSchema.methods.isLikedBy = function (userId: string): boolean {

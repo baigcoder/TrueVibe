@@ -6,7 +6,7 @@ import { Bell, Heart, MessageSquare, UserPlus, Repeat, Loader2, ChevronRight, Ch
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -114,7 +114,7 @@ export function NotificationList() {
             <ScrollArea className="flex-1">
                 <AnimatePresence mode="wait">
                     {activeTab === 'notifications' && (
-                        <motion.div
+                        <m.div
                             key="notifications"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -139,7 +139,7 @@ export function NotificationList() {
                                         const Icon = iconConfig.icon;
 
                                         return (
-                                            <motion.div
+                                            <m.div
                                                 key={notification._id}
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
@@ -173,7 +173,7 @@ export function NotificationList() {
                                                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                                                     </span>
                                                 </div>
-                                            </motion.div>
+                                            </m.div>
                                         );
                                     })}
 
@@ -191,11 +191,11 @@ export function NotificationList() {
                                     )}
                                 </div>
                             )}
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {activeTab === 'requests' && (
-                        <motion.div
+                        <m.div
                             key="requests"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -243,11 +243,11 @@ export function NotificationList() {
                                     </div>
                                 ))
                             )}
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {activeTab === 'suggestions' && (
-                        <motion.div
+                        <m.div
                             key="suggestions"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -287,7 +287,7 @@ export function NotificationList() {
                                     </div>
                                 ))
                             )}
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </ScrollArea>

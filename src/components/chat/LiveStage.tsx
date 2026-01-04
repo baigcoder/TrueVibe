@@ -1,7 +1,7 @@
 import {
     Hand, Users, Star, ArrowUp
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useVoiceRoom } from '@/context/VoiceRoomContext';
 import { useAuth } from '@/context/AuthContext';
@@ -99,7 +99,7 @@ export function LiveStage() {
                 <div className="grid grid-cols-4 gap-2 overflow-y-auto scrollbar-hide">
                     {/* Local Listener */}
                     {!isSpeaker && (
-                        <motion.div
+                        <m.div
                             className={cn(
                                 "flex flex-col items-center p-2 rounded-xl transition-all relative overflow-hidden group",
                                 isHandRaised ? "bg-primary/10 border border-primary/40" : "bg-white/5 border border-white/5"
@@ -115,22 +115,22 @@ export function LiveStage() {
                             <span className="text-[9px] font-black uppercase tracking-tight mt-1 text-white/40 group-hover:text-white transition-colors truncate w-full text-center">YOU</span>
 
                             {isHandRaised && (
-                                <motion.div
+                                <m.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     className="absolute top-1 right-1 w-4 h-4 rounded-md bg-primary flex items-center justify-center shadow-glow-primary"
                                 >
                                     <Hand className="w-2.5 h-2.5 text-black" />
-                                </motion.div>
+                                </m.div>
                             )}
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {/* Remote Listeners */}
                     {listenerParticipants.map(participant => {
                         const hasHandRaised = raisedHands.some(h => h.userId === participant.id);
                         return (
-                            <motion.div
+                            <m.div
                                 key={participant.id}
                                 className={cn(
                                     "flex flex-col items-center p-2 rounded-xl transition-all relative overflow-hidden group",
@@ -147,13 +147,13 @@ export function LiveStage() {
                                 <span className="text-[9px] font-black uppercase tracking-tight mt-1 text-white/40 group-hover:text-white transition-colors truncate w-full text-center">{participant.name}</span>
 
                                 {hasHandRaised && (
-                                    <motion.div
+                                    <m.div
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
                                         className="absolute top-1 right-1 w-4 h-4 rounded-md bg-primary flex items-center justify-center shadow-glow-primary"
                                     >
                                         <Hand className="w-2.5 h-2.5 text-black" />
-                                    </motion.div>
+                                    </m.div>
                                 )}
 
                                 {/* Admin Promotion Controls */}
@@ -166,7 +166,7 @@ export function LiveStage() {
                                         <span className="text-[8px] font-black text-black">PROMOTE</span>
                                     </button>
                                 )}
-                            </motion.div>
+                            </m.div>
                         );
                     })}
                 </div>

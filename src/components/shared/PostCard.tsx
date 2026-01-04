@@ -6,16 +6,17 @@ import { TrustBadge } from "./TrustBadge";
 import { AIReportModal } from "./AIReportModal";
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Bookmark,
-    ShieldCheck, Sparkles, Trash2, Edit2, BarChart3
+    ShieldCheck, Trash2, Edit2, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
     useLikePost, useUnlikePost, useDeletePost,
     useUpdatePost, useRecordView
 } from "@/api/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useAIReport } from "@/hooks/useAIReport";
+import { useDownloadPDFReport, useEmailReport } from "@/hooks/useDownloadReport";
 import { PostAnalytics } from "./PostAnalytics";
 import { TipButton } from "./TipButton";
 import {
@@ -30,11 +31,13 @@ import {
     DialogContent,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
-import { useAIAnalysisUpdate } from "@/context/SocketContext";
+import { useAIAnalysisRealtime, type AIAnalysisData } from "@/context/RealtimeContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback } from "react";
 import { CommentSection } from "./CommentSection";
 import { Textarea } from "@/components/ui/textarea";
+import { MediaPreviewModal } from "@/components/modals/MediaPreviewModal";
+import { CustomVideoPlayer } from "./CustomVideoPlayer";
 
 // Flexible post type that works with both mock data and API responses
 export interface PostData {
@@ -97,6 +100,8 @@ export function PostCard({ post }: PostCardProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
+    const [showMediaPreview, setShowMediaPreview] = useState(false);
+    const [previewMediaIndex, setPreviewMediaIndex] = useState(0);
 
     const likePost = useLikePost();
     const unlikePost = useUnlikePost();
@@ -168,16 +173,115 @@ export function PostCard({ post }: PostCardProps) {
         }
     };
 
-    // Listen for AI analysis completion and refresh the post
-    useAIAnalysisUpdate(useCallback(({ postId: updatePostId }) => {
-        if (updatePostId === post._id || updatePostId === postId) {
-            console.log(`🔔 AI Analysis complete for post: ${updatePostId}, refetching...`);
-            // Force immediate refetch to get updated aiAnalysis data
-            queryClient.invalidateQueries({ queryKey: ['posts', updatePostId], refetchType: 'all' });
-            queryClient.invalidateQueries({ queryKey: ['feed'], refetchType: 'all' });
-            queryClient.invalidateQueries({ queryKey: ['hashtags'], refetchType: 'all' });
+    // Listen for AI analysis completion via Supabase Realtime
+    const handleAIAnalysisComplete = useCallback((data: AIAnalysisData) => {
+        console.log(`📡 [Supabase Realtime] ai:analysis-complete received:`, {
+            receivedPostId: data.postId,
+            currentPostId: postId,
+            currentPostInternalId: post._id,
+            match: data.postId === post._id || data.postId === postId
+        });
+
+        if (data.postId === post._id || data.postId === postId) {
+            console.log(`🔔 AI Analysis complete for post: ${data.postId}, updating cache...`);
+
+            // IMMEDIATELY update the post data in the cache with the new analysis
+            // This ensures TrustBadge updates without waiting for refetch
+            queryClient.setQueryData(['posts', data.postId], (oldData: any) => {
+                if (oldData) {
+                    return {
+                        ...oldData,
+                        trustLevel: data.trustLevel,
+                        aiAnalysis: {
+                            ...oldData.aiAnalysis,
+                            fakeScore: data.fakeScore,
+                            realScore: data.realScore,
+                            classification: data.classification,
+                            processingTimeMs: data.processingTimeMs,
+                            facesDetected: data.facesDetected,
+                            avgFaceScore: data.avgFaceScore,
+                            avgFftScore: data.avgFftScore,
+                            avgEyeScore: data.avgEyeScore,
+                            fftBoost: data.fftBoost,
+                            eyeBoost: data.eyeBoost,
+                            temporalBoost: data.temporalBoost,
+                            framesAnalyzed: data.framesAnalyzed,
+                            mediaType: data.mediaType
+                        }
+                    };
+                }
+                return oldData;
+            });
+
+            // Also update feed cache entries
+            queryClient.setQueriesData({ queryKey: ['feed'] }, (oldData: any) => {
+                if (oldData?.pages) {
+                    return {
+                        ...oldData,
+                        pages: oldData.pages.map((page: any) => ({
+                            ...page,
+                            posts: page.posts?.map((p: any) =>
+                                (p._id === data.postId || p.id === data.postId) ? {
+                                    ...p,
+                                    trustLevel: data.trustLevel,
+                                    aiAnalysis: {
+                                        ...p.aiAnalysis,
+                                        fakeScore: data.fakeScore,
+                                        realScore: data.realScore,
+                                        classification: data.classification,
+                                        processingTimeMs: data.processingTimeMs,
+                                        facesDetected: data.facesDetected,
+                                        avgFaceScore: data.avgFaceScore,
+                                        avgFftScore: data.avgFftScore,
+                                        avgEyeScore: data.avgEyeScore,
+                                        fftBoost: data.fftBoost,
+                                        eyeBoost: data.eyeBoost,
+                                        temporalBoost: data.temporalBoost,
+                                        framesAnalyzed: data.framesAnalyzed,
+                                        mediaType: data.mediaType
+                                    }
+                                } : p
+                            )
+                        }))
+                    };
+                }
+                return oldData;
+            });
+
+            // Also trigger a background refetch for freshest data
+            queryClient.refetchQueries({ queryKey: ['feed'], type: 'active' });
+
+            // Show toast notification with scroll-to-post action
+            const trustLevel = data.trustLevel || 'authentic';
+            const statusLabel = trustLevel === 'authentic' ? '✓ Verified' :
+                trustLevel === 'suspicious' ? '⚠ Review Needed' :
+                    trustLevel === 'likely_fake' ? '⚠ High Risk' : '⛔ Manipulated';
+
+            const scrollToPost = () => {
+                const postElement = document.getElementById(`post-${data.postId}`);
+                if (postElement) {
+                    postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Add highlight effect
+                    postElement.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+                    setTimeout(() => {
+                        postElement.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+                    }, 3000);
+                }
+            };
+
+            toast.success(`AI Analysis Complete`, {
+                description: `TrustBadge: ${statusLabel}`,
+                action: {
+                    label: 'View Post',
+                    onClick: scrollToPost
+                },
+                duration: 6000
+            });
         }
-    }, [post._id, postId, queryClient]));
+    }, [post._id, postId, queryClient]);
+
+    // Subscribe to Supabase Realtime for AI analysis updates
+    useAIAnalysisRealtime(handleAIAnalysisComplete);
 
     const handleLike = async () => {
         if (!postId) return;
@@ -222,7 +326,6 @@ export function PostCard({ post }: PostCardProps) {
         : rawTrustLevel.includes('fake')
             ? (rawTrustLevel === 'likely_fake' ? 'likely_fake' : 'fake')
             : rawTrustLevel as 'authentic' | 'suspicious' | 'fake' | 'pending' | 'likely_fake';
-    const trustScore = post.trustScore || (normalizedTrust === 'authentic' ? 95 : normalizedTrust === 'suspicious' ? 60 : 30);
 
     // Get image from media array or direct property (prefer optimized for images too)
     const imageMedia = post.media?.find(m => m.type === 'image');
@@ -235,10 +338,23 @@ export function PostCard({ post }: PostCardProps) {
     // Check if analysis is complete by looking at aiAnalysis data presence
     const hasCompletedAnalysis = post.aiAnalysis !== undefined && post.aiAnalysis !== null;
     const canGenerateReport = hasCompletedAnalysis && normalizedTrust !== 'pending';
-    const { report, isLoading: isLoadingReport, isGenerating, error: reportError, generateReport } = useAIReport(
+    const { report, isLoading: isLoadingReport, isGenerating, error: reportError, generateReport, hasReport } = useAIReport(
         postId,
         canGenerateReport
     );
+
+    // Auto-generate report when analysis is complete and no report exists
+    // Only try once - don't retry on errors
+    const [autoGenerateAttempted, setAutoGenerateAttempted] = useState(false);
+    useEffect(() => {
+        if (canGenerateReport && !hasReport && !isLoadingReport && !isGenerating && !reportError && !autoGenerateAttempted) {
+            setAutoGenerateAttempted(true);
+            // Auto-generate report silently in background
+            generateReport().catch(() => {
+                // Silently fail - user can still manually generate
+            });
+        }
+    }, [canGenerateReport, hasReport, isLoadingReport, isGenerating, reportError, autoGenerateAttempted, generateReport]);
 
     const handleGenerateReport = async () => {
         setShowReportModal(true);
@@ -252,12 +368,66 @@ export function PostCard({ post }: PostCardProps) {
         }
     };
 
+    // Email and Download hooks for TrustBadge
+    const { downloadPDF, isDownloading } = useDownloadPDFReport();
+    const { emailReport, isEmailing } = useEmailReport();
+
+    const handleEmailReport = () => {
+        if (!report || !postId) {
+            toast.error("Generate the report first before emailing.");
+            return;
+        }
+        emailReport({
+            postId,
+            analysisResults: {
+                fake_score: 1 - (report.report.confidence || 0.5),
+                real_score: report.report.confidence || 0.5,
+                processing_time_ms: 0,
+                model_version: report.modelUsed || 'v7'
+            },
+            reportContent: {
+                verdict: report.report.verdict,
+                confidence: report.report.confidence,
+                summary: report.report.summary,
+                detectionBreakdown: report.report.detectionBreakdown,
+                technicalDetails: report.report.technicalDetails,
+                recommendations: report.report.recommendations
+            }
+        });
+    };
+
+    const handleDownloadReport = () => {
+        if (!report || !postId) {
+            toast.error("Generate the report first before downloading.");
+            return;
+        }
+        downloadPDF({
+            postId,
+            contentType: 'feed',
+            analysisResults: {
+                fake_score: 1 - (report.report.confidence || 0.5),
+                real_score: report.report.confidence || 0.5,
+                processing_time_ms: 0,
+                model_version: report.modelUsed || 'v7'
+            },
+            reportContent: {
+                verdict: report.report.verdict,
+                confidence: report.report.confidence,
+                summary: report.report.summary,
+                detectionBreakdown: report.report.detectionBreakdown,
+                technicalDetails: report.report.technicalDetails,
+                recommendations: report.report.recommendations
+            }
+        });
+    };
+
     return (
-        <motion.div
+        <m.div
+            id={`post-${postId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="group/post relative"
+            className="group/post relative transition-all duration-300"
         >
             <Card className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 hover:border-white/20 transition-all duration-700 overflow-hidden shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] relative">
                 {/* Technical Grid Pattern Overlay */}
@@ -297,28 +467,28 @@ export function PostCard({ post }: PostCardProps) {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">@{userHandle}</span>
-                                    <span className="w-1 h-1 bg-white/10 rounded-full" />
-                                    <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-600 italic">SYSTEM_SYNC: {timestamp}</span>
+                                    <span className="text-[10px] font-medium text-slate-500">@{userHandle}</span>
+                                    <span className="text-slate-600">·</span>
+                                    <span className="text-[10px] text-slate-500">{timestamp}</span>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-1">
                                 {isOwner && (
-                                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[8px] font-black text-primary uppercase tracking-[0.2em] mr-2">
-                                        <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                                        OWNER_SIGNAL
+                                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary mr-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                        Your Post
                                     </div>
                                 )}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <motion.button
+                                        <m.button
                                             whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.05)" }}
                                             whileTap={{ scale: 0.95 }}
                                             className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-white transition-colors"
                                         >
                                             <MoreHorizontal className="w-5 h-5" />
-                                        </motion.button>
+                                        </m.button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56 bg-slate-950/90 backdrop-blur-3xl border-white/10 rounded-2xl p-2 shadow-2xl">
                                         {isOwner && (
@@ -367,12 +537,13 @@ export function PostCard({ post }: PostCardProps) {
                 <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5 relative z-10">
                     {/* AI Logic Analysis - Technical Implementation */}
                     {((postImage || postVideo) || normalizedTrust !== 'authentic' || post.aiAnalysis) && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="relative group/trust"
                         >
                             <TrustBadge
+                                key={`trust-${postId}-${post.aiAnalysis?.fakeScore ?? 'pending'}-${normalizedTrust}`}
                                 level={normalizedTrust}
                                 score={Math.round(100 - (post.trustScore ?? (post.aiAnalysis?.fakeScore ? post.aiAnalysis.fakeScore * 100 : 0)))}
                                 analysisDetails={post.aiAnalysis ? {
@@ -396,8 +567,12 @@ export function PostCard({ post }: PostCardProps) {
                                 } : undefined}
                                 onGenerateReport={handleGenerateReport}
                                 isGeneratingReport={isGenerating}
+                                onEmailReport={report ? handleEmailReport : undefined}
+                                isEmailing={isEmailing}
+                                onDownloadReport={report ? handleDownloadReport : undefined}
+                                isDownloading={isDownloading}
                             />
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {isEditing ? (
@@ -412,7 +587,7 @@ export function PostCard({ post }: PostCardProps) {
                                 />
                             </div>
                             <div className="flex justify-end gap-3">
-                                <motion.button
+                                <m.button
                                     whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => {
@@ -422,8 +597,8 @@ export function PostCard({ post }: PostCardProps) {
                                     className="h-11 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-xl transition-all"
                                 >
                                     ABORT
-                                </motion.button>
-                                <motion.button
+                                </m.button>
+                                <m.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={handleEditSave}
@@ -431,7 +606,7 @@ export function PostCard({ post }: PostCardProps) {
                                     className="h-11 px-8 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(129,140,248,0.3)] hover:shadow-primary/50 transition-all disabled:opacity-50"
                                 >
                                     {updatePost.isPending ? "SYNCING..." : "DEPLOY_UPDATE"}
-                                </motion.button>
+                                </m.button>
                             </div>
                         </div>
                     ) : (
@@ -441,15 +616,19 @@ export function PostCard({ post }: PostCardProps) {
                     )}
 
                     {postImage && (
-                        <motion.div
+                        <m.div
                             whileHover={{ scale: 1.01 }}
                             transition={{ duration: 0.4 }}
-                            className="rounded-[2rem] overflow-hidden mt-2 bg-slate-900 border border-white/10 group/img relative shadow-2xl"
+                            className="rounded-[2rem] overflow-hidden mt-2 bg-slate-900 border border-white/10 group/img relative shadow-2xl cursor-pointer"
+                            onClick={() => {
+                                setPreviewMediaIndex(0);
+                                setShowMediaPreview(true);
+                            }}
                         >
                             <img
                                 src={postImage}
                                 alt="Post content"
-                                className="w-full h-auto object-cover max-h-[500px] transition-all duration-1000 group-hover/img:scale-105"
+                                className="w-full h-auto object-cover max-h-[350px] transition-all duration-1000 group-hover/img:scale-105"
                                 loading="lazy"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-60 pointer-events-none" />
@@ -457,42 +636,30 @@ export function PostCard({ post }: PostCardProps) {
                             {/* Image Metadata Overlay */}
                             <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover/img:opacity-100 transition-opacity duration-500">
                                 <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-[8px] font-black text-white/80 uppercase tracking-widest">
-                                    IMG_DATA: VERIFIED
+                                    Tap to zoom
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
 
                     {postVideo && (
-                        <div className="rounded-[2rem] overflow-hidden mt-2 bg-black border border-white/10 relative shadow-2xl group/vid">
-                            <video
+                        <div className="mt-2">
+                            <CustomVideoPlayer
                                 src={postVideo}
-                                controls
-                                playsInline
-                                className="w-full h-auto max-h-[500px] bg-black"
+                                maxHeight="350px"
+                                onClickExpand={() => {
+                                    setPreviewMediaIndex(postImage ? 1 : 0);
+                                    setShowMediaPreview(true);
+                                }}
                             />
-                            {/* Video Technical Label */}
-                            <div className="absolute top-4 right-4 px-2.5 py-1 bg-rose-500/20 backdrop-blur-md rounded-lg border border-rose-500/30 text-[8px] font-black text-rose-400 uppercase tracking-widest opacity-0 group-hover/vid:opacity-100 transition-opacity">
-                                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse inline-block mr-1.5" />
-                                VIDEO_FEED_ACTIVE
-                            </div>
                         </div>
                     )}
 
-                    {/* Vibe Summary - Technical Detail */}
-                    {normalizedTrust === 'authentic' && (
-                        <div className="flex items-center gap-2 pt-2">
-                            <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 transition-all hover:bg-emerald-500/10 group/vibe">
-                                <Sparkles className="w-4 h-4 group-hover/vibe:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] italic">AUTHENTIC_SCORE: {trustScore}%</span>
-                            </div>
-                        </div>
-                    )}
                 </CardContent>
 
                 <CardFooter className="px-3 sm:px-6 py-3 sm:py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                        <motion.button
+                        <m.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLike}
@@ -510,9 +677,9 @@ export function PostCard({ post }: PostCardProps) {
                                 <Heart className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all duration-500 group-hover/btn:scale-110", post.isLiked && "fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]")} />
                             )}
                             <span className="text-[10px] sm:text-[11px] font-black tracking-widest">{likesCount}</span>
-                        </motion.button>
+                        </m.button>
 
-                        <motion.button
+                        <m.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowComments(!showComments)}
@@ -525,13 +692,13 @@ export function PostCard({ post }: PostCardProps) {
                         >
                             <MessageCircle className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all duration-500 group-hover/btn:scale-110", showComments && "fill-current drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]")} />
                             <span className="text-[10px] sm:text-[11px] font-black tracking-widest">{commentsCount}</span>
-                        </motion.button>
+                        </m.button>
 
                         <div className="h-4 w-px bg-white/10 mx-1 hidden sm:block" />
 
                         <div className="hidden sm:flex items-center gap-2">
                             {isOwner && (
-                                <motion.button
+                                <m.button
                                     whileHover={{ scale: 1.05, backgroundColor: "rgba(129,140,248,0.1)" }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setShowAnalytics(true)}
@@ -539,13 +706,13 @@ export function PostCard({ post }: PostCardProps) {
                                     title="View Insights"
                                 >
                                     <BarChart3 className="w-4.5 h-4.5" />
-                                </motion.button>
+                                </m.button>
                             )}
                             <TipButton authorName={userName} />
                         </div>
                     </div>
 
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1, color: "#FDE047" }}
                         whileTap={{ scale: 0.9 }}
                         className={cn(
@@ -556,12 +723,12 @@ export function PostCard({ post }: PostCardProps) {
                         )}
                     >
                         <Bookmark className={cn("w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 transition-all", post.isSaved && "fill-current")} />
-                    </motion.button>
+                    </m.button>
                 </CardFooter>
 
                 <AnimatePresence mode="wait">
                     {showComments && (
-                        <motion.div
+                        <m.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -571,7 +738,7 @@ export function PostCard({ post }: PostCardProps) {
                             <div className="p-2 sm:p-4">
                                 <CommentSection postId={postId} />
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </Card>
@@ -635,6 +802,18 @@ export function PostCard({ post }: PostCardProps) {
                 postId={post._id}
                 contentType={post.media?.[0]?.type === 'video' || post.aiAnalysis?.mediaType === 'video' ? 'short' : 'feed'}
             />
-        </motion.div>
+
+            {/* Media Preview Modal */}
+            <MediaPreviewModal
+                isOpen={showMediaPreview}
+                onClose={() => setShowMediaPreview(false)}
+                media={[
+                    ...(postImage ? [{ url: postImage, type: 'image' as const }] : []),
+                    ...(postVideo ? [{ url: postVideo, type: 'video' as const }] : [])
+                ]}
+                initialIndex={previewMediaIndex}
+                showStats={true}
+            />
+        </m.div>
     );
 }

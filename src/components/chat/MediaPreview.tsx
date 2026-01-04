@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, FileText, Video, Image as ImageIcon, Mic, Loader2, Play, ZoomIn, Film, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useRef } from 'react';
@@ -88,7 +88,7 @@ function PreviewItem({
     };
 
     return (
-        <motion.div
+        <m.div
             layout
             initial={{ opacity: 0, scale: 0.8, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -230,7 +230,7 @@ function PreviewItem({
 
             {/* Remove Button */}
             {!isUploading && (
-                <motion.button
+                <m.button
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     onClick={(e) => {
@@ -240,9 +240,9 @@ function PreviewItem({
                     className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                 >
                     <X className="w-4 h-4" />
-                </motion.button>
+                </m.button>
             )}
-        </motion.div>
+        </m.div>
     );
 }
 
@@ -259,7 +259,7 @@ export function MediaPreview({
 
     return (
         <>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, y: 10, height: 0 }}
@@ -310,14 +310,14 @@ export function MediaPreview({
 
                 {/* Upload Progress */}
                 {isUploading && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="mt-4"
                     >
                         <div className="flex items-center gap-4">
                             <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden border border-white/5 relative">
-                                <motion.div
+                                <m.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${uploadProgress}%` }}
                                     className="h-full bg-gradient-to-r from-primary to-violet-500 shadow-[0_0_20px_rgba(129,140,248,0.8)] rounded-full"
@@ -330,21 +330,21 @@ export function MediaPreview({
                         <p className="text-[10px] text-slate-500 mt-2">
                             Uploading... Please don't close this window
                         </p>
-                    </motion.div>
+                    </m.div>
                 )}
-            </motion.div>
+            </m.div>
 
             {/* Expanded Image Modal */}
             <AnimatePresence>
                 {expandedIndex !== null && files[expandedIndex]?.type === 'image' && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
                         onClick={() => setExpandedIndex(null)}
                     >
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
@@ -370,8 +370,8 @@ export function MediaPreview({
                                     {formatFileSize(files[expandedIndex].file.size)}
                                 </span>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </m.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </>

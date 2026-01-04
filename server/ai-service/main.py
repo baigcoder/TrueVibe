@@ -22,6 +22,29 @@ import hashlib
 import time
 from functools import lru_cache
 from threading import Lock
+import numpy as np
+
+
+def convert_numpy_types(obj: Any) -> Any:
+    """
+    Recursively convert numpy types to Python native types.
+    Fixes PydanticSerializationError with numpy.int32, numpy.float64, etc.
+    """
+    if isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, (np.integer,)):
+        return int(obj)
+    elif isinstance(obj, (np.floating,)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    else:
+        return obj
+
 
 # Simple in-memory cache with TTL for analysis results
 class AnalysisCache:
@@ -346,6 +369,8 @@ async def analyze_image(request: AnalyzeRequest):
                 logger.info("📦 Returning cached analysis result")
                 # Update processing time to indicate cache hit
                 cached_result['processing_time_ms'] = 0
+                # Convert numpy types to native Python (for old cache entries)
+                cached_result = convert_numpy_types(cached_result)
                 return AnalyzeResponse(**cached_result)
         else:
             # Invalidate cache when force_reanalyze is requested
@@ -390,7 +415,12 @@ async def analyze_image(request: AnalyzeRequest):
             'filter_intensity': details.get('filter_intensity'),
             'filter_analysis': details.get('filter_analysis'),
             'multi_face_analysis': details.get('multi_face_analysis'),
+            # NEW: Individual frame breakdown for detailed report
+            'frame_breakdown': details.get('frame_breakdown'),
         }
+        
+        # Convert numpy types to native Python types (fixes PydanticSerializationError)
+        result = convert_numpy_types(result)
         
         # Cache the result for future requests
         analysis_cache.set(url_str, result)

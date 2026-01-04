@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle,
     DialogDescription
@@ -106,7 +106,7 @@ export function DraftsManager({ isOpen, onClose, onEditDraft }: DraftsManagerPro
                     <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                         <AnimatePresence mode="wait">
                             {activeTab === 'drafts' ? (
-                                <motion.div
+                                <m.div
                                     key="drafts"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -153,9 +153,9 @@ export function DraftsManager({ isOpen, onClose, onEditDraft }: DraftsManagerPro
                                             </div>
                                         ))
                                     )}
-                                </motion.div>
+                                </m.div>
                             ) : (
-                                <motion.div
+                                <m.div
                                     key="scheduled"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -190,7 +190,7 @@ export function DraftsManager({ isOpen, onClose, onEditDraft }: DraftsManagerPro
                                             </div>
                                         ))
                                     )}
-                                </motion.div>
+                                </m.div>
                             )}
                         </AnimatePresence>
                     </div>

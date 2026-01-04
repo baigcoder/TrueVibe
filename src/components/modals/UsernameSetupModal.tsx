@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useUpdateProfile } from "@/api/hooks";
 import { Check, X, Loader2, AtSign, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -151,16 +151,16 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                             <div className="absolute right-4 top-1/2 -translate-y-1/2">
                                 <AnimatePresence mode="wait">
                                     {isChecking ? (
-                                        <motion.div
+                                        <m.div
                                             key="checking"
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.8 }}
                                         >
                                             <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
-                                        </motion.div>
+                                        </m.div>
                                     ) : isAvailable === true ? (
-                                        <motion.div
+                                        <m.div
                                             key="available"
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -169,9 +169,9 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                                             <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
                                                 <Check className="w-4 h-4 text-emerald-500" />
                                             </div>
-                                        </motion.div>
+                                        </m.div>
                                     ) : isAvailable === false ? (
-                                        <motion.div
+                                        <m.div
                                             key="taken"
                                             initial={{ opacity: 0, scale: 0.8 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -180,7 +180,7 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                                             <div className="w-6 h-6 rounded-full bg-rose-500/20 flex items-center justify-center">
                                                 <X className="w-4 h-4 text-rose-500" />
                                             </div>
-                                        </motion.div>
+                                        </m.div>
                                     ) : null}
                                 </AnimatePresence>
                             </div>
@@ -189,7 +189,7 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                         {/* Status message */}
                         <AnimatePresence mode="wait">
                             {formatError ? (
-                                <motion.p
+                                <m.p
                                     key="format-error"
                                     initial={{ opacity: 0, y: -5 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -197,9 +197,9 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                                     className="text-xs text-rose-400 font-medium"
                                 >
                                     {formatError}
-                                </motion.p>
+                                </m.p>
                             ) : isAvailable === true ? (
-                                <motion.p
+                                <m.p
                                     key="available"
                                     initial={{ opacity: 0, y: -5 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -208,9 +208,9 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                                 >
                                     <Sparkles className="w-3 h-3" />
                                     This handle is available!
-                                </motion.p>
+                                </m.p>
                             ) : isAvailable === false ? (
-                                <motion.p
+                                <m.p
                                     key="taken"
                                     initial={{ opacity: 0, y: -5 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -218,7 +218,7 @@ export function UsernameSetupModal({ open, onComplete }: UsernameSetupModalProps
                                     className="text-xs text-rose-400 font-medium"
                                 >
                                     This handle is already taken
-                                </motion.p>
+                                </m.p>
                             ) : null}
                         </AnimatePresence>
                     </div>

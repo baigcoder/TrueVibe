@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import {
     DropdownMenu,
@@ -124,7 +124,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                         const authorAvatar = commentAuthor?.avatar;
 
                         return (
-                            <motion.div
+                            <m.div
                                 key={comment._id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -225,7 +225,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                                         )}
                                     </div>
                                 </div>
-                            </motion.div>
+                            </m.div>
                         );
                     })
                 )}

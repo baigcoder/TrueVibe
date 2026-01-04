@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useSpotify } from '@/hooks/useSpotify';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -15,7 +15,7 @@ export const SpotifyConnect = () => {
     }
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl p-6 relative group shadow-2xl transition-all duration-700 hover:border-white/20"
@@ -70,7 +70,7 @@ export const SpotifyConnect = () => {
             </div>
 
 
-        </motion.div>
+        </m.div>
     );
 };
 

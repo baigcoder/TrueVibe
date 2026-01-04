@@ -48,10 +48,61 @@ class ErrorBoundary extends Component<Props, State> {
         window.location.href = '/app/feed';
     };
 
+    // Check if this is a chunk loading error (common after deployments)
+    isChunkLoadError = (): boolean => {
+        const error = this.state.error;
+        if (!error) return false;
+
+        const message = error.message?.toLowerCase() || '';
+        const name = error.name?.toLowerCase() || '';
+
+        return (
+            message.includes('failed to fetch dynamically imported module') ||
+            message.includes('loading chunk') ||
+            message.includes('loading css chunk') ||
+            message.includes('dynamically imported module') ||
+            name.includes('chunkloaderror')
+        );
+    };
+
+    handleReload = (): void => {
+        // Clear any cached data and do a hard reload
+        window.location.reload();
+    };
+
     render(): ReactNode {
         if (this.state.hasError) {
             if (this.props.fallback) {
                 return this.props.fallback;
+            }
+
+            // Special handling for chunk loading errors
+            if (this.isChunkLoadError()) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-8 bg-[#030712]">
+                        <div className="text-center max-w-md">
+                            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                <RefreshCw className="w-10 h-10 text-primary" />
+                            </div>
+
+                            <h2 className="text-2xl font-bold text-white mb-3">
+                                App Updated
+                            </h2>
+                            <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                                A new version of TrueVibe has been deployed. Please reload the page to get the latest updates.
+                            </p>
+
+                            <Button
+                                onClick={this.handleReload}
+                                size="lg"
+                                className="h-12 px-8"
+                            >
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Reload Page
+                            </Button>
+                        </div>
+                    </div>
+                );
             }
 
             return (
