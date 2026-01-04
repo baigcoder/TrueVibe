@@ -2126,23 +2126,32 @@ class DeepfakeDetector:
             avg_fake += gan_boost
             print(f"🔬 GAN fingerprint detected → +{gan_boost*100:.1f}%")
         
-        # ✨ CRITICAL FIX: No-face content should default to AUTHENTIC
-        # If no faces detected AND all analysis scores are near zero, this is likely 
-        # a landscape/desk/scenery video - NOT a deepfake attempt
+        # ✨ CRITICAL FIX v8.1: No-face content scoring
+        # Only boost to AUTHENTIC if both:
+        # 1. No faces detected AND
+        # 2. Frame scores are genuinely low (not just analysis scores)
         if len(faces) == 0:
             avg_face = sum(face_scores) / len(face_scores) if face_scores else 0
             avg_fft = sum(fft_scores) / len(fft_scores) if fft_scores else 0
             avg_eye = sum(eye_scores) / len(eye_scores) if eye_scores else 0
             
-            # If all scores are low (< 10%), this is genuine non-face content
-            if avg_face < 0.1 and avg_fft < 0.1 and avg_eye < 0.1:
+            # Check if frame-level analysis shows high fake probability
+            frame_based_avg = avg_fake  # This is the weighted average from all frames
+            
+            # If frames show HIGH fake scores (>50%), trust the frame analysis!
+            if frame_based_avg > 0.5:
+                # Keep the frame-based score - don't override it
+                print(f"⚠️ No faces BUT high frame scores ({frame_based_avg*100:.1f}%) → keeping as SUSPICIOUS")
+                # No modification to avg_fake - trust the weighted frame analysis
+            elif avg_face < 0.1 and avg_fft < 0.1 and avg_eye < 0.1:
+                # Low frame scores AND low analysis scores = genuine clean content
                 print(f"✅ No faces + clean scores → AUTHENTIC (not a deepfake)")
-                avg_fake = 0.08  # 8% fake = 92% real (v8: even more confident)
+                avg_fake = 0.08  # 8% fake = 92% real
                 avg_real = 0.92
             else:
-                # Some anomalies but no faces - mark as slightly suspicious but not fake
-                print(f"⚠️ No faces but some anomalies detected - marking as low risk")
-                avg_fake = min(0.32, avg_fake)  # Cap at 32% even with anomalies
+                # Mixed signals - moderate suspicion, but don't cap too aggressively
+                print(f"⚠️ No faces, mixed signals (avg_fake={avg_fake*100:.1f}%) - moderate risk")
+                # Don't cap at 32% - let the frame analysis speak
                 avg_real = 1.0 - avg_fake
         
         # Final aggregation
