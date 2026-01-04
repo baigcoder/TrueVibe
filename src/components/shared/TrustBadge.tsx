@@ -223,53 +223,60 @@ export function TrustBadge({
                     delay: 0.1
                 }}
                 className={cn(
-                    "inline-flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 pr-2.5 sm:pr-4 rounded-xl sm:rounded-2xl border bg-slate-950/80 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/80 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
+                    "inline-flex items-center gap-2 sm:gap-4 p-1.5 sm:p-2 pr-3 sm:pr-5 rounded-xl sm:rounded-2xl border bg-slate-950/90 backdrop-blur-2xl transition-all duration-500 hover:bg-slate-900/90 hover:scale-[1.02] active:scale-95 cursor-pointer group/badge",
                     displayConfig.borderColor,
-                    "shadow-xl",
+                    displayConfig.glow,
+                    "shadow-xl hover:shadow-2xl",
                     className
                 )}
             >
-                {/* Icon Circle */}
+                {/* Icon Circle - Enhanced for desktop */}
                 <div className="relative flex-shrink-0">
+                    {/* Glow ring on desktop */}
                     <div className={cn(
-                        "w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center border border-white/10 bg-white/5 transition-all duration-500",
+                        "absolute inset-0 rounded-lg sm:rounded-xl opacity-0 sm:opacity-100 blur-md transition-opacity",
+                        displayConfig.signalColor
+                    )} style={{ opacity: 0.2 }} />
+                    <div className={cn(
+                        "relative w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center border border-white/10 bg-white/5 transition-all duration-500",
                         displayConfig.textColor
                     )}>
                         {(derivedLevel === 'analyzing' || isRefreshing) ? (
-                            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         ) : (
-                            <displayConfig.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <displayConfig.icon className="w-4.5 h-4.5 sm:w-6 sm:h-6" />
                         )}
                     </div>
                 </div>
 
-                {/* Info Layout */}
-                <div className="flex items-center gap-4">
+                {/* Info Layout - Enhanced for desktop */}
+                <div className="flex items-center gap-3 sm:gap-5">
                     <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                            <span className={cn("text-[10px] sm:text-sm font-black tracking-tight uppercase leading-none italic", displayConfig.textColor)}>
+                        <div className="flex items-center gap-1.5 sm:gap-2.5">
+                            <span className={cn("text-[10px] sm:text-base font-black tracking-tight uppercase leading-none italic", displayConfig.textColor)}>
                                 {displayConfig.label}
                             </span>
-                            <div className="h-2.5 sm:h-3 w-px bg-white/10" />
-                            <span className="text-[9px] sm:text-xs font-mono font-black text-white/60 leading-none">
+                            <div className="h-3 sm:h-4 w-px bg-white/10" />
+                            <span className="text-[9px] sm:text-sm font-mono font-black text-white/70 leading-none">
                                 {badgeDisplayPercent}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1 sm:mt-1.5">
-                            <div className="w-16 sm:w-24 h-1 sm:h-1.5 bg-white/5 rounded-full overflow-hidden p-[0.5px]">
+                        <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
+                            <div className="w-20 sm:w-32 h-1.5 sm:h-2 bg-white/5 rounded-full overflow-hidden">
                                 <m.div
                                     className={cn("h-full rounded-full", displayConfig.signalColor)}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${badgeProgressValue}%` }}
                                     transition={{ duration: 1, ease: "easeOut" }}
+                                    style={{ boxShadow: `0 0 8px ${displayConfig.color}` }}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-white/5 group-hover/badge:bg-white/10 transition-colors border border-white/5">
+                    <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/5 group-hover/badge:bg-white/10 transition-colors border border-white/5">
                         <ChevronDown className={cn(
-                            "w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 transition-transform duration-300",
+                            "w-3 h-3 sm:w-4 sm:h-4 text-slate-400 transition-transform duration-300",
                             showDetails && "rotate-180"
                         )} />
                     </div>
