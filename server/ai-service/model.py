@@ -545,6 +545,107 @@ class DeepfakeDetector:
         
         return suspicion, noise_image
     
+    def detect_screen_content(self, image: Image.Image) -> Tuple[bool, float, dict]:
+        """
+        Detect if image contains screen/monitor content (gaming, coding, UI).
+        
+        Screen content has:
+        - Rectangular bright areas (monitors)
+        - High contrast edges (UI elements, text)
+        - Neon/saturated colors (gaming, RGB setups)
+        - Consistent backlight glow
+        - Text-like patterns
+        
+        Returns: (is_screen_content, confidence, details)
+        """
+        img_array = np.array(image)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        hsv = cv2.cvtColor(img_array, cv2.COLOR_RGB2HSV)
+        
+        indicators = []
+        confidence = 0.0
+        
+        # 1. Check for rectangular bright regions (monitor shapes)
+        _, bright_mask = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
+        bright_ratio = np.sum(bright_mask > 0) / bright_mask.size
+        if 0.05 < bright_ratio < 0.6:
+            # Has distinct bright rectangular areas (like a monitor)
+            contours, _ = cv2.findContours(bright_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for cnt in contours:
+                if cv2.contourArea(cnt) > 5000:  # Significant bright region
+                    x, y, w, h = cv2.boundingRect(cnt)
+                    aspect = w / h if h > 0 else 0
+                    # Monitor aspect ratios: 16:9 (1.78), 16:10 (1.6), 21:9 (2.33), 4:3 (1.33)
+                    if 1.2 < aspect < 2.5 or 0.4 < aspect < 0.85:  # Horizontal or vertical monitor
+                        indicators.append("rectangular_bright_area")
+                        confidence += 0.2
+                        break
+        
+        # 2. Check for high saturation neon colors (RGB gaming, neon UI)
+        saturation = hsv[:, :, 1]
+        high_sat_ratio = np.sum(saturation > 180) / saturation.size
+        if high_sat_ratio > 0.08:
+            indicators.append("neon_colors")
+            confidence += 0.15
+        
+        # 3. Check for very dark background with bright spots (typical setup)
+        dark_ratio = np.sum(gray < 40) / gray.size
+        if dark_ratio > 0.4 and bright_ratio > 0.1:
+            indicators.append("dark_background_bright_spots")
+            confidence += 0.2
+        
+        # 4. Check for sharp edges (UI elements, text)
+        edges = cv2.Canny(gray, 50, 150)
+        edge_ratio = np.sum(edges > 0) / edges.size
+        if edge_ratio > 0.08:
+            indicators.append("high_edge_density")
+            confidence += 0.15
+        
+        # 5. Check for horizontal/vertical line dominance (UI grids, code)
+        sobel_h = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        sobel_v = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        h_energy = np.sum(np.abs(sobel_h))
+        v_energy = np.sum(np.abs(sobel_v))
+        
+        # Strong horizontal or vertical patterns
+        if max(h_energy, v_energy) / (min(h_energy, v_energy) + 1) > 1.8:
+            indicators.append("grid_pattern")
+            confidence += 0.1
+        
+        # 6. Check for uniform color blocks (solid UI backgrounds)
+        # Divide image into blocks and check color uniformity
+        block_size = 32
+        h, w = gray.shape
+        uniform_blocks = 0
+        total_blocks = 0
+        for y in range(0, h - block_size, block_size):
+            for x in range(0, w - block_size, block_size):
+                block = gray[y:y+block_size, x:x+block_size]
+                if np.std(block) < 10:  # Very uniform block
+                    uniform_blocks += 1
+                total_blocks += 1
+        
+        if total_blocks > 0:
+            uniform_ratio = uniform_blocks / total_blocks
+            if uniform_ratio > 0.15:
+                indicators.append("uniform_color_blocks")
+                confidence += 0.15
+        
+        # Determine if it's screen content
+        is_screen = confidence >= 0.35 or len(indicators) >= 3
+        
+        details = {
+            'is_screen_content': is_screen,
+            'confidence': min(confidence, 0.95),
+            'indicators': indicators,
+            'bright_ratio': round(bright_ratio, 3),
+            'dark_ratio': round(dark_ratio, 3),
+            'edge_density': round(edge_ratio, 3),
+            'neon_ratio': round(high_sat_ratio, 3)
+        }
+        
+        return is_screen, min(confidence, 0.95), details
+    
     def extract_eye_region(self, face_image: Image.Image) -> Optional[Image.Image]:
         """
         Extract eye region from face - highest manipulation area in deepfakes.
@@ -2126,11 +2227,33 @@ class DeepfakeDetector:
             avg_fake += gan_boost
             print(f"🔬 GAN fingerprint detected → +{gan_boost*100:.1f}%")
         
+        # ✨ NEW v8.2: Screen Content Detection
+        # Gaming footage, screen recordings, coding videos should not be flagged as deepfakes
+        screen_compensation = 0.0
+        screen_detected = False
+        if len(faces) == 0 and len(frames) > 0:
+            # Run screen detection on first frame
+            try:
+                first_frame = frames[0][0] if frames else None
+                if first_frame:
+                    is_screen, screen_conf, screen_details = self.detect_screen_content(first_frame)
+                    if is_screen:
+                        screen_detected = True
+                        # Apply significant authenticity compensation for screen content
+                        # Higher confidence = more compensation
+                        screen_compensation = 0.20 + (screen_conf * 0.25)  # 20-45% reduction
+                        avg_fake = max(0.05, avg_fake - screen_compensation)
+                        print(f"🖥️ SCREEN CONTENT DETECTED (conf={screen_conf*100:.0f}%)")
+                        print(f"   Indicators: {', '.join(screen_details.get('indicators', []))}")
+                        print(f"   → Authenticity boost: +{screen_compensation*100:.1f}%")
+            except Exception as e:
+                print(f"   ⚠️ Screen detection error: {e}")
+        
         # ✨ CRITICAL FIX v8.1: No-face content scoring
         # Only boost to AUTHENTIC if both:
         # 1. No faces detected AND
         # 2. Frame scores are genuinely low (not just analysis scores)
-        if len(faces) == 0:
+        if len(faces) == 0 and not screen_detected:
             avg_face = sum(face_scores) / len(face_scores) if face_scores else 0
             avg_fft = sum(fft_scores) / len(fft_scores) if fft_scores else 0
             avg_eye = sum(eye_scores) / len(eye_scores) if eye_scores else 0
