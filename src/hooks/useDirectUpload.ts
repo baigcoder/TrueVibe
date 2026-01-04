@@ -86,105 +86,15 @@ export function useDirectUpload(options: UseDirectUploadOptions = {}) {
     }, [maxSizeMB, maxWidthOrHeight]);
 
     /**
-     * Compress video using Canvas + MediaRecorder
-     * Reduces file size by 40-60% typically
+     * Video compression DISABLED - Browser-based compression strips audio!
+     * Cloudinary handles server-side compression with proper audio preservation.
+     * Keep this function for future use if we implement audio-preserving compression.
      */
     const compressVideo = useCallback(async (file: File): Promise<File> => {
-        // Skip small videos (< 5MB) or if browser doesn't support MediaRecorder
-        if (file.size < 5 * 1024 * 1024 || !window.MediaRecorder) {
-            console.log('🎬 Video too small or MediaRecorder not supported, skipping compression');
-            return file;
-        }
-
-        try {
-            console.log(`🎬 Compressing video: ${(file.size / 1024 / 1024).toFixed(1)}MB...`);
-
-            return new Promise((resolve, _reject) => {
-                const video = document.createElement('video');
-                video.muted = true;
-                video.playsInline = true;
-
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                video.onloadedmetadata = () => {
-                    // Scale down to max 720p for faster upload
-                    const scale = Math.min(1, 720 / Math.max(video.videoWidth, video.videoHeight));
-                    canvas.width = Math.floor(video.videoWidth * scale);
-                    canvas.height = Math.floor(video.videoHeight * scale);
-
-                    // Use lower bitrate for compression
-                    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-                        ? 'video/webm;codecs=vp9'
-                        : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
-                            ? 'video/webm;codecs=vp8'
-                            : 'video/webm';
-
-                    const stream = canvas.captureStream(24); // 24fps
-                    const recorder = new MediaRecorder(stream, {
-                        mimeType,
-                        videoBitsPerSecond: 1000000, // 1Mbps (lower = smaller file)
-                    });
-
-                    const chunks: Blob[] = [];
-                    recorder.ondataavailable = (e) => chunks.push(e.data);
-
-                    recorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'video/webm' });
-                        const compressed = new File([blob], file.name.replace(/\.[^.]+$/, '.webm'), {
-                            type: 'video/webm',
-                        });
-
-                        console.log(`🎬 Compressed: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB (${Math.round((1 - compressed.size / file.size) * 100)}% smaller)`);
-
-                        // If compression made it bigger, use original
-                        if (compressed.size >= file.size * 0.9) {
-                            console.log('🎬 Compression ineffective, using original');
-                            resolve(file);
-                        } else {
-                            resolve(compressed);
-                        }
-
-                        URL.revokeObjectURL(video.src);
-                    };
-
-                    recorder.onerror = () => {
-                        console.warn('🎬 Video compression failed, using original');
-                        resolve(file);
-                    };
-
-                    recorder.start();
-                    video.play();
-
-                    // Draw frames to canvas
-                    const drawFrame = () => {
-                        if (video.ended || video.paused) {
-                            recorder.stop();
-                            return;
-                        }
-                        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        requestAnimationFrame(drawFrame);
-                    };
-                    drawFrame();
-                };
-
-                video.onerror = () => {
-                    console.warn('🎬 Could not load video for compression');
-                    resolve(file);
-                };
-
-                // Set a timeout - don't spend more than 30s compressing
-                setTimeout(() => {
-                    console.warn('🎬 Compression timeout, using original');
-                    resolve(file);
-                }, 30000);
-
-                video.src = URL.createObjectURL(file);
-            });
-        } catch (err) {
-            console.warn('🎬 Video compression error:', err);
-            return file;
-        }
+        // IMPORTANT: Browser-based canvas compression strips audio tracks!
+        // Always upload original video - Cloudinary compresses server-side with audio
+        console.log('🎬 Uploading video directly (browser compression disabled to preserve audio)');
+        return file;
     }, []);
 
     /**
