@@ -52,9 +52,24 @@ export async function broadcastAIAnalysisComplete(payload: AIAnalysisPayload): P
         const channelName = 'ai-analysis-updates';
         const channel = client.channel(channelName);
 
-        // Subscribe and broadcast
-        await channel.subscribe();
+        // Wait for subscription to be fully ready
+        await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('Subscription timeout'));
+            }, 5000);
 
+            channel.subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    clearTimeout(timeout);
+                    resolve();
+                } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    clearTimeout(timeout);
+                    reject(new Error(`Channel subscription failed: ${status}`));
+                }
+            });
+        });
+
+        // Now send the broadcast
         const result = await channel.send({
             type: 'broadcast',
             event: 'ai:analysis-complete',
@@ -63,7 +78,10 @@ export async function broadcastAIAnalysisComplete(payload: AIAnalysisPayload): P
 
         console.log(`[Supabase Realtime] Broadcasted ai:analysis-complete for post ${payload.postId}`, result);
 
-        // Unsubscribe after sending (we don't need to keep listening)
+        // Small delay before cleanup to ensure message is sent
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Unsubscribe after sending
         await client.removeChannel(channel);
 
         return true;
