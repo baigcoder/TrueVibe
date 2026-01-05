@@ -1,5 +1,5 @@
 import { m, AnimatePresence } from 'framer-motion';
-import { X, FileText, Video, Image as ImageIcon, Mic, Loader2, Play, ZoomIn, Film, Clock } from 'lucide-react';
+import { X, FileText, Video, Image as ImageIcon, Mic, Loader2, Play, ZoomIn, Film, Clock, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useRef } from 'react';
 
@@ -71,6 +71,7 @@ function PreviewItem({
 }) {
     const [videoDuration, setVideoDuration] = useState<number>(0);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
     const Icon = getFileIcon(item.type);
     const colorClass = getFileColor(item.type);
@@ -84,6 +85,14 @@ function PreviewItem({
                 videoRef.current.play();
             }
             setIsVideoPlaying(!isVideoPlaying);
+        }
+    };
+
+    const handleToggleMute = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (videoRef.current) {
+            videoRef.current.muted = !isMuted;
+            setIsMuted(!isMuted);
         }
     };
 
@@ -142,7 +151,7 @@ function PreviewItem({
                         ref={videoRef}
                         src={item.previewUrl}
                         className="w-full h-full object-cover"
-                        muted
+                        muted={isMuted}
                         loop
                         playsInline
                         onLoadedMetadata={(e) => setVideoDuration(e.currentTarget.duration)}
@@ -179,6 +188,19 @@ function PreviewItem({
                                 <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
                             )}
                         </div>
+                    </button>
+
+                    {/* Mute/Unmute Toggle - TOP RIGHT */}
+                    <button
+                        onClick={handleToggleMute}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center border border-white/10 hover:bg-black/80 transition-all z-10"
+                        title={isMuted ? "Unmute" : "Mute"}
+                    >
+                        {isMuted ? (
+                            <VolumeX className="w-3.5 h-3.5 text-white/70" />
+                        ) : (
+                            <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                        )}
                     </button>
 
                     {/* Video badge */}

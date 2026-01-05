@@ -302,29 +302,29 @@ export function TrustBadge({
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             transition={{ type: "spring", damping: 30, stiffness: 600 }}
-                            className="relative w-full max-w-[320px] max-h-[calc(100vh-160px)] sm:max-h-[70vh] bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            className="relative w-full max-w-[320px] sm:max-w-[420px] lg:max-w-[480px] max-h-[calc(100vh-160px)] sm:max-h-[75vh] bg-slate-950 border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                         >
                             {/* Header - Fixed */}
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950 rounded-t-2xl flex-shrink-0">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-md bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
-                                        <Brain className="w-3 h-3 text-indigo-400" />
+                            <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3.5 border-b border-white/10 bg-slate-950 rounded-t-2xl flex-shrink-0">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+                                        <Brain className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-400" />
                                     </div>
-                                    <span className="text-[8px] font-black uppercase tracking-[0.1em] text-white/90">AI Audit</span>
+                                    <span className="text-[8px] sm:text-xs font-black uppercase tracking-[0.1em] text-white/90">AI Audit</span>
                                 </div>
                                 <button
                                     onClick={() => setShowDetails(false)}
-                                    className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/5 hover:bg-white/10 transition-all"
+                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5 hover:bg-white/10 transition-all"
                                 >
-                                    <X className="w-3 h-3 text-slate-400" />
+                                    <X className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
                                 </button>
                             </div>
 
                             {/* Content - Scrollable */}
-                            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                                <div className="flex flex-col items-center space-y-3 pb-2">
-                                    {/* Gauges Grid - Smaller */}
-                                    <div className="grid grid-cols-2 gap-2 w-full">
+                            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-5 space-y-3 sm:space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                <div className="flex flex-col items-center space-y-3 sm:space-y-4 pb-2">
+                                    {/* Gauges Grid - Bigger on desktop */}
+                                    <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full">
                                         {[
                                             { label: "AUTHENTIC", val: displayRealPercent, color: "#10b981", bg: "emerald", p: realPercent },
                                             { label: "RISK", val: displayFakePercent, color: "#ef4444", bg: "red", p: fakePercent }
@@ -332,17 +332,17 @@ export function TrustBadge({
                                             <div
                                                 key={i}
                                                 className={cn(
-                                                    "border rounded-xl p-2 text-center flex flex-col items-center justify-center",
+                                                    "border rounded-xl sm:rounded-2xl p-2 sm:p-4 text-center flex flex-col items-center justify-center",
                                                     gauge.bg === "emerald" ? "bg-emerald-500/[0.03] border-emerald-500/20" : "bg-red-500/[0.03] border-red-500/20"
                                                 )}
                                             >
                                                 <div className={cn(
-                                                    "text-[7px] font-black uppercase mb-1.5 tracking-widest",
+                                                    "text-[7px] sm:text-[10px] font-black uppercase mb-1.5 sm:mb-2 tracking-widest",
                                                     gauge.bg === "emerald" ? "text-emerald-400" : "text-red-400"
                                                 )}>
                                                     {gauge.label}
                                                 </div>
-                                                <div className="relative w-10 h-10">
+                                                <div className="relative w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16">
                                                     <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                                                         <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.05]" />
                                                         <m.circle
@@ -354,7 +354,7 @@ export function TrustBadge({
                                                         />
                                                     </svg>
                                                     <div className="absolute inset-0 flex items-center justify-center">
-                                                        <span className="text-[10px] font-black text-white italic">
+                                                        <span className="text-[10px] sm:text-sm lg:text-base font-black text-white italic">
                                                             {gauge.val}
                                                         </span>
                                                     </div>
@@ -364,7 +364,7 @@ export function TrustBadge({
                                     </div>
 
                                     {/* Metrics - Compact */}
-                                    <div className="w-full space-y-1.5 px-1">
+                                    <div className="w-full space-y-1.5 sm:space-y-2.5 px-1">
                                         {(() => {
                                             // For confidence, show the dominant score (whichever is higher)
                                             // e.g., 65% authentic = 65% confidence in authentic result
@@ -381,7 +381,7 @@ export function TrustBadge({
                                                 { label: "Time", val: analysisDetails?.processingTime !== undefined ? `${(analysisDetails.processingTime / 1000).toFixed(1)}s` : "N/A", color: "text-slate-400" }
                                             ]
                                         })().map((m, i) => (
-                                            <div key={i} className="flex justify-between items-center text-[8px] uppercase font-black tracking-wide">
+                                            <div key={i} className="flex justify-between items-center text-[8px] sm:text-[11px] uppercase font-black tracking-wide">
                                                 <span className="text-slate-500">{m.label}</span>
                                                 <span className={cn("font-mono", m.color)}>{m.val}</span>
                                             </div>
@@ -390,7 +390,7 @@ export function TrustBadge({
 
                                     {/* Status Verdict - Compact */}
                                     <div className={cn(
-                                        "w-full py-2 px-3 rounded-xl text-center border font-black text-[9px] tracking-[0.15em] italic bg-black/40",
+                                        "w-full py-2 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-2xl text-center border font-black text-[9px] sm:text-xs tracking-[0.15em] italic bg-black/40",
                                         isPendingState ? "border-slate-500/20 text-slate-400" :
                                             derivedLevel === 'authentic' ? "border-emerald-500/20 text-emerald-400" :
                                                 derivedLevel === 'suspicious' ? "border-amber-500/20 text-amber-400" :
@@ -399,7 +399,7 @@ export function TrustBadge({
                                     )}>
                                         {isPendingState ? (
                                             <span className="flex items-center justify-center gap-2">
-                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                                                 ANALYZING...
                                             </span>
                                         ) : (
@@ -411,7 +411,7 @@ export function TrustBadge({
                                     </div>
 
                                     {/* Action Buttons Row */}
-                                    <div className="w-full flex gap-2">
+                                    <div className="w-full flex gap-2 sm:gap-3">
                                         {/* Email Button */}
                                         {onEmailReport && (
                                             <m.button
