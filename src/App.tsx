@@ -6,8 +6,10 @@ import { RealtimeProvider } from "@/context/RealtimeContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { CallProvider } from "@/context/CallContext";
 import { VoiceRoomProvider } from "@/context/VoiceRoomContext";
+import { UploadQueueProvider } from "@/context/UploadQueueContext";
 import { CallOverlay } from "@/components/chat/CallOverlay";
 import { VoiceRoomPanel } from "@/components/chat/VoiceRoomPanel";
+import { UploadStatusIndicator } from "@/components/shared/UploadStatusIndicator";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
 import { NotificationManager } from "@/components/NotificationManager";
@@ -89,6 +91,7 @@ function AppContent() {
       <NotificationManager />
       <CallOverlay />
       <VoiceRoomPanel />
+      <UploadStatusIndicator />
       <Toaster
         position="top-center"
         theme="dark"
@@ -123,7 +126,9 @@ export default function App() {
               <AuthProvider>
                 <CallProvider>
                   <VoiceRoomProvider>
-                    <AppContent />
+                    <UploadQueueProvider>
+                      <AppContent />
+                    </UploadQueueProvider>
                   </VoiceRoomProvider>
                 </CallProvider>
               </AuthProvider>
