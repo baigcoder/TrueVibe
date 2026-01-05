@@ -85,8 +85,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             setLocalStream(stream);
             return stream;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get user media:', error);
+            // Show user-friendly error message
+            const errorMessage = error.name === 'NotAllowedError'
+                ? 'Camera/microphone access denied. Please allow permissions in your browser settings.'
+                : error.name === 'NotFoundError'
+                    ? 'No camera or microphone found on this device.'
+                    : 'Failed to access camera/microphone. Please check your device settings.';
+
+            // Import toast dynamically to avoid circular deps
+            import('sonner').then(({ toast }) => {
+                toast.error(errorMessage);
+            });
             return null;
         }
     }, []);
