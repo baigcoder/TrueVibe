@@ -71,7 +71,7 @@ const getAudioDuration = (file: File): Promise<number> => {
  * Resizes to max 1920px and compresses to 80% JPEG quality
  */
 const compressImage = async (file: File): Promise<File> => {
-    // Skip if not an image or already small (< 100KB)
+    // Skip if not an image or already small (<100KB)
     if (!file.type.startsWith('image/') || file.size < 100 * 1024) {
         return file;
     }
@@ -123,6 +123,188 @@ const compressImage = async (file: File): Promise<File> => {
 };
 
 /**
+ * Compress video for faster upload
+ * Reduces resolution to 720p max and re-encodes at lower bitrate
+ * Can reduce file size by 50-80% for HD videos
+ */
+const compressVideo = async (
+    file: File,
+    onProgress?: (progress: number) => void
+): Promise<File> => {
+    // Skip if not a video or already small (<2MB)
+    if (!file.type.startsWith('video/') || file.size < 2 * 1024 * 1024) {
+        return file;
+    }
+
+    console.log(`🎬 Compressing video: ${(file.size / (1024 * 1024)).toFixed(1)}MB`);
+    onProgress?.(5);
+
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+
+        video.onloadedmetadata = async () => {
+            try {
+                // Calculate target resolution (max 720p)
+                const maxHeight = 720;
+                let { videoWidth: width, videoHeight: height } = video;
+
+                if (height > maxHeight) {
+                    width = Math.round((width / height) * maxHeight);
+                    height = maxHeight;
+                }
+
+                // Ensure even dimensions (required for many codecs)
+                width = Math.round(width / 2) * 2;
+                height = Math.round(height / 2) * 2;
+
+                console.log(`   📐 Resizing: ${video.videoWidth}x${video.videoHeight} → ${width}x${height}`);
+                onProgress?.(10);
+
+                // Create canvas for frame processing
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d')!;
+
+                // Use MediaRecorder to re-encode
+                const stream = canvas.captureStream(30); // 30fps
+
+                // IMPORTANT: Unmute video for audio capture
+                video.muted = false;
+                video.volume = 0.01; // Very low volume to avoid playback noise
+
+                // Capture audio from the video element using Web Audio API
+                let audioCtx: AudioContext | null = null;
+                try {
+                    audioCtx = new AudioContext();
+                    const source = audioCtx.createMediaElementSource(video);
+                    const dest = audioCtx.createMediaStreamDestination();
+
+                    // Connect source to both destination (for recording) and speakers (muted)
+                    const gainNode = audioCtx.createGain();
+                    gainNode.gain.value = 0; // Mute playback output
+
+                    source.connect(dest); // For recording
+                    source.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    // Add audio tracks to the stream
+                    const audioTracks = dest.stream.getAudioTracks();
+                    if (audioTracks.length > 0) {
+                        audioTracks.forEach(track => stream.addTrack(track));
+                        console.log('   🔊 Audio track captured successfully');
+                    } else {
+                        console.log('   ⚠️ No audio tracks available');
+                    }
+                } catch (audioErr) {
+                    console.log('   ⚠️ Audio capture failed (video may be silent):', audioErr);
+                }
+
+                // Choose codec - prefer VP9 for smaller files, fallback to VP8/H264
+                const mimeTypes = [
+                    'video/webm;codecs=vp9',
+                    'video/webm;codecs=vp8',
+                    'video/webm',
+                    'video/mp4'
+                ];
+
+                let selectedMime = 'video/webm';
+                for (const mime of mimeTypes) {
+                    if (MediaRecorder.isTypeSupported(mime)) {
+                        selectedMime = mime;
+                        break;
+                    }
+                }
+
+                // Lower bitrate for compression (1.5 Mbps for 720p)
+                const videoBitrate = height >= 720 ? 1500000 : 1000000;
+
+                const recorder = new MediaRecorder(stream, {
+                    mimeType: selectedMime,
+                    videoBitsPerSecond: videoBitrate
+                });
+
+                const chunks: Blob[] = [];
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: selectedMime });
+                    const ext = selectedMime.includes('webm') ? 'webm' : 'mp4';
+                    const compressedFile = new File(
+                        [blob],
+                        file.name.replace(/\.[^.]+$/, `.${ext}`),
+                        { type: selectedMime, lastModified: Date.now() }
+                    );
+
+                    const reduction = ((file.size - compressedFile.size) / file.size * 100).toFixed(0);
+                    console.log(`✅ Video compressed: ${(file.size / (1024 * 1024)).toFixed(1)}MB → ${(compressedFile.size / (1024 * 1024)).toFixed(1)}MB (-${reduction}%)`);
+                    onProgress?.(100);
+
+                    // Cleanup
+                    URL.revokeObjectURL(video.src);
+                    resolve(compressedFile);
+                };
+
+                recorder.onerror = () => {
+                    console.log('   ⚠️ MediaRecorder failed, using original');
+                    resolve(file);
+                };
+
+                recorder.start(100); // Collect data every 100ms
+
+                // Play video and draw to canvas
+                video.currentTime = 0;
+                await video.play();
+
+                const duration = video.duration;
+                let lastProgress = 10;
+
+                const drawFrame = () => {
+                    if (video.paused || video.ended) {
+                        recorder.stop();
+                        return;
+                    }
+
+                    ctx.drawImage(video, 0, 0, width, height);
+
+                    // Update progress
+                    const progress = 10 + (video.currentTime / duration) * 85;
+                    if (progress - lastProgress >= 5) {
+                        onProgress?.(Math.round(progress));
+                        lastProgress = progress;
+                    }
+
+                    requestAnimationFrame(drawFrame);
+                };
+
+                drawFrame();
+
+                // Stop when video ends
+                video.onended = () => {
+                    recorder.stop();
+                };
+
+            } catch (err) {
+                console.log('   ⚠️ Video compression failed:', err);
+                resolve(file); // Fallback to original
+            }
+        };
+
+        video.onerror = () => {
+            console.log('   ⚠️ Video load failed, using original');
+            resolve(file);
+        };
+
+        video.src = URL.createObjectURL(file);
+        video.load();
+    });
+};
+
+/**
  * Hook for uploading media to Cloudinary via signed upload
  */
 export function useMediaUpload(): UseMediaUploadReturn {
@@ -145,8 +327,16 @@ export function useMediaUpload(): UseMediaUploadReturn {
         setError(null);
 
         try {
-            // Compress images before upload for faster transfer
-            const processedFile = await compressImage(file);
+            // Compress images AND videos before upload for faster transfer
+            let processedFile = await compressImage(file);
+
+            // Also compress videos (reduces 50-80% file size)
+            if (file.type.startsWith('video/')) {
+                processedFile = await compressVideo(file, (progress) => {
+                    setProgress({ loaded: 0, total: file.size, percentage: progress });
+                });
+            }
+
             const mediaType = type || getMediaType(processedFile);
 
             // Validate file size (after compression)
