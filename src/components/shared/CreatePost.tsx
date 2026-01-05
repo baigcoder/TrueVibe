@@ -523,43 +523,89 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 // 🚀 START BACKGROUND UPLOAD - DON'T AWAIT!
                 // This allows the dialog to close immediately while upload continues
                 if (postId) {
-                    // Show toast to inform user
-                    toast.info('Video uploading in background...', {
-                        description: 'Your post is live! Video will appear shortly.',
-                        icon: '📤',
-                        duration: 4000,
-                    });
-
-                    // Fire and forget - upload happens in background
+                    // Fire and forget - upload happens in background with realtime progress
                     (async () => {
                         for (const videoFile of videoFiles) {
-                            console.log(`📤 Uploading in background: ${videoFile.name} (${(videoFile.size / 1024 / 1024).toFixed(1)}MB)`);
+                            const fileSizeMB = (videoFile.size / 1024 / 1024).toFixed(1);
+                            console.log(`📤 Uploading in background: ${videoFile.name} (${fileSizeMB}MB)`);
+
+                            // Create persistent toast that updates with progress
+                            const toastId = toast.loading(`Uploading video... 0%`, {
+                                description: `${videoFile.name} (${fileSizeMB}MB)`,
+                                duration: Infinity, // Keep until we dismiss it
+                            });
+
                             try {
-                                const result = await directUpload.upload([videoFile]);
-                                if (result[0]) {
+                                // Upload with progress tracking via XHR
+                                const result = await new Promise<any>((resolve, reject) => {
+                                    const isVideo = videoFile.type.startsWith('video/');
+                                    const resourceType = isVideo ? 'video' : 'image';
+                                    const uploadUrl = `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dbqmh24nd'}/${resourceType}/upload`;
+
+                                    const formData = new FormData();
+                                    formData.append('file', videoFile);
+                                    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'truevibe_unsigned');
+                                    formData.append('folder', 'truevibe/posts');
+
+                                    const xhr = new XMLHttpRequest();
+
+                                    // Realtime progress updates
+                                    xhr.upload.onprogress = (event) => {
+                                        if (event.lengthComputable) {
+                                            const percent = Math.round((event.loaded / event.total) * 100);
+                                            toast.loading(`Uploading video... ${percent}%`, {
+                                                id: toastId,
+                                                description: `${videoFile.name} (${fileSizeMB}MB)`,
+                                            });
+                                        }
+                                    };
+
+                                    xhr.onload = () => {
+                                        if (xhr.status >= 200 && xhr.status < 300) {
+                                            try {
+                                                resolve(JSON.parse(xhr.responseText));
+                                            } catch {
+                                                reject(new Error('Invalid response'));
+                                            }
+                                        } else {
+                                            reject(new Error(`Upload failed: ${xhr.status}`));
+                                        }
+                                    };
+
+                                    xhr.onerror = () => reject(new Error('Network error'));
+                                    xhr.ontimeout = () => reject(new Error('Upload timeout'));
+
+                                    xhr.open('POST', uploadUrl);
+                                    xhr.timeout = 300000; // 5 minutes
+                                    xhr.send(formData);
+                                });
+
+                                if (result) {
+                                    // Confirm with backend
                                     await confirmUpload.mutateAsync({
-                                        cloudinaryId: result[0].publicId,
-                                        url: result[0].secureUrl,
+                                        cloudinaryId: result.public_id,
+                                        url: result.secure_url,
                                         type: 'video',
-                                        width: result[0].width,
-                                        height: result[0].height,
-                                        duration: result[0].duration,
-                                        sizeBytes: result[0].bytes,
-                                        mimeType: `video/${result[0].format}`,
-                                        thumbnailUrl: result[0].thumbnailUrl,
-                                        postId, // Attach to the post we just created
+                                        width: result.width,
+                                        height: result.height,
+                                        duration: result.duration,
+                                        sizeBytes: result.bytes,
+                                        mimeType: videoFile.type,
+                                        thumbnailUrl: result.thumbnail_url,
+                                        postId,
                                     });
+
                                     console.log(`✅ Background upload complete: ${videoFile.name}`);
                                     toast.success('Video uploaded!', {
+                                        id: toastId,
                                         description: 'Your video is now live.',
-                                        icon: '✅',
                                     });
                                 }
                             } catch (err) {
                                 console.error('Background video upload failed:', err);
                                 toast.error('Video upload failed', {
+                                    id: toastId,
                                     description: 'Please try uploading again.',
-                                    icon: '❌',
                                 });
                             }
                         }
