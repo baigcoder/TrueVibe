@@ -2522,6 +2522,54 @@ class DeepfakeDetector:
         # Generate frames and run main analysis
         frames, faces, content_info = self.generate_image_frames(image)
         
+        # ============ ACCURACY FIX: Early return for non-face content ============
+        # Screenshots, UI, graphics, landscapes should NOT be flagged as deepfakes
+        # Only run deepfake detection on images with actual human faces
+        if not faces or len(faces) == 0:
+            print(f"   ⚡ NO FACES DETECTED - Checking if screen/UI content...")
+            
+            # Check if this looks like screen content (website, code, gaming, UI)
+            is_screen, screen_conf, screen_details = self.detect_screen_content(image)
+            
+            if is_screen:
+                print(f"   ✅ SCREEN CONTENT DETECTED ({screen_conf*100:.0f}% confidence)")
+                print(f"      Indicators: {', '.join(screen_details.get('indicators', []))}")
+                print(f"   → Classifying as AUTHENTIC (not applicable for deepfake detection)")
+                
+                # Return as authentic - deepfake detection only applies to face content
+                probs = {'fake': 0.02, 'real': 0.98}
+                classification = 'real'
+                confidence = 0.98
+                details = {
+                    'faces_detected': 0,
+                    'content_type': 'screen',
+                    'screen_content': screen_details,
+                    'classification_reason': 'No faces detected - screen/UI content not applicable for deepfake analysis',
+                    'debug_frames': [],
+                    'model_version': 'deepfake-detector-v8'
+                }
+                return self._finalize(probs, details, MediaType.IMAGE, content_info)
+            
+            # No faces AND not obviously screen content - could be landscape, object, etc.
+            # Still mark as authentic since no face manipulation is possible
+            print(f"   ✅ NO FACE CONTENT - No faces to analyze")
+            print(f"   → Classifying as AUTHENTIC (deepfake detection requires faces)")
+            
+            probs = {'fake': 0.05, 'real': 0.95}
+            classification = 'real'
+            confidence = 0.95
+            details = {
+                'faces_detected': 0,
+                'content_type': content_info.get('content_type', 'scene'),
+                'classification_reason': 'No faces detected - deepfake analysis not applicable',
+                'debug_frames': [],
+                'model_version': 'deepfake-detector-v8'
+            }
+            return self._finalize(probs, details, MediaType.IMAGE, content_info)
+        
+        # Continue with face-based deepfake analysis...
+        print(f"   👤 Faces detected: {len(faces)} - Running deepfake analysis...")
+        
         # Blending boundary analysis (if faces detected)
         blending_score = 0.0
         blending_details = {}
