@@ -273,6 +273,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
                 callId: callState.callId,
                 answer: pc.localDescription,
                 answererId: user?.id,
+                // Include answerer info so caller can update UI
+                answererInfo: {
+                    id: user?.id,
+                    name: profile?.name,
+                    avatar: profile?.avatar,
+                },
             });
         }
     }, [callState.callId, callState.callType, callState.pendingOffer, callState.remoteUserId, user, profile, getUserMedia, createPeerConnection, stopRingtone, closeCallNotification, playConnectedSound, broadcast]);
@@ -382,6 +388,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
                         new RTCSessionDescription(data.answer)
                     );
                     console.log('[CallContext] Remote description set successfully');
+
+                    // UPDATE CALLER STATE: Mark call as connected (no longer ringing/calling)
+                    setCallState((prev) => ({
+                        ...prev,
+                        isInCall: true,
+                        isRinging: false,
+                        // Update participant name from "Calling..." to actual name if available
+                        participants: prev.participants.map((p, idx) =>
+                            idx === 1 && data.answererInfo
+                                ? { ...p, name: data.answererInfo.name || p.name, avatar: data.answererInfo.avatar || p.avatar }
+                                : p
+                        ),
+                    }));
                 } catch (error) {
                     console.error('[CallContext] Failed to set remote description:', error);
                 }
