@@ -466,21 +466,17 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
             setIsUploading(true);
             setUploadProgress(0);
 
-            // 🚀 FAST PATH: Direct upload for images (bypasses backend = 10x faster)
-            // Videos still use signed upload (needed for AI analysis queue)
+            const imageFiles = selectedFiles.filter(f => f.type.startsWith('image/'));
+            const videoFiles = selectedFiles.filter(f => f.type.startsWith('video/'));
             const mediaIds: string[] = [];
             const totalFiles = selectedFiles.length;
 
-            const imageFiles = selectedFiles.filter(f => f.type.startsWith('image/'));
-            const videoFiles = selectedFiles.filter(f => f.type.startsWith('video/'));
-
-            // Upload images directly to Cloudinary (FAST!)
+            // 🚀 FAST PATH: Upload images synchronously (they're small and fast)
             if (imageFiles.length > 0) {
                 console.log(`🚀 Direct uploading ${imageFiles.length} image(s)...`);
                 try {
                     const results = await directUpload.upload(imageFiles);
                     for (const result of results) {
-                        // Confirm with backend to get mediaId for DB
                         const confirmRes = await confirmUpload.mutateAsync({
                             cloudinaryId: result.publicId,
                             url: result.secureUrl,
@@ -496,7 +492,6 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                     console.log(`✅ Direct upload complete: ${results.length} images`);
                 } catch (directErr) {
                     console.warn('⚠️ Direct upload failed, falling back to signed upload');
-                    // Fallback to signed upload
                     for (let i = 0; i < imageFiles.length; i++) {
                         const result = await uploadToCloudinary(imageFiles[i], i, totalFiles);
                         if (result) mediaIds.push(result);
@@ -504,55 +499,7 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 }
             }
 
-            // 🚀 FAST PATH: Direct upload for videos too (bypasses backend signature!)
-            // Only use chunked upload for very large videos (>50MB)
-            const LARGE_VIDEO_THRESHOLD = 50 * 1024 * 1024; // 50MB
-
-            if (videoFiles.length > 0) {
-                const smallVideos = videoFiles.filter(f => f.size <= LARGE_VIDEO_THRESHOLD);
-                const largeVideos = videoFiles.filter(f => f.size > LARGE_VIDEO_THRESHOLD);
-
-                // Direct upload for small/medium videos (FAST!)
-                if (smallVideos.length > 0) {
-                    console.log(`🚀 Direct uploading ${smallVideos.length} video(s)...`);
-                    try {
-                        const results = await directUpload.upload(smallVideos);
-                        for (const result of results) {
-                            // Confirm with backend to get mediaId + queue AI analysis
-                            const confirmRes = await confirmUpload.mutateAsync({
-                                cloudinaryId: result.publicId,
-                                url: result.secureUrl,
-                                type: 'video',
-                                width: result.width,
-                                height: result.height,
-                                duration: result.duration,
-                                sizeBytes: result.bytes,
-                                mimeType: `video/${result.format}`,
-                                thumbnailUrl: result.thumbnailUrl,
-                            });
-                            const mediaId = (confirmRes as { data: { media: { _id: string } } }).data.media._id;
-                            mediaIds.push(mediaId);
-                        }
-                        console.log(`✅ Direct upload complete: ${results.length} videos`);
-                    } catch (directErr) {
-                        console.warn('⚠️ Video direct upload failed, falling back to signed upload');
-                        for (let i = 0; i < smallVideos.length; i++) {
-                            const result = await uploadToCloudinary(smallVideos[i], imageFiles.length + i, totalFiles);
-                            if (result) mediaIds.push(result);
-                        }
-                    }
-                }
-
-                // Chunked upload for large videos (>50MB) - more reliable
-                for (let i = 0; i < largeVideos.length; i++) {
-                    console.log(`🎬 Chunked upload for large video ${i + 1}/${largeVideos.length} (${(largeVideos[i].size / 1024 / 1024).toFixed(1)}MB)...`);
-                    const result = await uploadToCloudinary(largeVideos[i], imageFiles.length + smallVideos.length + i, totalFiles);
-                    if (result) {
-                        mediaIds.push(result);
-                    }
-                }
-            }
-
+            // Build final content
             let finalContent = content.trim();
             if (hashtags.length > 0) {
                 finalContent += '\n' + hashtags.map(t => `#${t}`).join(' ');
@@ -561,28 +508,78 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 finalContent += `\n📍 ${location}`;
             }
 
-            if (scheduledFor) {
-                await saveDraft.mutateAsync({
-                    draftId: draftId || undefined,
+            // 🎬 BACKGROUND UPLOAD: For videos, create post first then upload in background
+            if (videoFiles.length > 0) {
+                console.log(`🎬 Background upload mode: Creating post first, then uploading ${videoFiles.length} video(s)...`);
+
+                // Create post WITHOUT media first (post appears immediately!)
+                const postRes = await createPost.mutateAsync({
                     content: finalContent,
-                    mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
-                    poll: pollData,
-                    hashtags,
-                    visibility: 'public',
-                    autoSaved: false,
-                    scheduledFor,
+                    mediaIds: mediaIds.length > 0 ? mediaIds : undefined, // Include any images
                 });
-            } else {
-                await createPost.mutateAsync({
-                    content: finalContent,
-                    mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
-                });
+
+                const postId = (postRes as any)?.data?.post?._id;
+
+                // 🚀 START BACKGROUND UPLOAD - DON'T AWAIT!
+                // This allows the dialog to close immediately while upload continues
+                if (postId) {
+                    // Fire and forget - upload happens in background
+                    (async () => {
+                        for (const videoFile of videoFiles) {
+                            console.log(`📤 Uploading in background: ${videoFile.name} (${(videoFile.size / 1024 / 1024).toFixed(1)}MB)`);
+                            try {
+                                const result = await directUpload.upload([videoFile]);
+                                if (result[0]) {
+                                    await confirmUpload.mutateAsync({
+                                        cloudinaryId: result[0].publicId,
+                                        url: result[0].secureUrl,
+                                        type: 'video',
+                                        width: result[0].width,
+                                        height: result[0].height,
+                                        duration: result[0].duration,
+                                        sizeBytes: result[0].bytes,
+                                        mimeType: `video/${result[0].format}`,
+                                        thumbnailUrl: result[0].thumbnailUrl,
+                                        postId, // Attach to the post we just created
+                                    });
+                                    console.log(`✅ Background upload complete: ${videoFile.name}`);
+                                }
+                            } catch (err) {
+                                console.error('Background video upload failed:', err);
+                            }
+                        }
+                    })();
+                }
 
                 if (draftId) {
                     await deleteDraft.mutateAsync(draftId);
                 }
+            } else {
+                // No videos - normal flow
+                if (scheduledFor) {
+                    await saveDraft.mutateAsync({
+                        draftId: draftId || undefined,
+                        content: finalContent,
+                        mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
+                        poll: pollData,
+                        hashtags,
+                        visibility: 'public',
+                        autoSaved: false,
+                        scheduledFor,
+                    });
+                } else {
+                    await createPost.mutateAsync({
+                        content: finalContent,
+                        mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
+                    });
+
+                    if (draftId) {
+                        await deleteDraft.mutateAsync(draftId);
+                    }
+                }
             }
 
+            // Reset form
             setContent("");
             setSelectedFiles([]);
             setFilePreviews([]);
