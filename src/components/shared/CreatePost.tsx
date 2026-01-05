@@ -523,6 +523,13 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                 // 🚀 START BACKGROUND UPLOAD - DON'T AWAIT!
                 // This allows the dialog to close immediately while upload continues
                 if (postId) {
+                    // Show toast to inform user
+                    toast.info('Video uploading in background...', {
+                        description: 'Your post is live! Video will appear shortly.',
+                        icon: '📤',
+                        duration: 4000,
+                    });
+
                     // Fire and forget - upload happens in background
                     (async () => {
                         for (const videoFile of videoFiles) {
@@ -543,9 +550,17 @@ export function CreatePost({ onSuccess, className }: CreatePostProps) {
                                         postId, // Attach to the post we just created
                                     });
                                     console.log(`✅ Background upload complete: ${videoFile.name}`);
+                                    toast.success('Video uploaded!', {
+                                        description: 'Your video is now live.',
+                                        icon: '✅',
+                                    });
                                 }
                             } catch (err) {
                                 console.error('Background video upload failed:', err);
+                                toast.error('Video upload failed', {
+                                    description: 'Please try uploading again.',
+                                    icon: '❌',
+                                });
                             }
                         }
                     })();
