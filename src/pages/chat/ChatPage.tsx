@@ -42,6 +42,12 @@ import {
   Hash,
   Headphones,
   Trash2,
+  Ban,
+  BellOff,
+  Bell,
+  Image,
+  User,
+  Camera,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
@@ -64,6 +70,8 @@ import {
   useCreateConversation,
   useSearchUsers,
   useDeleteConversation,
+  useBlockUser,
+  useCheckBlockStatus,
 } from "@/api/hooks";
 import { useSocket } from "@/context/SocketContext";
 import { useRealtime } from "@/context/RealtimeContext";
@@ -259,6 +267,11 @@ export default function ChatPage() {
   const [hideSidebarDesktop, setHideSidebarDesktop] = useState(false);
   const [showFeaturesGuide, setShowFeaturesGuide] = useState(false);
 
+  // WhatsApp-style features state
+  const [showContactPanel, setShowContactPanel] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [isMutedConversation, setIsMutedConversation] = useState(false);
+
   // Handle room URL parameter for join by link
   useEffect(() => {
     if (search.room && !isInRoom) {
@@ -321,9 +334,12 @@ export default function ChatPage() {
   const removeReaction = useRemoveReaction();
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
+  const blockUserMutation = useBlockUser();
   const { initiateCall } = useCall();
   const { data: searchUsersData, isLoading: searchLoading } =
     useSearchUsers(searchQuery);
+
+
 
   const servers = (serversData as any)?.data?.servers || [];
   const discoverServers = (discoverData as any)?.data?.servers || [];
@@ -346,6 +362,19 @@ export default function ChatPage() {
   const selectedChannel = channels.find(
     (c: Channel) => c._id === selectedChannelId,
   );
+
+  // Get the other participant's ID for block status check (WhatsApp-style features)
+  const otherParticipantId = selectedConversation?.type === "direct"
+    ? selectedConversation?.participants?.find(
+      (p: any) => p._id !== profile?._id && p.userId !== profile?._id
+    )?.userId || selectedConversation?.participants?.find(
+      (p: any) => p._id !== profile?._id && p.userId !== profile?._id
+    )?._id
+    : null;
+
+  const { data: blockStatus } = useCheckBlockStatus(otherParticipantId || "");
+  const isUserBlocked = (blockStatus as any)?.data?.isBlocked || false;
+
   const messagesLoading =
     view === "server" ? channelMsgsLoading : dmMsgsLoading;
 
@@ -1572,7 +1601,10 @@ export default function ChatPage() {
                   </div>
                 </div>
               ) : selectedConversation ? (
-                <div className="flex items-center gap-4 lg:gap-6 min-w-0">
+                <div
+                  onClick={() => setShowContactPanel(true)}
+                  className="flex items-center gap-4 lg:gap-6 min-w-0 cursor-pointer group"
+                >
                   <div className="relative shrink-0 pr-2">
                     <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Avatar className="w-10 h-10 lg:w-16 lg:h-16 border border-white/[0.08] rounded-2xl shadow-2xl relative z-10 transition-transform group-hover:scale-105">
@@ -1587,7 +1619,7 @@ export default function ChatPage() {
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-[0_0_12px_rgba(16,185,129,0.5)] z-20" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <h2 className="font-bold text-white text-lg lg:text-2xl tracking-tight truncate whitespace-nowrap premium-font">
+                    <h2 className="font-bold text-white text-lg lg:text-2xl tracking-tight truncate whitespace-nowrap premium-font group-hover:text-primary transition-colors">
                       {selectedConversation.type === "group"
                         ? selectedConversation.groupName
                         : selectedConversation.participants[0]?.name}
@@ -1597,6 +1629,9 @@ export default function ChatPage() {
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest premium-font">
                         Online
                       </span>
+                      {isMutedConversation && (
+                        <BellOff className="w-3 h-3 text-amber-400 ml-1" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -3088,6 +3123,192 @@ export default function ChatPage() {
                 </div>
               </m.div>
             </>
+          )}
+        </AnimatePresence>
+
+        {/* WhatsApp-Style Contact Profile Panel */}
+        <AnimatePresence>
+          {showContactPanel && selectedConversation && (
+            <m.div
+              initial={{ x: 320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 320, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute top-0 right-0 w-80 h-full bg-[#0a0f1a]/95 backdrop-blur-2xl border-l border-white/10 z-50 flex flex-col overflow-hidden"
+            >
+              {/* Panel Header */}
+              <div className="p-4 border-b border-white/10 flex items-center gap-3">
+                <button
+                  onClick={() => setShowContactPanel(false)}
+                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5 text-white/70" />
+                </button>
+                <h3 className="text-base font-bold text-white">Contact Info</h3>
+              </div>
+
+              {/* User Profile Section */}
+              <div className="p-6 flex flex-col items-center text-center border-b border-white/10">
+                <div className="relative mb-4">
+                  <Avatar className="w-24 h-24 rounded-2xl border-2 border-primary/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                    <AvatarImage
+                      src={selectedConversation.participants?.[0]?.avatar}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/20 to-indigo-500/20 text-white">
+                      {selectedConversation.participants?.[0]?.name?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-3 border-[#0a0f1a] flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  </div>
+                </div>
+
+                <h4 className="text-lg font-bold text-white mb-1">
+                  {selectedConversation.type === "group"
+                    ? selectedConversation.groupName
+                    : selectedConversation.participants?.[0]?.name}
+                </h4>
+                <p className="text-sm text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Online
+                </p>
+
+                {isUserBlocked && (
+                  <div className="mt-3 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full">
+                    <span className="text-xs font-semibold text-red-400">⛔ User Blocked</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Actions */}
+              <div className="p-4 grid grid-cols-3 gap-3 border-b border-white/10">
+                <button
+                  onClick={() => {
+                    const targetId = otherParticipantId;
+                    if (targetId) initiateCall(targetId, "audio");
+                    setShowContactPanel(false);
+                  }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                >
+                  <Phone className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Call</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const targetId = otherParticipantId;
+                    if (targetId) initiateCall(targetId, "video");
+                    setShowContactPanel(false);
+                  }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                >
+                  <Video className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Video</span>
+                </button>
+                <button
+                  onClick={() => window.open(`/app/profile/${otherParticipantId}`, '_blank')}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                >
+                  <User className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Profile</span>
+                </button>
+              </div>
+
+              {/* Shared Media Placeholder */}
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Image className="w-4 h-4 text-slate-400" />
+                    Shared Media
+                  </h5>
+                  <button className="text-xs text-primary hover:underline">See All</button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-slate-600" />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-500 text-center mt-2">No media shared yet</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="p-4 space-y-2 mt-auto">
+                {/* Mute Notifications */}
+                <button
+                  onClick={() => {
+                    setIsMutedConversation(!isMutedConversation);
+                    toast.success(isMutedConversation ? "Notifications unmuted" : "Notifications muted");
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                    isMutedConversation
+                      ? "bg-amber-500/20 border border-amber-500/30"
+                      : "bg-white/5 hover:bg-white/10"
+                  )}
+                >
+                  {isMutedConversation ? (
+                    <BellOff className="w-5 h-5 text-amber-400" />
+                  ) : (
+                    <Bell className="w-5 h-5 text-slate-400" />
+                  )}
+                  <span className={cn(
+                    "text-sm font-medium",
+                    isMutedConversation ? "text-amber-400" : "text-slate-300"
+                  )}>
+                    {isMutedConversation ? "Notifications Muted" : "Mute Notifications"}
+                  </span>
+                </button>
+
+                {/* Block User */}
+                <button
+                  onClick={() => {
+                    if (showBlockConfirm) {
+                      blockUserMutation.mutate(
+                        { userId: otherParticipantId || "" },
+                        {
+                          onSuccess: () => {
+                            toast.success(isUserBlocked ? "User unblocked" : "User blocked successfully");
+                            setShowBlockConfirm(false);
+                            setShowContactPanel(false);
+                          },
+                          onError: (err: any) => {
+                            toast.error(err?.message || "Failed to block user");
+                            setShowBlockConfirm(false);
+                          }
+                        }
+                      );
+                    } else {
+                      setShowBlockConfirm(true);
+                      setTimeout(() => setShowBlockConfirm(false), 3000);
+                    }
+                  }}
+                  disabled={blockUserMutation.isPending}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                    showBlockConfirm
+                      ? "bg-red-500/30 border border-red-500/50"
+                      : isUserBlocked
+                        ? "bg-red-500/20 border border-red-500/30"
+                        : "bg-white/5 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent"
+                  )}
+                >
+                  {blockUserMutation.isPending ? (
+                    <Loader2 className="w-5 h-5 text-red-400 animate-spin" />
+                  ) : (
+                    <Ban className="w-5 h-5 text-red-400" />
+                  )}
+                  <span className="text-sm font-medium text-red-400">
+                    {showBlockConfirm
+                      ? "Click again to confirm"
+                      : isUserBlocked
+                        ? "Unblock User"
+                        : "Block User"}
+                  </span>
+                </button>
+              </div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
