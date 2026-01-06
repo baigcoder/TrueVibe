@@ -1929,28 +1929,28 @@ export default function ChatPage() {
 
                               <div
                                 className={cn(
-                                  "flex flex-col gap-1.5 max-w-[85%] sm:max-w-[80%]",
+                                  "flex flex-col gap-1 sm:gap-1.5 max-w-[80%] xs:max-w-[85%] sm:max-w-[80%]",
                                   isMe && "items-end",
                                 )}
                               >
                                 {/* Identifier */}
                                 <div
                                   className={cn(
-                                    "flex items-center gap-3 px-1",
+                                    "flex items-center gap-2 sm:gap-3 px-1",
                                     isMe ? "flex-row-reverse" : "flex-row",
                                   )}
                                 >
-                                  <span className="text-xs font-semibold text-white/90">
+                                  <span className="text-[11px] sm:text-xs font-semibold text-white/90">
                                     {isMe ? "You" : msg.sender?.name || "User"}
                                   </span>
-                                  <span className="text-[10px] text-slate-600 font-medium">
+                                  <span className="text-[9px] sm:text-[10px] text-slate-600 font-medium">
                                     {formatTime(msg.createdAt)}
                                   </span>
                                 </div>
 
                                 <div
                                   className={cn(
-                                    "relative px-6 py-5 rounded-[1.5rem] text-[15px] leading-relaxed transition-all duration-500 group/bubble border shadow-sm",
+                                    "relative px-4 py-3 sm:px-6 sm:py-5 rounded-[1.25rem] sm:rounded-[1.5rem] text-sm sm:text-[15px] leading-relaxed transition-all duration-500 group/bubble border shadow-sm",
                                     isMe
                                       ? "bg-primary/10 text-primary border-primary/20 rounded-tr-none"
                                       : "glass-card text-slate-200 rounded-tl-none backdrop-blur-3xl",
