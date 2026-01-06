@@ -306,12 +306,16 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 
         console.log(`[Short Delete] Request: shortId=${id}, authUserId=${authUserId}`);
 
-        // Validate ObjectId format
+        // Validate ObjectId format - must be exactly 24 hex characters
         if (!id || !/^[a-f\d]{24}$/i.test(id)) {
-            console.log(`[Short Delete] Invalid short ID format: ${id}`);
+            console.log(`[Short Delete] Invalid short ID format: "${id}" (length: ${id?.length})`);
             res.status(400).json({
                 success: false,
-                error: { message: 'Invalid short ID format' }
+                error: {
+                    message: 'Invalid short ID format',
+                    receivedId: id,
+                    expectedFormat: '24 character hex string (MongoDB ObjectId)'
+                }
             });
             return;
         }
