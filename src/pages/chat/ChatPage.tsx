@@ -3134,7 +3134,7 @@ export default function ChatPage() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 w-full sm:w-80 h-full bg-[#0a0f1a]/98 sm:bg-[#0a0f1a]/95 backdrop-blur-2xl sm:border-l border-white/10 z-50 flex flex-col overflow-hidden safe-area-inset"
+              className="fixed inset-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 w-full sm:w-80 h-full bg-[#030712] sm:bg-[#0a0f1a]/95 sm:backdrop-blur-2xl sm:border-l border-white/10 z-50 flex flex-col overflow-hidden"
             >
               {/* Panel Header */}
               <div className="p-3 sm:p-4 border-b border-white/10 flex items-center gap-3 shrink-0">

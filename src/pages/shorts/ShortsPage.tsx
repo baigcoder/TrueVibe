@@ -57,6 +57,7 @@ const ShortItem = ({
     const [duration, setDuration] = useState(0);
     const [isBuffering, setIsBuffering] = useState(false);
     const [showControls, setShowControls] = useState(false);
+    const [videoError, setVideoError] = useState(false);
     const followMutation = useFollowUser();
     const unfollowMutation = useUnfollowUser();
     const recordView = useRecordShortView();
@@ -174,7 +175,27 @@ const ShortItem = ({
                     onClick={handlePlayPause}
                     onDoubleClick={handleDoubleTap}
                 >
-                    {shouldLoad ? (
+                    {videoError ? (
+                        // Fallback UI for broken/missing videos
+                        <div className="h-full w-full relative flex flex-col items-center justify-center">
+                            <img
+                                src={short.thumbnailUrl}
+                                className="w-full h-full object-cover opacity-30 absolute inset-0"
+                                alt=""
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+                            <div className="relative z-10 flex flex-col items-center gap-4 px-8 text-center">
+                                <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                                    <Video className="w-8 h-8 text-red-400" />
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-lg">Video Unavailable</p>
+                                    <p className="text-white/50 text-sm mt-1">This video may have been removed</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : shouldLoad ? (
                         <video
                             ref={videoRef}
                             src={short.videoUrl}
@@ -184,6 +205,7 @@ const ShortItem = ({
                             loop
                             playsInline
                             muted={isMuted}
+                            onError={() => setVideoError(true)}
                         />
                     ) : (
                         <div className="h-full w-full relative">
