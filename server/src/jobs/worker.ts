@@ -7,6 +7,7 @@ import { Story } from '../modules/stories/Story.model.js';
 import { AIAnalysis, AIClassification } from '../modules/posts/AIAnalysis.model.js';
 import { Notification } from '../modules/notifications/Notification.model.js';
 import { Profile } from '../modules/users/Profile.model.js';
+import { FlaggedPost } from '../modules/moderation/FlaggedPost.model.js';
 import { emitToUser } from '../socket/index.js';
 import { config } from '../config/index.js';
 import { fetchWithRetry, withCircuitBreaker } from '../shared/utils/http.utils.js';
@@ -374,6 +375,44 @@ const aiAnalysisWorker = new Worker(
                         link: contentType === 'short' ? `/app/shorts/${mediaId}` : `/app/posts/${postId}`,
                         isRead: false,
                     });
+                }
+
+                // AUTO-MODERATION: Flag posts with high fake scores for review
+                if (result.fakeScore > 0.7 && contentType !== 'story') {
+                    try {
+                        // Check if already flagged
+                        const existingFlag = await FlaggedPost.findOne({
+                            postId: contentType === 'short' ? mediaId : postId,
+                            reason: 'high_fake_score'
+                        });
+
+                        if (!existingFlag) {
+                            await FlaggedPost.create({
+                                postId: contentType === 'short' ? mediaId : postId,
+                                contentType,
+                                userId: ownerId,
+                                flaggedBy: 'system',
+                                reason: 'high_fake_score',
+                                fakeScore: result.fakeScore,
+                                details: `AI detected ${(result.fakeScore * 100).toFixed(1)}% manipulation probability. Classification: ${classification}`,
+                                status: 'pending',
+                            });
+
+                            debugLog(`Auto-flagged ${contentType} ${postId} for high fake score: ${result.fakeScore}`);
+
+                            // Notify the user their content is under review
+                            await Notification.create({
+                                userId: ownerId,
+                                type: 'system',
+                                title: '⚠️ Content Under Review',
+                                body: `Your ${contentType} has been flagged for review due to potential manipulation detected by our AI system.`,
+                                link: contentType === 'short' ? `/app/shorts/${mediaId}` : `/app/posts/${postId}`,
+                                isRead: false,
+                            });
+                        }
+                    } catch (flagError) {
+                        errorLog('Failed to auto-flag content:', flagError);
+                    }
                 }
             }
 
