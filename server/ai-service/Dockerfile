@@ -1,5 +1,6 @@
 # Deepfake Detection Service - Railway Optimized
-FROM python:3.11-slim
+# Using explicit registry to avoid TLS issues
+FROM docker.io/library/python:3.11-slim
 
 # Set working directory
 WORKDIR /app
