@@ -1020,7 +1020,97 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
         
         elements.append(Spacer(1, 12))
     
-    # ==================== ANALYSIS FRAMES GRID ====================
+    # ==================== METHODOLOGY EXPLANATION ====================
+    elements.append(Paragraph("🔬 Detection Methodology", styles['TVSection']))
+    
+    methodology_text = (
+        "Our AI authenticity system uses a multi-layered approach combining several advanced techniques:\n\n"
+        "<b>• SigLIP2 Neural Classification:</b> A state-of-the-art vision-language model trained to detect "
+        "subtle manipulation artifacts that are invisible to the human eye.\n\n"
+        "<b>• FFT Frequency Analysis:</b> Analyzes the frequency domain of images to detect GAN-generated "
+        "artifacts like periodic patterns left by neural networks.\n\n"
+        "<b>• Eye Region Analysis:</b> Examines eye reflections and symmetry, which are often inconsistent "
+        "in AI-generated faces.\n\n"
+        "<b>• Skin Texture Validation:</b> Checks for natural skin texture patterns that deepfakes often "
+        "fail to replicate accurately.\n\n"
+        "<b>• Temporal Consistency (Videos):</b> Analyzes frame-to-frame consistency to detect flickering "
+        "and temporal artifacts common in manipulated videos."
+    )
+    
+    method_box = Table([
+        [Paragraph(f"<font size='8' color='#475569'>{methodology_text}</font>", 
+                  ParagraphStyle('Method', alignment=TA_LEFT, leading=12))]
+    ], colWidths=[7*inch])
+    method_box.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), COLORS['lighter']),
+        ('BOX', (0, 0), (-1, -1), 1, COLORS['info']),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('LEFTPADDING', (0, 0), (-1, -1), 14),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 14),
+    ]))
+    elements.append(method_box)
+    elements.append(Spacer(1, 16))
+    
+    # ==================== SCORE INTERPRETATION GUIDE ====================
+    elements.append(Paragraph("📖 Understanding Your Scores", styles['TVSection']))
+    
+    score_guide = [
+        ['Score Range', 'Classification', 'What It Means'],
+        ['0% - 30%', Paragraph("<font color='#10B981'><b>✅ Authentic</b></font>", ParagraphStyle('SG1', alignment=TA_CENTER)),
+         'No significant manipulation detected. The content appears genuine with high confidence.'],
+        ['30% - 50%', Paragraph("<font color='#F59E0B'><b>⚠️ Suspicious</b></font>", ParagraphStyle('SG2', alignment=TA_CENTER)),
+         'Some patterns warrant attention. May be edited, compressed, or have minor AI assistance.'],
+        ['50% - 70%', Paragraph("<font color='#EF4444'><b>🚨 Likely Fake</b></font>", ParagraphStyle('SG3', alignment=TA_CENTER)),
+         'Multiple manipulation indicators detected. Content is likely AI-generated or significantly altered.'],
+        ['70% - 100%', Paragraph("<font color='#991B1B'><b>⛔ Confirmed Fake</b></font>", ParagraphStyle('SG4', alignment=TA_CENTER)),
+         'Strong evidence of manipulation. Multiple detection layers confirm artificial generation or editing.'],
+    ]
+    
+    guide_table = Table(score_guide, colWidths=[1.2*inch, 1.3*inch, 4.5*inch])
+    guide_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), COLORS['dark']),
+        ('TEXTCOLOR', (0, 0), (-1, 0), COLORS['white']),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('ALIGN', (0, 0), (1, -1), 'CENTER'),
+        ('ALIGN', (2, 0), (2, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [COLORS['white'], COLORS['lighter']]),
+        ('BOX', (0, 0), (-1, -1), 2, COLORS['primary']),
+        ('LINEBELOW', (0, 0), (-1, 0), 2, COLORS['primary']),
+        ('GRID', (0, 1), (-1, -1), 0.5, COLORS['light']),
+    ]))
+    elements.append(guide_table)
+    elements.append(Spacer(1, 12))
+    
+    # Confidence interpretation note
+    conf_note = Table([
+        [Paragraph(
+            "<font size='8' color='#475569'><b>📊 About Confidence Levels:</b> "
+            "The confidence percentage indicates how certain our AI is about its classification. "
+            "Higher confidence means more detection layers agree on the result. "
+            "A 95% confident 'Authentic' verdict means the AI is highly certain the content is genuine, "
+            "while a 60% confident 'Suspicious' verdict suggests some uncertainty—consider manual review.</font>",
+            ParagraphStyle('ConfNote', alignment=TA_LEFT, leading=11)
+        )]
+    ], colWidths=[7*inch])
+    conf_note.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#EFF6FF')),  # Light blue
+        ('BOX', (0, 0), (-1, -1), 1, COLORS['info']),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 12),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+    ]))
+    elements.append(conf_note)
+    elements.append(Spacer(1, 16))
+
     if data.debug_frames and len(data.debug_frames) > 0:
         elements.append(PageBreak())
         elements.append(Paragraph("🖼️ Detailed Frame-by-Frame Analysis", styles['TVSection']))
