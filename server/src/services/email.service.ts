@@ -1,10 +1,15 @@
 /**
  * Email Service for TrueVibe
  * Handles sending emails including PDF report attachments
+ * Supports Resend API (recommended) or SMTP fallback
  */
 
 import nodemailer from 'nodemailer';
 import { config } from '../config/index.js';
+
+// Resend API key (preferred for production - no SMTP timeout issues)
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_API_URL = 'https://api.resend.com/emails';
 
 // Email configuration from environment
 const emailConfig = {
@@ -18,7 +23,7 @@ const emailConfig = {
     from: process.env.SMTP_FROM || 'TrueVibe <noreply@truevibe.app>',
 };
 
-// Create transporter (lazy initialization)
+// Create transporter (lazy initialization for SMTP fallback)
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter(): nodemailer.Transporter {
@@ -32,6 +37,8 @@ function getTransporter(): nodemailer.Transporter {
             port: emailConfig.port,
             secure: emailConfig.secure,
             auth: emailConfig.auth,
+            connectionTimeout: 10000, // 10 second timeout
+            greetingTimeout: 10000,
         });
     }
     return transporter;
@@ -51,24 +58,80 @@ export interface EmailOptions {
 }
 
 /**
- * Send an email
+ * Send email using Resend API
+ */
+async function sendWithResend(options: EmailOptions): Promise<boolean> {
+    console.log(`📧 Sending email via Resend API to ${options.to}...`);
+
+    const body: Record<string, unknown> = {
+        from: emailConfig.from,
+        to: [options.to],
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+    };
+
+    // Handle attachments
+    if (options.attachments?.length) {
+        body.attachments = options.attachments.map(att => ({
+            filename: att.filename,
+            content: Buffer.isBuffer(att.content) ? att.content.toString('base64') : att.content,
+            content_type: att.contentType || 'application/octet-stream',
+        }));
+    }
+
+    const response = await fetch(RESEND_API_URL, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Resend API error: ${response.status} - ${errorData}`);
+    }
+
+    const result = await response.json() as { id: string };
+    console.log(`📧 Email sent via Resend: ${result.id}`);
+    return true;
+}
+
+/**
+ * Send email using SMTP (fallback)
+ */
+async function sendWithSMTP(options: EmailOptions): Promise<boolean> {
+    console.log(`📧 Sending email via SMTP to ${options.to}...`);
+    const transport = getTransporter();
+
+    const mailOptions = {
+        from: emailConfig.from,
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+        attachments: options.attachments,
+    };
+
+    const result = await transport.sendMail(mailOptions);
+    console.log(`📧 Email sent via SMTP: ${result.messageId}`);
+    return true;
+}
+
+/**
+ * Send an email (uses Resend if available, otherwise SMTP)
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-        const transport = getTransporter();
+        // Prefer Resend API (no SMTP timeout issues)
+        if (RESEND_API_KEY) {
+            return await sendWithResend(options);
+        }
 
-        const mailOptions = {
-            from: emailConfig.from,
-            to: options.to,
-            subject: options.subject,
-            text: options.text,
-            html: options.html,
-            attachments: options.attachments,
-        };
-
-        const result = await transport.sendMail(mailOptions);
-        console.log(`📧 Email sent to ${options.to}: ${result.messageId}`);
-        return true;
+        // Fallback to SMTP
+        return await sendWithSMTP(options);
     } catch (error) {
         console.error('❌ Failed to send email:', error);
         throw error;
@@ -282,9 +345,9 @@ export async function sendFakeDetectionAlert(params: {
 }
 
 /**
- * Check if email service is configured
+ * Check if email service is configured (Resend or SMTP)
  */
 export function isEmailConfigured(): boolean {
-    return !!(emailConfig.auth.user && emailConfig.auth.pass);
+    return !!(RESEND_API_KEY || (emailConfig.auth.user && emailConfig.auth.pass));
 }
 

@@ -735,14 +735,23 @@ export const blockUser = async (
             throw new ForbiddenError('Cannot block yourself');
         }
 
-        // Check if user exists
-        const userToBlock = await Profile.findOne({ userId: blockedId });
+        // Check if user exists - support multiple ID formats
+        const userToBlock = await Profile.findOne({
+            $or: [
+                { userId: blockedId },
+                { _id: mongoose.isValidObjectId(blockedId) ? blockedId : null },
+                { supabaseId: blockedId },
+            ].filter(condition => Object.values(condition)[0] !== null)
+        });
         if (!userToBlock) {
             throw new NotFoundError('User to block');
         }
 
+        // Use the actual userId for blocking
+        const actualBlockedUserId = userToBlock.userId || userToBlock.supabaseId;
+
         // Check if already blocked
-        const existingBlock = await Block.findOne({ blockerId, blockedId });
+        const existingBlock = await Block.findOne({ blockerId, blockedId: actualBlockedUserId });
         if (existingBlock) {
             throw new ConflictError('User is already blocked');
         }
@@ -750,18 +759,18 @@ export const blockUser = async (
         // Create block
         await Block.create({
             blockerId,
-            blockedId,
+            blockedId: actualBlockedUserId,
             reason: reason?.substring(0, 500),
         });
 
         // Also remove any follow relationships
         await Promise.all([
-            Follow.findOneAndDelete({ followerId: blockerId, followingId: blockedId }),
-            Follow.findOneAndDelete({ followerId: blockedId, followingId: blockerId }),
+            Follow.findOneAndDelete({ followerId: blockerId, followingId: actualBlockedUserId }),
+            Follow.findOneAndDelete({ followerId: actualBlockedUserId, followingId: blockerId }),
             FollowRequest.deleteMany({
                 $or: [
-                    { requesterId: blockerId, targetId: blockedId },
-                    { requesterId: blockedId, targetId: blockerId },
+                    { requesterId: blockerId, targetId: actualBlockedUserId },
+                    { requesterId: actualBlockedUserId, targetId: blockerId },
                 ],
             }),
         ]);
@@ -769,7 +778,7 @@ export const blockUser = async (
         // Update follower counts
         await Promise.all([
             Profile.findOneAndUpdate({ userId: blockerId }, { $inc: { following: -1, followers: -1 } }),
-            Profile.findOneAndUpdate({ userId: blockedId }, { $inc: { following: -1, followers: -1 } }),
+            Profile.findOneAndUpdate({ userId: actualBlockedUserId }, { $inc: { following: -1, followers: -1 } }),
         ]);
 
         res.json({
