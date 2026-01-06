@@ -170,9 +170,21 @@ router.post('/:id/like', requireAuth, async (req, res, next) => {
         const { id } = req.params;
         const userId = req.auth!.userId;
 
+        // Validate ObjectId format
+        if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+            res.status(400).json({ success: false, error: { message: 'Invalid story ID format' } });
+            return;
+        }
+
         const story = await Story.findById(id);
         if (!story) {
             res.status(404).json({ success: false, error: { message: 'Story not found' } });
+            return;
+        }
+
+        // Check if story is deleted or expired
+        if (story.isDeleted) {
+            res.status(404).json({ success: false, error: { message: 'Story has been deleted' } });
             return;
         }
 
@@ -186,8 +198,9 @@ router.post('/:id/like', requireAuth, async (req, res, next) => {
         }
 
         await story.save();
-        res.json({ success: true, isLiked: likeIndex === -1 });
+        res.json({ success: true, isLiked: likeIndex === -1, likesCount: story.likes.length });
     } catch (error) {
+        console.error('Story like error:', error);
         next(error);
     }
 });
@@ -246,20 +259,34 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
         const { id } = req.params;
         const userId = req.auth!.userId;
 
+        // Find story that belongs to this user
         const story = await Story.findOne({ _id: id, userId });
-        if (story) {
-            // Delete media from Cloudinary
-            if (story.mediaUrl) {
+
+        if (!story) {
+            res.status(404).json({
+                success: false,
+                error: { message: 'Story not found or you do not have permission to delete it' }
+            });
+            return;
+        }
+
+        // Delete media from Cloudinary
+        if (story.mediaUrl) {
+            try {
                 const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
                 await deleteCloudinaryByUrl(story.mediaUrl);
+            } catch (cloudinaryError) {
+                console.error('Failed to delete media from Cloudinary:', cloudinaryError);
+                // Continue with soft delete even if Cloudinary delete fails
             }
-
-            story.isDeleted = true;
-            await story.save();
         }
+
+        story.isDeleted = true;
+        await story.save();
 
         res.json({ success: true, message: 'Story deleted' });
     } catch (error) {
+        console.error('Story delete error:', error);
         next(error);
     }
 });
