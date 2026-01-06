@@ -1264,6 +1264,18 @@ export function useUserReports() {
     });
 }
 
+// Delete AI Report
+export function useDeleteReport() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (postId: string) => api.delete(`/posts/${postId}/report`),
+        onSuccess: () => {
+            // Invalidate user reports cache to refresh the list
+            queryClient.invalidateQueries({ queryKey: ['user', 'reports'] });
+        },
+    });
+}
+
 // ============ Media Hooks ============
 
 export function useUploadUrl() {

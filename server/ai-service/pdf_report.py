@@ -440,10 +440,10 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
     # Create donut chart and metrics side by side
     donut = create_donut_chart(data.fake_score, data.real_score, 100)
     
-    # Metrics cards
+    # Metrics cards - Clear labeling for fake detection
     metrics_data = [
-        ('Fake Score', f"{data.fake_score*100:.1f}%", COLORS['danger'] if data.fake_score > 0.5 else COLORS['secondary']),
-        ('Real Score', f"{data.real_score*100:.1f}%", COLORS['secondary'] if data.real_score > 0.5 else COLORS['slate']),
+        ('Manipulation', f"{data.fake_score*100:.1f}%", COLORS['danger'] if data.fake_score > 0.5 else COLORS['secondary']),
+        ('Authentic', f"{data.real_score*100:.1f}%", COLORS['danger'] if data.real_score < 0.5 else COLORS['secondary']),
         ('Faces', str(data.faces_detected), COLORS['info']),
         ('Time', f"{data.processing_time_ms}ms", COLORS['slate']),
     ]

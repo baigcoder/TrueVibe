@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { requestNotificationPermission, onForegroundMessage } from '@/lib/firebase';
+import { playNotificationSound } from '@/lib/notificationSound';
 import { api } from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -48,9 +49,23 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         const unsubscribe = onForegroundMessage((payload: PushNotificationPayload) => {
             console.log('Foreground message received:', payload);
 
-            // Show toast notification
+            // Play notification sound (works on desktop and mobile)
+            playNotificationSound();
+
+            // Determine icon based on notification type
+            const notificationType = payload.data?.type;
+            let icon = '🔔';
+            if (notificationType === 'like') icon = '❤️';
+            else if (notificationType === 'comment') icon = '💬';
+            else if (notificationType === 'follow') icon = '👤';
+            else if (notificationType === 'message') icon = '✉️';
+            else if (notificationType === 'mention') icon = '@';
+
+            // Show toast notification with 5-second duration
             toast(payload.notification?.title || 'New Notification', {
                 description: payload.notification?.body,
+                duration: 5000, // Auto-dismiss after 5 seconds
+                icon,
                 action: payload.data?.link ? {
                     label: 'View',
                     onClick: () => {

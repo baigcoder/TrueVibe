@@ -284,7 +284,7 @@ export default function ProfilePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
                         {/* Cover Actions */}
-                        <div className="absolute bottom-3 sm:bottom-4 md:bottom-6 right-3 sm:right-4 md:right-6 flex gap-2 sm:gap-3 z-30">
+                        <div className="absolute top-3 right-3 sm:bottom-4 sm:top-auto md:bottom-6 md:right-6 flex gap-2 sm:gap-3 z-30">
                             {isOwnProfile ? (
                                 <>
                                     <Button
@@ -317,7 +317,7 @@ export default function ProfilePage() {
                                     </Button>
                                 </>
                             ) : (
-                                <div className="flex gap-3">
+                                <div className="flex gap-2 sm:gap-3">
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -329,20 +329,20 @@ export default function ProfilePage() {
                                             }
                                         }}
                                         className={cn(
-                                            "backdrop-blur-xl border rounded-2xl w-11 h-11 shadow-2xl transition-all",
+                                            "backdrop-blur-xl border rounded-xl sm:rounded-2xl w-9 h-9 sm:w-11 sm:h-11 shadow-2xl transition-all",
                                             canMessage
                                                 ? "bg-white/10 border-white/20 hover:bg-white/20 text-white hover:scale-110"
                                                 : "bg-white/5 border-white/10 text-slate-500 cursor-not-allowed opacity-60"
                                         )}
                                         title={canMessage ? "Send message" : "Mutual follow required to message"}
                                     >
-                                        <MessageCircle className="w-5 h-5" />
+                                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                                     </Button>
                                     <Button
                                         onClick={hasPendingRequest ? handleCancelRequest : handleFollow}
                                         disabled={followMutation.isPending || unfollowMutation.isPending || cancelRequestMutation.isPending}
                                         className={cn(
-                                            "rounded-2xl h-11 px-8 gap-2.5 font-bold text-xs shadow-2xl transition-all",
+                                            "rounded-xl sm:rounded-2xl h-9 sm:h-11 px-4 sm:px-8 gap-1.5 sm:gap-2.5 font-bold text-[10px] sm:text-xs shadow-2xl transition-all",
                                             isFollowing
                                                 ? "bg-white/10 border border-white/20 text-white hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
                                                 : hasPendingRequest
@@ -354,18 +354,19 @@ export default function ProfilePage() {
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : isFollowing ? (
                                             <>
-                                                <UserMinus className="w-4 h-4" />
-                                                Following
+                                                <UserMinus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                <span className="hidden sm:inline">Following</span>
                                             </>
                                         ) : hasPendingRequest ? (
                                             <>
-                                                <X className="w-4 h-4" />
-                                                Cancel Request
+                                                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                <span className="hidden sm:inline">Cancel</span>
+                                                <span className="sm:hidden">Cancel</span>
                                             </>
                                         ) : (
                                             <>
-                                                <UserPlus className="w-4 h-4" />
-                                                Follow
+                                                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                <span>Follow</span>
                                             </>
                                         )}
                                     </Button>

@@ -1367,6 +1367,57 @@ export const getReport = async (
 };
 
 /**
+ * Delete AI authenticity report for a post
+ * Only accessible by post owner or admin
+ */
+export const deleteReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!.userId;
+
+        // Get the post
+        const post = await Post.findById(id);
+        if (!post) {
+            throw new NotFoundError('Post not found');
+        }
+
+        // Get the current user to check role
+        const currentUser = await User.findOne({ supabaseId: userId });
+        if (!currentUser) {
+            throw new NotFoundError('User not found');
+        }
+        const isAdmin = currentUser.role === 'admin';
+
+        // The author OR an admin can delete reports
+        if (post.userId.toString() !== currentUser.supabaseId && !isAdmin) {
+            throw new ForbiddenError('Only the post owner or an admin can delete AI reports');
+        }
+
+        // Delete the report
+        const deleted = await AIReport.findOneAndDelete(
+            isAdmin ? { postId: id } : { postId: id, userId }
+        );
+
+        if (!deleted) {
+            throw new NotFoundError('AI report not found');
+        }
+
+        console.log(`🗑️ AI report deleted for post ${id} by user ${userId}`);
+
+        res.json({
+            success: true,
+            message: 'AI report deleted successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * Download PDF report for a post
  * Generates a professional PDF with debug images
  * Only accessible by post owner

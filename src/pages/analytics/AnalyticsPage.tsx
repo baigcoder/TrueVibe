@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts, useUserReports } from "@/api/hooks";
+import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts, useUserReports, useDeleteReport } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
 import {
     Loader2, Users, Heart, ShieldCheck, ArrowUpRight, ArrowDownRight,
     Eye, MessageCircle, Share2, Play, Image as ImageIcon, Video, BarChart2,
-    Calendar, Zap, Award, Target, Activity, FileText, Download, CheckCircle, AlertTriangle, XCircle
+    Calendar, Zap, Award, Target, Activity, FileText, Download, CheckCircle, AlertTriangle, XCircle, Trash2
 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -200,6 +200,8 @@ export default function AnalyticsPage() {
 
     // Get user's AI reports
     const { data: reportsData, isLoading: loadingReports } = useUserReports();
+    const deleteReport = useDeleteReport();
+    const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
 
     // Extract data
     const stats = (overview as any)?.data?.overview || {
@@ -881,6 +883,47 @@ export default function AnalyticsPage() {
                                             >
                                                 <Download className="w-4 h-4" />
                                                 <span className="hidden sm:inline text-xs font-bold">PDF</span>
+                                            </Button>
+
+                                            {/* Delete Button */}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                disabled={deleteReport.isPending}
+                                                onClick={async () => {
+                                                    if (deletingReportId === report._id) {
+                                                        // Confirm delete
+                                                        try {
+                                                            await deleteReport.mutateAsync(report.postId);
+                                                            toast.success('Report deleted successfully');
+                                                            setDeletingReportId(null);
+                                                        } catch (error) {
+                                                            console.error('Delete error:', error);
+                                                            toast.error('Failed to delete report');
+                                                            setDeletingReportId(null);
+                                                        }
+                                                    } else {
+                                                        // First click - show confirmation
+                                                        setDeletingReportId(report._id);
+                                                        // Auto-reset after 3 seconds if not confirmed
+                                                        setTimeout(() => setDeletingReportId((prev) => prev === report._id ? null : prev), 3000);
+                                                    }
+                                                }}
+                                                className={cn(
+                                                    "gap-1.5 transition-all",
+                                                    deletingReportId === report._id
+                                                        ? "text-white bg-rose-500 hover:bg-rose-600"
+                                                        : "text-rose-400 hover:text-white hover:bg-rose-500/20"
+                                                )}
+                                            >
+                                                {deleteReport.isPending && deletingReportId === report._id ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4" />
+                                                )}
+                                                <span className="hidden sm:inline text-xs font-bold">
+                                                    {deletingReportId === report._id ? 'Confirm?' : ''}
+                                                </span>
                                             </Button>
                                         </m.div>
                                     ))}

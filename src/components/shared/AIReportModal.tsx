@@ -77,6 +77,20 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
         return "text-emerald-400";
     };
 
+    // Get shorter category name for mobile display
+    const getCategoryName = (category: string) => {
+        const name = category.replace(" Analysis", "").replace(" Detection", "");
+        // Map long names to shorter versions for mobile
+        const shortNames: Record<string, string> = {
+            "FFT Frequency": "FFT Analysis",
+            "Face Manipulation": "Face Detection",
+            "Color Consistency": "Color Check",
+            "Eye Region": "Eye Analysis",
+            "Noise Pattern": "Noise Analysis"
+        };
+        return shortNames[name] || name;
+    };
+
     return (
         <m.div
             variants={{
@@ -91,50 +105,49 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
         >
             <button
                 onClick={onToggle}
-                className="w-full h-full p-4 sm:p-5 hover:bg-white/5 transition-colors text-left"
+                className="w-full h-full p-3 sm:p-5 hover:bg-white/5 transition-colors text-left"
             >
-                <div className="flex items-center gap-4">
-                    {/* Icon - Constant Size */}
+                {/* Mobile-first layout: horizontal row with score on right */}
+                <div className="flex items-center gap-3 sm:gap-4">
+                    {/* Icon - Smaller on mobile */}
                     <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl border transition-all duration-300 group-hover:scale-110",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl border transition-all duration-300 group-hover:scale-110",
                         item.detected ? "bg-red-500/20 border-red-500/30 shadow-red-500/10" : "bg-slate-800 border-white/5"
                     )}>
-                        <Icon className={cn("w-6 h-6", item.detected ? "text-red-400" : "text-slate-400")} />
+                        <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", item.detected ? "text-red-400" : "text-slate-400")} />
                     </div>
 
-                    {/* Label Area - Flex-1 with enough min-width */}
-                    <div className="flex-1 min-w-0 pr-2">
-                        <span className="block text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1 group-hover:text-slate-400 transition-colors">
+                    {/* Label Area - Flexible with nowrap title */}
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                        <span className="block text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-500 mb-0.5 sm:mb-1 group-hover:text-slate-400 transition-colors">
                             Diagnosis
                         </span>
-                        <h4 className="text-xs sm:text-sm font-black uppercase tracking-tight text-white/90 leading-tight break-words">
-                            {item.category.replace(" Analysis", "").replace(" Detection", "")}
+                        <h4 className="text-[11px] sm:text-sm font-black uppercase tracking-tight text-white/90 leading-tight truncate">
+                            {getCategoryName(item.category)}
                         </h4>
-                        {/* Short info always visible */}
-                        <p className="text-[10px] sm:text-xs text-slate-400 mt-1.5 leading-snug line-clamp-2">
+                        {/* Description - hidden on very small screens, visible on sm+ */}
+                        <p className="hidden sm:block text-[10px] sm:text-xs text-slate-400 mt-1.5 leading-snug line-clamp-2">
                             {item.category.includes("Face") && "Analyzes facial features for manipulation signs"}
-                            {item.category.includes("FFT") && "Detects AI-generated texture patterns in frequency domain"}
-                            {item.category.includes("Color") && "Checks color distribution consistency across the image"}
+                            {item.category.includes("FFT") && "Detects AI-generated texture patterns"}
+                            {item.category.includes("Color") && "Checks color consistency across image"}
                             {item.category.includes("Eye") && "Examines eye region for deepfake artifacts"}
-                            {item.category.includes("Noise") && "Analyzes noise patterns for synthetic content markers"}
+                            {item.category.includes("Noise") && "Analyzes noise patterns for synthetic markers"}
                         </p>
                     </div>
 
-                    {/* Score Area - Far Right, Fixed width to prevent overlap */}
-                    <div className="flex flex-col items-end flex-shrink-0 min-w-[70px]">
+                    {/* Score Area - Compact on mobile */}
+                    <div className="flex flex-col items-end flex-shrink-0">
                         {score !== null && (
-                            <div className="flex items-baseline gap-1">
-                                <span className={cn("text-2xl sm:text-3xl font-black italic tracking-tighter tabular-nums", getScoreColor(score))}>
+                            <div className="flex items-baseline gap-0.5 sm:gap-1">
+                                <span className={cn("text-xl sm:text-3xl font-black italic tracking-tighter tabular-nums", getScoreColor(score))}>
                                     {score}%
                                 </span>
-                                <span className="text-[10px] font-black uppercase text-slate-500/60 tracking-widest leading-none">
+                                <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-500/60 tracking-wider leading-none">
                                     LVL
                                 </span>
                             </div>
                         )}
-                        <div className="flex items-center gap-1 mt-1">
-                            <ChevronDown className={cn("w-3.5 h-3.5 text-slate-600 transition-transform duration-300 group-hover:text-slate-400", isExpanded && "rotate-180")} />
-                        </div>
+                        <ChevronDown className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600 transition-transform duration-300 group-hover:text-slate-400 mt-0.5 sm:mt-1", isExpanded && "rotate-180")} />
                     </div>
                 </div>
             </button>
@@ -147,14 +160,14 @@ function MetricCard({ item, isExpanded, onToggle }: { item: DetectionItem; isExp
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                         className="bg-gradient-to-b from-slate-900/80 to-slate-950"
                     >
-                        <div className="px-5 py-5 border-t border-violet-500/30 min-h-[80px]">
-                            <div className="flex items-start gap-4">
-                                <div className="w-1 min-h-[50px] bg-gradient-to-b from-violet-500 to-violet-600/50 rounded-full flex-shrink-0" />
-                                <div className="flex-1">
-                                    <span className="block text-[10px] font-black uppercase tracking-[0.15em] text-violet-400 mb-3">
+                        <div className="px-3 sm:px-5 py-4 sm:py-5 border-t border-violet-500/30">
+                            <div className="flex items-start gap-3 sm:gap-4">
+                                <div className="w-1 min-h-[40px] sm:min-h-[50px] bg-gradient-to-b from-violet-500 to-violet-600/50 rounded-full flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <span className="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] text-violet-400 mb-2 sm:mb-3">
                                         AI Explanation
                                     </span>
-                                    <p className="text-sm sm:text-base text-white leading-relaxed font-medium">
+                                    <p className="text-xs sm:text-base text-white leading-relaxed font-medium">
                                         {(item.explanation && item.explanation.trim().length > 0)
                                             ? item.explanation
                                             : "No detailed explanation available for this metric. The analysis is based on pattern recognition and statistical modeling of the media content."}
@@ -274,7 +287,7 @@ export function AIReportModal({
                             <div className="space-y-10">
                                 {/* Verdict Card Section */}
                                 <div className={cn(
-                                    "p-6 sm:p-10 rounded-[2.5rem] border bg-gradient-to-br relative overflow-hidden shadow-2xl group/v",
+                                    "p-4 sm:p-10 rounded-2xl sm:rounded-[2.5rem] border bg-gradient-to-br relative overflow-hidden shadow-2xl group/v",
                                     verdictInfo?.bgGradient,
                                     verdictInfo?.borderColor
                                 )}>
@@ -282,53 +295,55 @@ export function AIReportModal({
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
 
                                     <div className="relative z-10">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-                                            <div className="flex items-center gap-4">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 mb-4 sm:mb-8">
+                                            <div className="flex items-center gap-3 sm:gap-4">
                                                 <div className={cn(
-                                                    "w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl border bg-black/40",
+                                                    "w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl border bg-black/40",
                                                     verdictInfo?.borderColor
                                                 )}>
-                                                    {verdictInfo?.icon && <verdictInfo.icon className={cn("w-8 h-8", verdictInfo?.color)} />}
+                                                    {verdictInfo?.icon && <verdictInfo.icon className={cn("w-6 h-6 sm:w-8 sm:h-8", verdictInfo?.color)} />}
                                                 </div>
                                                 <div>
-                                                    <div className={cn("inline-flex px-3 py-1 rounded-full bg-black/40 border text-[10px] font-black tracking-[0.2em] mb-2 uppercase", verdictInfo?.color, verdictInfo?.borderColor)}>
+                                                    <div className={cn("inline-flex px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-black/40 border text-[9px] sm:text-[10px] font-black tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-2 uppercase", verdictInfo?.color, verdictInfo?.borderColor)}>
                                                         {verdictInfo?.label}
                                                     </div>
-                                                    <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tighter leading-tight italic">
-                                                        DeepScan Analysis Complete
+                                                    <h3 className="text-lg sm:text-3xl font-black text-white tracking-tight sm:tracking-tighter leading-tight italic">
+                                                        DeepScan Complete
                                                     </h3>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col items-end bg-black/20 p-4 rounded-2xl border border-white/5">
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="text-4xl sm:text-6xl font-black text-white leading-none tracking-tighter CustomNumber">
+                                            <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start bg-black/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/5">
+                                                <span className="text-[10px] sm:text-[11px] text-white/50 font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] sm:mt-2 order-2 sm:order-1">
+                                                    {report.report.verdict === 'authentic' ? 'Authenticity' : 'Manipulation'}
+                                                </span>
+                                                <div className="flex items-baseline gap-1 sm:gap-2 order-1 sm:order-2">
+                                                    <span className="text-3xl sm:text-6xl font-black text-white leading-none tracking-tighter CustomNumber">
                                                         {confidence}%
                                                     </span>
                                                 </div>
-                                                <span className="text-[10px] sm:text-[11px] text-white/50 font-black uppercase tracking-[0.3em] mt-2">Authenticity Index</span>
                                             </div>
                                         </div>
 
-                                        <p className="text-sm sm:text-lg text-white/80 leading-relaxed font-bold mb-8 max-w-2xl bg-black/10 p-4 rounded-xl border border-white/5 italic">
+                                        <p className="text-xs sm:text-lg text-white/80 leading-relaxed font-bold mb-4 sm:mb-8 max-w-2xl bg-black/10 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-white/5 italic">
                                             "{report.report.summary}"
                                         </p>
 
                                         {/* Progress Bar with Tooltip Area */}
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between items-end px-1">
+                                        <div className="space-y-2 sm:space-y-3">
+                                            <div className="flex justify-between items-end gap-2 px-1">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">Neural Confidence</span>
-                                                    <div className="flex gap-1">
+                                                    <span className="text-[9px] sm:text-[10px] font-black uppercase text-white/40 tracking-[0.15em] sm:tracking-[0.2em]">Confidence</span>
+                                                    <div className="flex gap-0.5 sm:gap-1">
                                                         {[1, 2, 3, 4, 5].map((i) => (
                                                             <div key={i} className={cn(
-                                                                "h-1 w-4 rounded-full",
+                                                                "h-1 w-3 sm:w-4 rounded-full",
                                                                 confidence >= i * 20 ? "bg-white/40" : "bg-white/10"
                                                             )} />
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <span className="text-xs font-black text-white px-3 py-1 bg-black/30 rounded-full border border-white/10">
-                                                    {confidence >= 80 ? 'HIGH' : confidence >= 60 ? 'MODERATE' : 'LOW'} RELIABILITY
+                                                <span className="text-[10px] sm:text-xs font-black text-white px-2 sm:px-3 py-0.5 sm:py-1 bg-black/30 rounded-full border border-white/10">
+                                                    {confidence >= 80 ? 'HIGH' : confidence >= 60 ? 'MED' : 'LOW'}
                                                 </span>
                                             </div>
                                             <div className="h-3 rounded-full bg-black/40 overflow-hidden p-1 border border-white/5">
@@ -348,12 +363,12 @@ export function AIReportModal({
                                 </div>
 
                                 {/* Audit Metrics Section */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-4 px-2">
+                                <div className="space-y-4 sm:space-y-6">
+                                    <div className="flex items-center gap-2 sm:gap-4 px-1 sm:px-2">
                                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-800 to-slate-800" />
-                                        <div className="flex items-center gap-3">
-                                            <Sparkles className="w-4 h-4 text-violet-500" />
-                                            <h3 className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400 whitespace-nowrap">Diagnostic Breakdown</h3>
+                                        <div className="flex items-center gap-2 sm:gap-3">
+                                            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-violet-500" />
+                                            <h3 className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-slate-400 whitespace-nowrap">Diagnostics</h3>
                                         </div>
                                         <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-800 to-slate-800" />
                                     </div>
@@ -373,20 +388,20 @@ export function AIReportModal({
                                 {/* Tools & Technical Section */}
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
                                     {/* Security Tips - Left Side */}
-                                    <div className="lg:col-span-12 bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-6 sm:p-8 backdrop-blur-xl">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="p-2 rounded-xl bg-violet-500/10 border border-violet-500/20">
-                                                <Zap className="w-5 h-5 text-violet-400" />
+                                    <div className="lg:col-span-12 bg-white/[0.02] border border-white/5 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 backdrop-blur-xl">
+                                        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                                            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-violet-500/10 border border-violet-500/20">
+                                                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" />
                                             </div>
-                                            <span className="text-xs font-black uppercase tracking-[0.2em] text-violet-400/90">Countermeasure Engine</span>
+                                            <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-violet-400/90">Recommendations</span>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="grid grid-cols-1 gap-3 sm:gap-6">
                                             {(report.report.recommendations || []).slice(0, 3).map((rec, i) => (
-                                                <div key={i} className="flex flex-col gap-4 p-5 rounded-2xl bg-slate-900/50 border border-white/[0.03] hover:border-violet-500/20 transition-all duration-300">
-                                                    <div className="w-8 h-8 rounded-lg bg-violet-600/10 flex items-center justify-center border border-violet-500/20">
-                                                        <span className="text-[11px] font-black text-violet-400">{i + 1}</span>
+                                                <div key={i} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-900/50 border border-white/[0.03] hover:border-violet-500/20 transition-all duration-300">
+                                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-violet-600/10 flex items-center justify-center border border-violet-500/20 flex-shrink-0">
+                                                        <span className="text-[10px] sm:text-[11px] font-black text-violet-400">{i + 1}</span>
                                                     </div>
-                                                    <p className="text-xs sm:text-[13px] text-slate-400 leading-relaxed font-bold">
+                                                    <p className="text-[11px] sm:text-[13px] text-slate-400 leading-relaxed font-medium flex-1">
                                                         {rec}
                                                     </p>
                                                 </div>
@@ -395,18 +410,18 @@ export function AIReportModal({
                                     </div>
 
                                     {/* Technical Diagnostics - Collapsible but Premium */}
-                                    <div className="lg:col-span-12 bg-slate-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden">
+                                    <div className="lg:col-span-12 bg-slate-900/40 border border-white/5 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
                                         <button
                                             onClick={() => setShowTechnical(!showTechnical)}
-                                            className="w-full px-8 py-5 flex items-center justify-between hover:bg-white/5 transition-all group"
+                                            className="w-full px-4 sm:px-8 py-3 sm:py-5 flex items-center justify-between hover:bg-white/5 transition-all group"
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <RefreshingCw className="w-5 h-5 text-amber-500/50" />
-                                                <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-white transition-colors">Core Signal Diagnostics</span>
+                                            <div className="flex items-center gap-2 sm:gap-4">
+                                                <RefreshingCw className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500/50" />
+                                                <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-400 group-hover:text-white transition-colors">Core Signal</span>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-400">Expand Logs</span>
-                                                <ChevronDown className={cn("w-5 h-5 text-slate-600 group-hover:text-white transition-transform duration-500", showTechnical && "rotate-180")} />
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-400">Expand</span>
+                                                <ChevronDown className={cn("w-4 h-4 sm:w-5 sm:h-5 text-slate-600 group-hover:text-white transition-transform duration-500", showTechnical && "rotate-180")} />
                                             </div>
                                         </button>
                                         <AnimatePresence>
