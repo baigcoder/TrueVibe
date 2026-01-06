@@ -16,6 +16,8 @@ export interface IProfile extends Document {
     following: number;
     trustScore: number;
     verified: boolean;
+    verificationBadge?: 'bronze' | 'silver' | 'gold' | 'verified_creator';
+    verificationBadgeEarnedAt?: Date;
     privacy: {
         profileVisibility: 'public' | 'followers' | 'private';
         showTrustScore: boolean;
@@ -137,6 +139,13 @@ const profileSchema = new Schema<IProfile>(
             type: Boolean,
             default: false,
         },
+        // Verification Badge
+        verificationBadge: {
+            type: String,
+            enum: ['bronze', 'silver', 'gold', 'verified_creator'],
+            default: null,
+        },
+        verificationBadgeEarnedAt: Date,
     },
     {
         timestamps: true,
