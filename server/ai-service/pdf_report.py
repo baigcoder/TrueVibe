@@ -34,6 +34,19 @@ except ImportError:
 
 from PIL import Image
 
+# Visual annotations for heatmaps and bounding boxes
+try:
+    from visual_annotations import (
+        create_full_annotated_image,
+        create_annotated_comparison,
+        image_to_base64,
+        ManipulationRegion
+    )
+    ANNOTATIONS_AVAILABLE = True
+except ImportError:
+    ANNOTATIONS_AVAILABLE = False
+    print("⚠️ Visual annotations module not available")
+
 
 @dataclass
 class ReportData:
@@ -433,6 +446,105 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
     ]))
     elements.append(summary_box)
     elements.append(Spacer(1, 18))
+    
+    # ==================== ANALYZED IMAGE DISPLAY ====================
+    if data.analyzed_image_url or data.annotated_image:
+        elements.append(Paragraph("🖼️ Analyzed Media", styles['TVSection']))
+        
+        try:
+            analyzed_img = None
+            
+            # Try to load the analyzed image
+            if data.analyzed_image_url:
+                import requests
+                response = requests.get(data.analyzed_image_url, timeout=10)
+                if response.status_code == 200:
+                    analyzed_img = Image.open(io.BytesIO(response.content))
+            
+            if analyzed_img:
+                # Create annotated version if we have face data and annotations are available
+                annotated_img = None
+                if ANNOTATIONS_AVAILABLE and data.face_scores and len(data.face_scores) > 0:
+                    # Create face regions for annotation
+                    regions = []
+                    img_w, img_h = analyzed_img.size
+                    # Approximate face regions (in real implementation, these come from face detection)
+                    num_faces = min(len(data.face_scores), 4)
+                    for i, score in enumerate(data.face_scores[:num_faces]):
+                        # Create approximate regions for visualization
+                        x = int(img_w * (0.2 + 0.2 * (i % 2)))
+                        y = int(img_h * (0.2 + 0.2 * (i // 2)))
+                        w = int(img_w * 0.25)
+                        h = int(img_h * 0.35)
+                        label = f"Face {i+1}: {score*100:.0f}%"
+                        regions.append(ManipulationRegion((x, y, w, h), score, label, "face"))
+                    
+                    try:
+                        annotated_img = create_full_annotated_image(
+                            analyzed_img, 
+                            faces=None,  # We don't have actual face objects here
+                            face_scores=data.face_scores,
+                            artifact_detections=None,
+                            include_heatmap=True if data.fake_score > 0.3 else False,
+                            include_boxes=True,
+                            include_arrows=False
+                        )
+                    except Exception as e:
+                        print(f"Could not create annotated image: {e}")
+                        annotated_img = None
+                
+                # Resize for PDF display
+                max_width = 6 * inch
+                max_height = 3 * inch
+                orig_w, orig_h = analyzed_img.size
+                scale = min(max_width / orig_w, max_height / orig_h, 1.0)
+                display_w = int(orig_w * scale)
+                display_h = int(orig_h * scale)
+                
+                # Create image flowable
+                img_buffer = io.BytesIO()
+                display_img = analyzed_img.resize((display_w, display_h), Image.LANCZOS)
+                display_img.save(img_buffer, format='PNG')
+                img_buffer.seek(0)
+                
+                # Add the image with a caption
+                img_flowable = RLImage(img_buffer, width=display_w * 0.7, height=display_h * 0.7)
+                
+                # Create image table with caption
+                if data.fake_score > 0.5:
+                    caption = "⛔ Manipulation artifacts detected in this media"
+                    caption_color = '#EF4444'
+                elif data.fake_score > 0.3:
+                    caption = "⚠️ Some suspicious patterns found in this media"
+                    caption_color = '#F59E0B'
+                else:
+                    caption = "✅ No significant manipulation detected"
+                    caption_color = '#10B981'
+                
+                img_table = Table([
+                    [img_flowable],
+                    [Paragraph(f"<font size='8' color='{caption_color}'>{caption}</font>", 
+                              ParagraphStyle('ImgCap', alignment=TA_CENTER))]
+                ], colWidths=[7*inch])
+                
+                img_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('BACKGROUND', (0, 0), (-1, -1), COLORS['lighter']),
+                    ('BOX', (0, 0), (-1, -1), 1, COLORS['light']),
+                ]))
+                elements.append(img_table)
+                elements.append(Spacer(1, 16))
+                
+        except Exception as e:
+            print(f"Could not add analyzed image to PDF: {e}")
+            elements.append(Paragraph(
+                f"<font size='8' color='#64748B'>[Image could not be loaded]</font>",
+                styles['TVSmall']
+            ))
+            elements.append(Spacer(1, 12))
     
     # ==================== SCORE OVERVIEW WITH CHARTS ====================
     elements.append(Paragraph("📊 Analysis Overview", styles['TVSection']))
