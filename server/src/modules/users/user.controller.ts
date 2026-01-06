@@ -593,6 +593,7 @@ export const getFollowers = async (
     try {
         const { id } = req.params;
         const { cursor, limit = '20' } = req.query;
+        const currentUserId = req.user?.userId;
 
         // Find the target user's profile
         const targetProfile = await Profile.findOne({
@@ -626,10 +627,21 @@ export const getFollowers = async (
 
         const profileMap = new Map(profiles.map(p => [p.userId.toString(), p]));
 
+        // Check which of these followers the current user is following
+        let currentUserFollowingSet = new Set<string>();
+        if (currentUserId) {
+            const currentUserFollowing = await Follow.find({
+                followerId: currentUserId,
+                followingId: { $in: followerIds }
+            });
+            currentUserFollowingSet = new Set(currentUserFollowing.map(f => f.followingId.toString()));
+        }
+
         const followers = results.map(follow => ({
             _id: follow._id,
             user: profileMap.get(follow.followerId.toString()),
             followedAt: follow.createdAt,
+            isFollowing: currentUserFollowingSet.has(follow.followerId.toString()),
         }));
 
         res.json({

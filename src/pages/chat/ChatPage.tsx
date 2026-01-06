@@ -3129,237 +3129,247 @@ export default function ChatPage() {
         {/* WhatsApp-Style Contact Profile Panel */}
         <AnimatePresence>
           {showContactPanel && selectedConversation && (
-            <m.div
-              initial={{ x: "100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "100%", opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 w-full sm:w-80 h-full bg-[#030712] sm:bg-[#0a0f1a]/95 sm:backdrop-blur-2xl sm:border-l border-white/10 z-50 flex flex-col overflow-hidden"
-            >
-              {/* Panel Header */}
-              <div className="p-3 sm:p-4 border-b border-white/10 flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => setShowContactPanel(false)}
-                  className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95"
-                >
-                  <X className="w-5 h-5 text-white/70" />
-                </button>
-                <h3 className="text-lg sm:text-base font-bold text-white">Contact Info</h3>
-              </div>
-
-              {/* User Profile Section */}
-              <div className="p-6 flex flex-col items-center text-center border-b border-white/10">
-                <div className="relative mb-4">
-                  <Avatar className="w-24 h-24 rounded-2xl border-2 border-primary/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-                    <AvatarImage
-                      src={selectedConversation.participants?.[0]?.avatar}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/20 to-indigo-500/20 text-white">
-                      {selectedConversation.participants?.[0]?.name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-3 border-[#0a0f1a] flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full" />
-                  </div>
+            <>
+              {/* Mobile backdrop overlay */}
+              <m.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 z-[9998] sm:hidden"
+                onClick={() => setShowContactPanel(false)}
+              />
+              <m.div
+                initial={{ x: "100%", opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: "100%", opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="fixed inset-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 w-full sm:w-80 h-full bg-slate-950 sm:bg-[#0a0f1a]/95 sm:backdrop-blur-2xl sm:border-l border-white/10 z-[9999] flex flex-col overflow-hidden overflow-y-auto"
+              >
+                {/* Panel Header */}
+                <div className="p-3 sm:p-4 border-b border-white/10 flex items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => setShowContactPanel(false)}
+                    className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95"
+                  >
+                    <X className="w-5 h-5 text-white/70" />
+                  </button>
+                  <h3 className="text-lg sm:text-base font-bold text-white">Contact Info</h3>
                 </div>
 
-                <h4 className="text-lg font-bold text-white mb-1">
-                  {selectedConversation.type === "group"
-                    ? selectedConversation.groupName
-                    : selectedConversation.participants?.[0]?.name}
-                </h4>
-                <p className="text-sm text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Online
-                </p>
-
-                {isUserBlocked && (
-                  <div className="mt-3 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full">
-                    <span className="text-xs font-semibold text-red-400">⛔ User Blocked</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Quick Actions */}
-              <div className="p-4 grid grid-cols-3 gap-3 border-b border-white/10">
-                <button
-                  onClick={() => {
-                    const targetId = otherParticipantId;
-                    if (targetId) initiateCall(targetId, "audio");
-                    setShowContactPanel(false);
-                  }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
-                >
-                  <Phone className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Call</span>
-                </button>
-                <button
-                  onClick={() => {
-                    const targetId = otherParticipantId;
-                    if (targetId) initiateCall(targetId, "video");
-                    setShowContactPanel(false);
-                  }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
-                >
-                  <Video className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Video</span>
-                </button>
-                <button
-                  onClick={() => window.open(`/app/profile/${otherParticipantId}`, '_blank')}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
-                >
-                  <User className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Profile</span>
-                </button>
-              </div>
-
-              {/* Shared Media - Dynamic from conversation */}
-              {(() => {
-                // Extract media from messages
-                const sharedMedia = currentMessages
-                  .filter((msg: any) => msg.attachments?.length > 0)
-                  .flatMap((msg: any) =>
-                    msg.attachments
-                      .filter((att: any) => att.type === 'image' || att.type === 'video')
-                      .map((att: any) => ({
-                        url: att.url,
-                        type: att.type,
-                        thumbnail: att.thumbnail || att.url,
-                        messageId: msg._id
-                      }))
-                  )
-                  .slice(0, 9); // Limit to 9 items
-
-                return (
-                  <div className="p-3 sm:p-4 border-b border-white/10">
-                    <div className="flex items-center justify-between mb-3">
-                      <h5 className="text-sm font-semibold text-white flex items-center gap-2">
-                        <Image className="w-4 h-4 text-slate-400" />
-                        Shared Media
-                        {sharedMedia.length > 0 && (
-                          <span className="text-xs text-slate-500">({sharedMedia.length})</span>
-                        )}
-                      </h5>
-                      {sharedMedia.length > 6 && (
-                        <button className="text-xs text-primary hover:underline">See All</button>
-                      )}
+                {/* User Profile Section */}
+                <div className="p-6 flex flex-col items-center text-center border-b border-white/10">
+                  <div className="relative mb-4">
+                    <Avatar className="w-24 h-24 rounded-2xl border-2 border-primary/30 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                      <AvatarImage
+                        src={selectedConversation.participants?.[0]?.avatar}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/20 to-indigo-500/20 text-white">
+                        {selectedConversation.participants?.[0]?.name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-3 border-[#0a0f1a] flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full" />
                     </div>
-                    {sharedMedia.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2">
-                        {sharedMedia.slice(0, 6).map((media: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className="aspect-square rounded-lg bg-white/5 overflow-hidden relative group cursor-pointer"
-                            onClick={() => window.open(media.url, '_blank')}
-                          >
-                            <img
-                              src={media.thumbnail}
-                              alt=""
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                            />
-                            {media.type === 'video' && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
-                                  <div className="w-0 h-0 border-l-[10px] border-l-slate-800 border-y-[6px] border-y-transparent ml-1" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                  </div>
+
+                  <h4 className="text-lg font-bold text-white mb-1">
+                    {selectedConversation.type === "group"
+                      ? selectedConversation.groupName
+                      : selectedConversation.participants?.[0]?.name}
+                  </h4>
+                  <p className="text-sm text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Online
+                  </p>
+
+                  {isUserBlocked && (
+                    <div className="mt-3 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full">
+                      <span className="text-xs font-semibold text-red-400">⛔ User Blocked</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick Actions */}
+                <div className="p-4 grid grid-cols-3 gap-3 border-b border-white/10">
+                  <button
+                    onClick={() => {
+                      const targetId = otherParticipantId;
+                      if (targetId) initiateCall(targetId, "audio");
+                      setShowContactPanel(false);
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                  >
+                    <Phone className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Call</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const targetId = otherParticipantId;
+                      if (targetId) initiateCall(targetId, "video");
+                      setShowContactPanel(false);
+                    }}
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                  >
+                    <Video className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Video</span>
+                  </button>
+                  <button
+                    onClick={() => window.open(`/app/profile/${otherParticipantId}`, '_blank')}
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
+                  >
+                    <User className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white">Profile</span>
+                  </button>
+                </div>
+
+                {/* Shared Media - Dynamic from conversation */}
+                {(() => {
+                  // Extract media from messages
+                  const sharedMedia = currentMessages
+                    .filter((msg: any) => msg.attachments?.length > 0)
+                    .flatMap((msg: any) =>
+                      msg.attachments
+                        .filter((att: any) => att.type === 'image' || att.type === 'video')
+                        .map((att: any) => ({
+                          url: att.url,
+                          type: att.type,
+                          thumbnail: att.thumbnail || att.url,
+                          messageId: msg._id
+                        }))
+                    )
+                    .slice(0, 9); // Limit to 9 items
+
+                  return (
+                    <div className="p-3 sm:p-4 border-b border-white/10">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-sm font-semibold text-white flex items-center gap-2">
+                          <Image className="w-4 h-4 text-slate-400" />
+                          Shared Media
+                          {sharedMedia.length > 0 && (
+                            <span className="text-xs text-slate-500">({sharedMedia.length})</span>
+                          )}
+                        </h5>
+                        {sharedMedia.length > 6 && (
+                          <button className="text-xs text-primary hover:underline">See All</button>
+                        )}
                       </div>
-                    ) : (
-                      <>
+                      {sharedMedia.length > 0 ? (
                         <div className="grid grid-cols-3 gap-2">
-                          {[1, 2, 3].map((i) => (
-                            <div key={i} className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
-                              <Camera className="w-5 h-5 text-slate-600" />
+                          {sharedMedia.slice(0, 6).map((media: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="aspect-square rounded-lg bg-white/5 overflow-hidden relative group cursor-pointer"
+                              onClick={() => window.open(media.url, '_blank')}
+                            >
+                              <img
+                                src={media.thumbnail}
+                                alt=""
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                              />
+                              {media.type === 'video' && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                  <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                                    <div className="w-0 h-0 border-l-[10px] border-l-slate-800 border-y-[6px] border-y-transparent ml-1" />
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
-                        <p className="text-[10px] text-slate-500 text-center mt-2">No media shared yet</p>
-                      </>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
+                                <Camera className="w-5 h-5 text-slate-600" />
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-slate-500 text-center mt-2">No media shared yet</p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Action Buttons */}
+                <div className="p-4 space-y-2 mt-auto">
+                  {/* Mute Notifications */}
+                  <button
+                    onClick={() => {
+                      setIsMutedConversation(!isMutedConversation);
+                      toast.success(isMutedConversation ? "Notifications unmuted" : "Notifications muted");
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                      isMutedConversation
+                        ? "bg-amber-500/20 border border-amber-500/30"
+                        : "bg-white/5 hover:bg-white/10"
                     )}
-                  </div>
-                );
-              })()}
+                  >
+                    {isMutedConversation ? (
+                      <BellOff className="w-5 h-5 text-amber-400" />
+                    ) : (
+                      <Bell className="w-5 h-5 text-slate-400" />
+                    )}
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isMutedConversation ? "text-amber-400" : "text-slate-300"
+                    )}>
+                      {isMutedConversation ? "Notifications Muted" : "Mute Notifications"}
+                    </span>
+                  </button>
 
-              {/* Action Buttons */}
-              <div className="p-4 space-y-2 mt-auto">
-                {/* Mute Notifications */}
-                <button
-                  onClick={() => {
-                    setIsMutedConversation(!isMutedConversation);
-                    toast.success(isMutedConversation ? "Notifications unmuted" : "Notifications muted");
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                    isMutedConversation
-                      ? "bg-amber-500/20 border border-amber-500/30"
-                      : "bg-white/5 hover:bg-white/10"
-                  )}
-                >
-                  {isMutedConversation ? (
-                    <BellOff className="w-5 h-5 text-amber-400" />
-                  ) : (
-                    <Bell className="w-5 h-5 text-slate-400" />
-                  )}
-                  <span className={cn(
-                    "text-sm font-medium",
-                    isMutedConversation ? "text-amber-400" : "text-slate-300"
-                  )}>
-                    {isMutedConversation ? "Notifications Muted" : "Mute Notifications"}
-                  </span>
-                </button>
-
-                {/* Block User */}
-                <button
-                  onClick={() => {
-                    if (showBlockConfirm) {
-                      blockUserMutation.mutate(
-                        { userId: otherParticipantId || "" },
-                        {
-                          onSuccess: () => {
-                            toast.success(isUserBlocked ? "User unblocked" : "User blocked successfully");
-                            setShowBlockConfirm(false);
-                            setShowContactPanel(false);
-                          },
-                          onError: (err: any) => {
-                            toast.error(err?.message || "Failed to block user");
-                            setShowBlockConfirm(false);
+                  {/* Block User */}
+                  <button
+                    onClick={() => {
+                      if (showBlockConfirm) {
+                        blockUserMutation.mutate(
+                          { userId: otherParticipantId || "" },
+                          {
+                            onSuccess: () => {
+                              toast.success(isUserBlocked ? "User unblocked" : "User blocked successfully");
+                              setShowBlockConfirm(false);
+                              setShowContactPanel(false);
+                            },
+                            onError: (err: any) => {
+                              toast.error(err?.message || "Failed to block user");
+                              setShowBlockConfirm(false);
+                            }
                           }
-                        }
-                      );
-                    } else {
-                      setShowBlockConfirm(true);
-                      setTimeout(() => setShowBlockConfirm(false), 3000);
-                    }
-                  }}
-                  disabled={blockUserMutation.isPending}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                    showBlockConfirm
-                      ? "bg-red-500/30 border border-red-500/50"
-                      : isUserBlocked
-                        ? "bg-red-500/20 border border-red-500/30"
-                        : "bg-white/5 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent"
-                  )}
-                >
-                  {blockUserMutation.isPending ? (
-                    <Loader2 className="w-5 h-5 text-red-400 animate-spin" />
-                  ) : (
-                    <Ban className="w-5 h-5 text-red-400" />
-                  )}
-                  <span className="text-sm font-medium text-red-400">
-                    {showBlockConfirm
-                      ? "Click again to confirm"
-                      : isUserBlocked
-                        ? "Unblock User"
-                        : "Block User"}
-                  </span>
-                </button>
-              </div>
-            </m.div>
+                        );
+                      } else {
+                        setShowBlockConfirm(true);
+                        setTimeout(() => setShowBlockConfirm(false), 3000);
+                      }
+                    }}
+                    disabled={blockUserMutation.isPending}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                      showBlockConfirm
+                        ? "bg-red-500/30 border border-red-500/50"
+                        : isUserBlocked
+                          ? "bg-red-500/20 border border-red-500/30"
+                          : "bg-white/5 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent"
+                    )}
+                  >
+                    {blockUserMutation.isPending ? (
+                      <Loader2 className="w-5 h-5 text-red-400 animate-spin" />
+                    ) : (
+                      <Ban className="w-5 h-5 text-red-400" />
+                    )}
+                    <span className="text-sm font-medium text-red-400">
+                      {showBlockConfirm
+                        ? "Click again to confirm"
+                        : isUserBlocked
+                          ? "Unblock User"
+                          : "Block User"}
+                    </span>
+                  </button>
+                </div>
+              </m.div>
+            </>
           )}
         </AnimatePresence>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { X, Loader2, UserPlus, UserMinus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +24,7 @@ interface UserItem {
         trustScore?: number;
     };
     followedAt?: string;
+    isFollowing?: boolean; // Added from API response
 }
 
 export function FollowersModal({ isOpen, onClose, userId, type, currentUserId }: FollowersModalProps) {
@@ -45,6 +46,28 @@ export function FollowersModal({ isOpen, onClose, userId, type, currentUserId }:
     );
 
     const total = (data?.pages as Array<{ data?: { total?: number } }> || [])[0]?.data?.total || 0;
+
+    // Initialize followingUsers from API response
+    useEffect(() => {
+        if (users.length > 0) {
+            const initialFollowing = new Set<string>();
+            users.forEach(item => {
+                // For 'following' list type, all users are followed by the profile owner
+                // For 'followers' list, use isFollowing from API
+                if (type === 'following' || item.isFollowing) {
+                    if (item.user?.userId) {
+                        initialFollowing.add(item.user.userId);
+                    }
+                }
+            });
+            setFollowingUsers(prev => {
+                // Merge with any session changes
+                const merged = new Set([...initialFollowing, ...prev]);
+                // Remove any that were unfollowed in session
+                return merged;
+            });
+        }
+    }, [users, type]);
 
     const handleFollowToggle = async (targetUserId: string) => {
         if (followingUsers.has(targetUserId)) {
