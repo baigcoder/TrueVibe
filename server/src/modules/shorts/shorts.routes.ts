@@ -302,22 +302,85 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
 router.delete('/:id', authenticate, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const userId = req.user!.userId;
+        const authUserId = req.user!.userId; // Supabase UUID
 
-        const short = await Short.findOne({ _id: id, userId });
-        if (short) {
-            // Delete media from Cloudinary
-            if (short.videoUrl) {
-                const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
-                await deleteCloudinaryByUrl(short.videoUrl);
-            }
-
-            short.isDeleted = true;
-            await short.save();
+        // Validate ObjectId format
+        if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+            res.status(400).json({
+                success: false,
+                error: { message: 'Invalid short ID format' }
+            });
+            return;
         }
 
+        // First find the short by ID only
+        const short = await Short.findOne({ _id: id, isDeleted: false });
+
+        if (!short) {
+            res.status(404).json({
+                success: false,
+                error: { message: 'Short not found' }
+            });
+            return;
+        }
+
+        // Check ownership - flexible matching for userId vs supabaseId
+        let isOwner = false;
+
+        // Direct match with short.userId
+        if (short.userId === authUserId || short.userId?.toString() === authUserId) {
+            isOwner = true;
+        }
+
+        // If not direct match, check via Profile lookup
+        if (!isOwner) {
+            const profile = await Profile.findOne({
+                $or: [
+                    { supabaseId: authUserId },
+                    { userId: authUserId }
+                ]
+            });
+
+            if (profile) {
+                // Check if short belongs to this profile
+                const profileUserId = profile.userId?.toString();
+                const profileSupabaseId = profile.supabaseId;
+
+                if (short.userId === profileUserId ||
+                    short.userId === profileSupabaseId ||
+                    short.userId?.toString() === profileUserId) {
+                    isOwner = true;
+                }
+            }
+        }
+
+        if (!isOwner) {
+            console.log(`[Short Delete] Ownership denied: authUserId=${authUserId}, short.userId=${short.userId}`);
+            res.status(403).json({
+                success: false,
+                error: { message: 'You do not have permission to delete this short' }
+            });
+            return;
+        }
+
+        // Delete media from Cloudinary
+        if (short.videoUrl) {
+            try {
+                const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
+                await deleteCloudinaryByUrl(short.videoUrl);
+            } catch (cloudinaryError) {
+                console.error('Failed to delete video from Cloudinary:', cloudinaryError);
+                // Continue with soft delete even if Cloudinary delete fails
+            }
+        }
+
+        short.isDeleted = true;
+        await short.save();
+
+        console.log(`[Short Delete] Success: shortId=${id}, userId=${authUserId}`);
         res.json({ success: true, message: 'Short deleted' });
     } catch (error) {
+        console.error('Short delete error:', error);
         next(error);
     }
 });

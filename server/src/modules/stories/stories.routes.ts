@@ -257,7 +257,7 @@ router.post('/:id/react', requireAuth, async (req, res, next) => {
 router.delete('/:id', requireAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const userId = req.auth!.userId;
+        const authUserId = req.auth!.userId; // Supabase UUID
 
         // Validate ObjectId format
         if (!id || !/^[a-f\d]{24}$/i.test(id)) {
@@ -268,13 +268,53 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
             return;
         }
 
-        // Find story that belongs to this user
-        const story = await Story.findOne({ _id: id, userId });
+        // First find the story by ID only
+        const story = await Story.findOne({ _id: id, isDeleted: false });
 
         if (!story) {
             res.status(404).json({
                 success: false,
-                error: { message: 'Story not found or you do not have permission to delete it' }
+                error: { message: 'Story not found' }
+            });
+            return;
+        }
+
+        // Check ownership - flexible matching for userId vs supabaseId
+        let isOwner = false;
+
+        // Direct match with story.userId
+        if (story.userId === authUserId || story.userId?.toString() === authUserId) {
+            isOwner = true;
+        }
+
+        // If not direct match, check via Profile lookup
+        if (!isOwner) {
+            const { Profile } = await import('../users/Profile.model.js');
+            const profile = await Profile.findOne({
+                $or: [
+                    { supabaseId: authUserId },
+                    { userId: authUserId }
+                ]
+            });
+
+            if (profile) {
+                // Check if story belongs to this profile
+                const profileUserId = profile.userId?.toString();
+                const profileSupabaseId = profile.supabaseId;
+
+                if (story.userId === profileUserId ||
+                    story.userId === profileSupabaseId ||
+                    story.userId?.toString() === profileUserId) {
+                    isOwner = true;
+                }
+            }
+        }
+
+        if (!isOwner) {
+            console.log(`[Story Delete] Ownership denied: authUserId=${authUserId}, story.userId=${story.userId}`);
+            res.status(403).json({
+                success: false,
+                error: { message: 'You do not have permission to delete this story' }
             });
             return;
         }
@@ -293,6 +333,7 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
         story.isDeleted = true;
         await story.save();
 
+        console.log(`[Story Delete] Success: storyId=${id}, userId=${authUserId}`);
         res.json({ success: true, message: 'Story deleted' });
     } catch (error) {
         console.error('Story delete error:', error);
