@@ -352,6 +352,57 @@ router.get('/me/export', authenticate, async (req, res, next) => {
     }
 });
 
+// Verified Creators Leaderboard
+router.get('/leaderboard', async (req, res, next) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+
+        // Get top users by trust score with verification badges
+        const users = await Profile.find({
+            trustScore: { $gte: 70 }, // Only users with good trust scores
+        })
+            .select('userId name handle avatar trustScore verificationBadge followers')
+            .sort({ trustScore: -1, followers: -1 })
+            .limit(limit)
+            .lean();
+
+        // Calculate authentic posts count for each user
+        const userIds = users.map(u => u.userId);
+        const postCounts = await Post.aggregate([
+            { $match: { userId: { $in: userIds }, isDeleted: false } },
+            {
+                $group: {
+                    _id: '$userId',
+                    totalPosts: { $sum: 1 },
+                    authenticPosts: {
+                        $sum: { $cond: [{ $eq: ['$trustLevel', 'authentic'] }, 1, 0] }
+                    },
+                }
+            }
+        ]);
+
+        const postCountMap = new Map(postCounts.map(p => [p._id, p]));
+
+        const leaderboard = users.map(user => ({
+            _id: user.userId || (user as any)._id,
+            name: user.name,
+            handle: user.handle,
+            avatar: user.avatar,
+            trustScore: user.trustScore,
+            verificationBadge: user.verificationBadge,
+            authenticPosts: postCountMap.get(user.userId)?.authenticPosts || 0,
+            totalPosts: postCountMap.get(user.userId)?.totalPosts || 0,
+        }));
+
+        res.json({
+            success: true,
+            data: { users: leaderboard },
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // These routes have :id wildcard, so they must come LAST
 router.get('/:id', optionalAuth, userController.getUserById);
 router.post('/:id/follow', authenticate, userController.followUser);

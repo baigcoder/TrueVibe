@@ -13,6 +13,38 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { api } from "@/api/client";
 
+// CSV Export helper function
+function exportToCSV(data: any[], filename: string) {
+    if (!data.length) {
+        toast.error('No data to export');
+        return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+        headers.join(','),
+        ...data.map(row =>
+            headers.map(header => {
+                const value = row[header];
+                // Escape quotes and wrap in quotes if contains comma
+                const stringValue = String(value ?? '');
+                return stringValue.includes(',') || stringValue.includes('"')
+                    ? `"${stringValue.replace(/"/g, '""')}"`
+                    : stringValue;
+            }).join(',')
+        )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success(`Exported ${data.length} records to CSV`);
+}
+
+
 interface StatCardProps {
     title: string;
     value: string | number;
@@ -353,6 +385,28 @@ export default function AnalyticsPage() {
                             </m.button>
                         ))}
                     </div>
+
+                    {/* Export CSV Button */}
+                    <Button
+                        onClick={() => {
+                            const exportData = [...posts, ...shorts].map(item => ({
+                                Type: item.type,
+                                Content: item.content?.substring(0, 100) || 'No content',
+                                Views: item.views,
+                                Likes: item.likes,
+                                Comments: item.comments,
+                                Shares: item.shares || 0,
+                                TrustLevel: item.trustLevel || 'pending',
+                                CreatedAt: new Date(item.createdAt).toLocaleDateString(),
+                            }));
+                            exportToCSV(exportData, 'truevibe_analytics');
+                        }}
+                        variant="outline"
+                        className="bg-white/5 border-white/10 hover:bg-white/10 text-white gap-2 rounded-xl px-4"
+                    >
+                        <Download className="w-4 h-4" />
+                        <span className="hidden sm:inline">Export CSV</span>
+                    </Button>
                 </div>
             </m.div>
 
