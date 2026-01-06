@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { authApi, usersApi, postsApi, commentsApi, feedApi, chatApi, analyticsApi, mediaApi, shortsApi, storiesApi, notificationApi, searchApi, highlightsApi } from './client';
+import { api, authApi, usersApi, postsApi, commentsApi, feedApi, chatApi, analyticsApi, mediaApi, shortsApi, storiesApi, notificationApi, searchApi, highlightsApi } from './client';
 import { useAuth } from '@/context/AuthContext';
 
 // ============ Auth Hooks ============
