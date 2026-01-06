@@ -24,7 +24,7 @@ export interface IStory extends Document {
         createdAt: Date;
     }[];
     // AI Analysis fields
-    trustLevel: 'authentic' | 'suspicious' | 'fake' | 'pending';
+    trustLevel: 'authentic' | 'suspicious' | 'fake' | 'pending' | 'likely_fake' | 'likely_real';
     aiAnalysisId?: mongoose.Types.ObjectId;
     expiresAt: Date;
     isDeleted: boolean;
@@ -76,7 +76,7 @@ const storySchema = new Schema<IStory>(
         // AI Analysis fields
         trustLevel: {
             type: String,
-            enum: ['authentic', 'suspicious', 'fake', 'pending'],
+            enum: ['authentic', 'suspicious', 'fake', 'pending', 'likely_fake', 'likely_real'],
             default: 'pending',
         },
         aiAnalysisId: {
