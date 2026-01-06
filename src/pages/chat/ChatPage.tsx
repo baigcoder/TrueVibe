@@ -3130,21 +3130,21 @@ export default function ChatPage() {
         <AnimatePresence>
           {showContactPanel && selectedConversation && (
             <m.div
-              initial={{ x: 320, opacity: 0 }}
+              initial={{ x: "100%", opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 320, opacity: 0 }}
+              exit={{ x: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute top-0 right-0 w-80 h-full bg-[#0a0f1a]/95 backdrop-blur-2xl border-l border-white/10 z-50 flex flex-col overflow-hidden"
+              className="fixed inset-0 sm:absolute sm:inset-auto sm:top-0 sm:right-0 w-full sm:w-80 h-full bg-[#0a0f1a]/98 sm:bg-[#0a0f1a]/95 backdrop-blur-2xl sm:border-l border-white/10 z-50 flex flex-col overflow-hidden safe-area-inset"
             >
               {/* Panel Header */}
-              <div className="p-4 border-b border-white/10 flex items-center gap-3">
+              <div className="p-3 sm:p-4 border-b border-white/10 flex items-center gap-3 shrink-0">
                 <button
                   onClick={() => setShowContactPanel(false)}
-                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95"
                 >
                   <X className="w-5 h-5 text-white/70" />
                 </button>
-                <h3 className="text-base font-bold text-white">Contact Info</h3>
+                <h3 className="text-lg sm:text-base font-bold text-white">Contact Info</h3>
               </div>
 
               {/* User Profile Section */}
@@ -3214,24 +3214,75 @@ export default function ChatPage() {
                 </button>
               </div>
 
-              {/* Shared Media Placeholder */}
-              <div className="p-4 border-b border-white/10">
-                <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <Image className="w-4 h-4 text-slate-400" />
-                    Shared Media
-                  </h5>
-                  <button className="text-xs text-primary hover:underline">See All</button>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
-                      <Camera className="w-5 h-5 text-slate-600" />
+              {/* Shared Media - Dynamic from conversation */}
+              {(() => {
+                // Extract media from messages
+                const sharedMedia = currentMessages
+                  .filter((msg: any) => msg.attachments?.length > 0)
+                  .flatMap((msg: any) =>
+                    msg.attachments
+                      .filter((att: any) => att.type === 'image' || att.type === 'video')
+                      .map((att: any) => ({
+                        url: att.url,
+                        type: att.type,
+                        thumbnail: att.thumbnail || att.url,
+                        messageId: msg._id
+                      }))
+                  )
+                  .slice(0, 9); // Limit to 9 items
+
+                return (
+                  <div className="p-3 sm:p-4 border-b border-white/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <Image className="w-4 h-4 text-slate-400" />
+                        Shared Media
+                        {sharedMedia.length > 0 && (
+                          <span className="text-xs text-slate-500">({sharedMedia.length})</span>
+                        )}
+                      </h5>
+                      {sharedMedia.length > 6 && (
+                        <button className="text-xs text-primary hover:underline">See All</button>
+                      )}
                     </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-500 text-center mt-2">No media shared yet</p>
-              </div>
+                    {sharedMedia.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {sharedMedia.slice(0, 6).map((media: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="aspect-square rounded-lg bg-white/5 overflow-hidden relative group cursor-pointer"
+                            onClick={() => window.open(media.url, '_blank')}
+                          >
+                            <img
+                              src={media.thumbnail}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                            />
+                            {media.type === 'video' && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                                  <div className="w-0 h-0 border-l-[10px] border-l-slate-800 border-y-[6px] border-y-transparent ml-1" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="aspect-square rounded-lg bg-white/5 flex items-center justify-center">
+                              <Camera className="w-5 h-5 text-slate-600" />
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-slate-500 text-center mt-2">No media shared yet</p>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Action Buttons */}
               <div className="p-4 space-y-2 mt-auto">
