@@ -168,39 +168,58 @@ router.post('/:id/view', requireAuth, async (req, res, next) => {
 router.post('/:id/like', requireAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const userId = req.auth!.userId;
+        const userId = String(req.auth!.userId); // Ensure string
+
+        console.log(`[Story Like] Request: storyId=${id}, userId=${userId}`);
 
         // Validate ObjectId format
         if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+            console.log(`[Story Like] Invalid story ID format: ${id}`);
             res.status(400).json({ success: false, error: { message: 'Invalid story ID format' } });
             return;
         }
 
         const story = await Story.findById(id);
         if (!story) {
+            console.log(`[Story Like] Story not found: ${id}`);
             res.status(404).json({ success: false, error: { message: 'Story not found' } });
             return;
         }
 
-        // Check if story is deleted or expired
+        // Check if story is deleted
         if (story.isDeleted) {
+            console.log(`[Story Like] Story is deleted: ${id}`);
             res.status(404).json({ success: false, error: { message: 'Story has been deleted' } });
             return;
         }
 
-        const likeIndex = story.likes.indexOf(userId);
-        if (likeIndex > -1) {
-            // Unlike
-            story.likes.splice(likeIndex, 1);
+        // Ensure likes array exists and contains strings
+        if (!story.likes) {
+            story.likes = [];
+        }
+
+        // Convert all likes to strings for comparison
+        const likesAsStrings = story.likes.map(like => String(like));
+        const isLiked = likesAsStrings.includes(userId);
+
+        console.log(`[Story Like] Current likes count: ${story.likes.length}, isLiked: ${isLiked}`);
+
+        if (isLiked) {
+            // Unlike - remove userId from likes
+            story.likes = story.likes.filter(like => String(like) !== userId);
+            console.log(`[Story Like] Unliked, new count: ${story.likes.length}`);
         } else {
-            // Like
+            // Like - add userId
             story.likes.push(userId);
+            console.log(`[Story Like] Liked, new count: ${story.likes.length}`);
         }
 
         await story.save();
-        res.json({ success: true, isLiked: likeIndex === -1, likesCount: story.likes.length });
+
+        console.log(`[Story Like] Success: storyId=${id}, userId=${userId}, isLiked=${!isLiked}`);
+        res.json({ success: true, isLiked: !isLiked, likesCount: story.likes.length });
     } catch (error) {
-        console.error('Story like error:', error);
+        console.error('[Story Like] Error:', error);
         next(error);
     }
 });
@@ -257,10 +276,13 @@ router.post('/:id/react', requireAuth, async (req, res, next) => {
 router.delete('/:id', requireAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const authUserId = req.auth!.userId; // Supabase UUID
+        const authUserId = String(req.auth!.userId); // Ensure string
+
+        console.log(`[Story Delete] Request: storyId=${id}, authUserId=${authUserId}`);
 
         // Validate ObjectId format
         if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+            console.log(`[Story Delete] Invalid story ID format: ${id}`);
             res.status(400).json({
                 success: false,
                 error: { message: 'Invalid story ID format' }
@@ -268,10 +290,11 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
             return;
         }
 
-        // First find the story by ID only
+        // Find the story by ID
         const story = await Story.findOne({ _id: id, isDeleted: false });
 
         if (!story) {
+            console.log(`[Story Delete] Story not found or already deleted: ${id}`);
             res.status(404).json({
                 success: false,
                 error: { message: 'Story not found' }
@@ -279,39 +302,16 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
             return;
         }
 
-        // Check ownership - flexible matching for userId vs supabaseId
-        let isOwner = false;
+        // Log all versions of userId for debugging
+        const storyUserId = String(story.userId || '');
+        console.log(`[Story Delete] Ownership check: authUserId="${authUserId}", storyUserId="${storyUserId}"`);
+        console.log(`[Story Delete] Types: authUserId=${typeof authUserId}, storyUserId=${typeof story.userId}`);
 
-        // Direct match with story.userId
-        if (story.userId === authUserId || story.userId?.toString() === authUserId) {
-            isOwner = true;
-        }
-
-        // If not direct match, check via Profile lookup
-        if (!isOwner) {
-            const { Profile } = await import('../users/Profile.model.js');
-            const profile = await Profile.findOne({
-                $or: [
-                    { supabaseId: authUserId },
-                    { userId: authUserId }
-                ]
-            });
-
-            if (profile) {
-                // Check if story belongs to this profile
-                const profileUserId = profile.userId?.toString();
-                const profileSupabaseId = profile.supabaseId;
-
-                if (story.userId === profileUserId ||
-                    story.userId === profileSupabaseId ||
-                    story.userId?.toString() === profileUserId) {
-                    isOwner = true;
-                }
-            }
-        }
+        // Simple string comparison for ownership
+        const isOwner = storyUserId === authUserId;
 
         if (!isOwner) {
-            console.log(`[Story Delete] Ownership denied: authUserId=${authUserId}, story.userId=${story.userId}`);
+            console.log(`[Story Delete] DENIED - userId mismatch. auth="${authUserId}" story="${storyUserId}"`);
             res.status(403).json({
                 success: false,
                 error: { message: 'You do not have permission to delete this story' }
@@ -319,13 +319,16 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
             return;
         }
 
+        console.log(`[Story Delete] Ownership confirmed, proceeding with delete`);
+
         // Delete media from Cloudinary
         if (story.mediaUrl) {
             try {
                 const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
                 await deleteCloudinaryByUrl(story.mediaUrl);
+                console.log(`[Story Delete] Cloudinary media deleted`);
             } catch (cloudinaryError) {
-                console.error('Failed to delete media from Cloudinary:', cloudinaryError);
+                console.error('[Story Delete] Cloudinary delete failed:', cloudinaryError);
                 // Continue with soft delete even if Cloudinary delete fails
             }
         }
@@ -333,10 +336,10 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
         story.isDeleted = true;
         await story.save();
 
-        console.log(`[Story Delete] Success: storyId=${id}, userId=${authUserId}`);
+        console.log(`[Story Delete] SUCCESS: storyId=${id}, userId=${authUserId}`);
         res.json({ success: true, message: 'Story deleted' });
     } catch (error) {
-        console.error('Story delete error:', error);
+        console.error('[Story Delete] Error:', error);
         next(error);
     }
 });

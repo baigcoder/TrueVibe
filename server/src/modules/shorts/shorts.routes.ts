@@ -302,10 +302,13 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
 router.delete('/:id', authenticate, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const authUserId = req.user!.userId; // Supabase UUID
+        const authUserId = String(req.user!.userId); // Ensure string
+
+        console.log(`[Short Delete] Request: shortId=${id}, authUserId=${authUserId}`);
 
         // Validate ObjectId format
         if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+            console.log(`[Short Delete] Invalid short ID format: ${id}`);
             res.status(400).json({
                 success: false,
                 error: { message: 'Invalid short ID format' }
@@ -313,10 +316,11 @@ router.delete('/:id', authenticate, async (req, res, next) => {
             return;
         }
 
-        // First find the short by ID only
+        // Find the short by ID
         const short = await Short.findOne({ _id: id, isDeleted: false });
 
         if (!short) {
+            console.log(`[Short Delete] Short not found or already deleted: ${id}`);
             res.status(404).json({
                 success: false,
                 error: { message: 'Short not found' }
@@ -324,38 +328,16 @@ router.delete('/:id', authenticate, async (req, res, next) => {
             return;
         }
 
-        // Check ownership - flexible matching for userId vs supabaseId
-        let isOwner = false;
+        // Log all versions of userId for debugging
+        const shortUserId = String(short.userId || '');
+        console.log(`[Short Delete] Ownership check: authUserId="${authUserId}", shortUserId="${shortUserId}"`);
+        console.log(`[Short Delete] Types: authUserId=${typeof authUserId}, shortUserId=${typeof short.userId}`);
 
-        // Direct match with short.userId
-        if (short.userId === authUserId || short.userId?.toString() === authUserId) {
-            isOwner = true;
-        }
-
-        // If not direct match, check via Profile lookup
-        if (!isOwner) {
-            const profile = await Profile.findOne({
-                $or: [
-                    { supabaseId: authUserId },
-                    { userId: authUserId }
-                ]
-            });
-
-            if (profile) {
-                // Check if short belongs to this profile
-                const profileUserId = profile.userId?.toString();
-                const profileSupabaseId = profile.supabaseId;
-
-                if (short.userId === profileUserId ||
-                    short.userId === profileSupabaseId ||
-                    short.userId?.toString() === profileUserId) {
-                    isOwner = true;
-                }
-            }
-        }
+        // Simple string comparison for ownership
+        const isOwner = shortUserId === authUserId;
 
         if (!isOwner) {
-            console.log(`[Short Delete] Ownership denied: authUserId=${authUserId}, short.userId=${short.userId}`);
+            console.log(`[Short Delete] DENIED - userId mismatch. auth="${authUserId}" short="${shortUserId}"`);
             res.status(403).json({
                 success: false,
                 error: { message: 'You do not have permission to delete this short' }
@@ -363,13 +345,16 @@ router.delete('/:id', authenticate, async (req, res, next) => {
             return;
         }
 
+        console.log(`[Short Delete] Ownership confirmed, proceeding with delete`);
+
         // Delete media from Cloudinary
         if (short.videoUrl) {
             try {
                 const { deleteCloudinaryByUrl } = await import('../../config/cloudinary.js');
                 await deleteCloudinaryByUrl(short.videoUrl);
+                console.log(`[Short Delete] Cloudinary video deleted`);
             } catch (cloudinaryError) {
-                console.error('Failed to delete video from Cloudinary:', cloudinaryError);
+                console.error('[Short Delete] Cloudinary delete failed:', cloudinaryError);
                 // Continue with soft delete even if Cloudinary delete fails
             }
         }
@@ -377,10 +362,10 @@ router.delete('/:id', authenticate, async (req, res, next) => {
         short.isDeleted = true;
         await short.save();
 
-        console.log(`[Short Delete] Success: shortId=${id}, userId=${authUserId}`);
+        console.log(`[Short Delete] SUCCESS: shortId=${id}, userId=${authUserId}`);
         res.json({ success: true, message: 'Short deleted' });
     } catch (error) {
-        console.error('Short delete error:', error);
+        console.error('[Short Delete] Error:', error);
         next(error);
     }
 });
