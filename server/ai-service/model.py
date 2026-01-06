@@ -2663,6 +2663,16 @@ class DeepfakeDetector:
         details['filter_analysis'] = filter_details
         details['content_type'] = content_info.get('content_type', 'unknown') if content_info else 'unknown'
         
+        # CRITICAL: Include face detection data for PDF report and frontend
+        details['faces_detected'] = len(faces)
+        # Get face-specific scores from the results
+        face_scores = []
+        for (_, name, _), r in zip(frames, results):
+            # Only include face scores (not fft, eye, etc.)
+            if 'face' in name.lower() and 'fft' not in name.lower() and 'eye' not in name.lower():
+                face_scores.append(round(r['fake'], 4))
+        details['face_scores'] = face_scores
+        
         _, debug_frames = self.save_debug(frames, results, MediaType.IMAGE)
         details['debug_frames'] = debug_frames
         
@@ -2765,6 +2775,16 @@ class DeepfakeDetector:
             details['debug_frames'] = debug_frames
         else:
             details['debug_frames'] = []
+        
+        # CRITICAL: Include face detection data for PDF report and frontend
+        details['faces_detected'] = len(faces) if faces else 0
+        # Get face-specific scores from the results (if any)
+        face_scores = []
+        if results:
+            for (_, name, _), r in zip(frames, results):
+                if 'face' in name.lower() and 'fft' not in name.lower() and 'eye' not in name.lower():
+                    face_scores.append(round(r['fake'], 4))
+        details['face_scores'] = face_scores
         
         return self._finalize(probs, details, "VIDEO")
     
