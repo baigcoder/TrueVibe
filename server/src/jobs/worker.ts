@@ -8,6 +8,7 @@ import { AIAnalysis, AIClassification } from '../modules/posts/AIAnalysis.model.
 import { Notification } from '../modules/notifications/Notification.model.js';
 import { Profile } from '../modules/users/Profile.model.js';
 import { FlaggedPost } from '../modules/moderation/FlaggedPost.model.js';
+import { sendFakeDetectionAlert } from '../services/email.service.js';
 import { emitToUser } from '../socket/index.js';
 import { config } from '../config/index.js';
 import { fetchWithRetry, withCircuitBreaker } from '../shared/utils/http.utils.js';
@@ -409,6 +410,27 @@ const aiAnalysisWorker = new Worker(
                                 link: contentType === 'short' ? `/app/shorts/${mediaId}` : `/app/posts/${postId}`,
                                 isRead: false,
                             });
+
+                            // Send email alert for fake detection
+                            if (ownerId) {
+                                const userProfile = await Profile.findOne({ userId: ownerId }).lean();
+                                if (userProfile) {
+                                    // Get user's email from Supabase (stored in supabaseId or we use a fallback)
+                                    try {
+                                        await sendFakeDetectionAlert({
+                                            recipientEmail: (userProfile as any).email || `${ownerId}@user.truevibe.app`,
+                                            recipientName: userProfile.name || 'User',
+                                            contentType,
+                                            contentId: contentType === 'short' ? mediaId : postId,
+                                            fakeScore: result.fakeScore,
+                                            classification,
+                                        });
+                                        debugLog(`Sent fake detection email alert to ${userProfile.name}`);
+                                    } catch (emailError) {
+                                        debugLog('Failed to send fake detection email:', emailError);
+                                    }
+                                }
+                            }
                         }
                     } catch (flagError) {
                         errorLog('Failed to auto-flag content:', flagError);
