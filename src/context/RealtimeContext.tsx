@@ -310,8 +310,13 @@ export interface AIAnalysisData {
     framesAnalyzed?: number;
 }
 
+// Global AI analysis event listeners (shared across all components)
+const aiAnalysisListeners = new Set<(data: AIAnalysisData) => void>();
+let aiAnalysisChannelRef: RealtimeChannel | null = null;
+let aiAnalysisChannelSubscribed = false;
+
 export function useAIAnalysisRealtime(onAnalysisComplete?: (data: AIAnalysisData) => void) {
-    const { subscribeToChannel, unsubscribeFromChannel } = useRealtime();
+    const { subscribeToChannel } = useRealtime();
     const callbackRef = useRef(onAnalysisComplete);
 
     // Keep callback ref updated
@@ -320,25 +325,49 @@ export function useAIAnalysisRealtime(onAnalysisComplete?: (data: AIAnalysisData
     }, [onAnalysisComplete]);
 
     useEffect(() => {
-        const channelName = 'ai-analysis-updates';
-        console.log('[Realtime] Subscribing to AI analysis channel:', channelName);
-
-        const channel = subscribeToChannel(channelName);
-
-        // Handle AI analysis complete events
-        channel.on('broadcast', { event: 'ai:analysis-complete' }, ({ payload }) => {
-            console.log('📡 [Supabase Realtime] AI Analysis complete received:', payload);
-
-            if (callbackRef.current && payload) {
-                callbackRef.current(payload as AIAnalysisData);
+        // Create a wrapper that calls the current callback
+        const listener = (data: AIAnalysisData) => {
+            if (callbackRef.current) {
+                callbackRef.current(data);
             }
-        });
-
-        return () => {
-            console.log('[Realtime] Unsubscribing from AI analysis channel:', channelName);
-            unsubscribeFromChannel(channelName);
         };
-    }, [subscribeToChannel, unsubscribeFromChannel]);
+
+        // Add this listener to the global set
+        aiAnalysisListeners.add(listener);
+
+        // Initialize the shared channel only ONCE (first subscriber)
+        if (!aiAnalysisChannelSubscribed) {
+            const channelName = 'ai-analysis-updates';
+            console.log('[Realtime] Creating SHARED AI analysis channel subscription:', channelName);
+
+            aiAnalysisChannelRef = subscribeToChannel(channelName);
+
+            // Handle AI analysis complete events - broadcast to ALL registered listeners
+            aiAnalysisChannelRef.on('broadcast', { event: 'ai:analysis-complete' }, ({ payload }) => {
+                console.log('📡 [Supabase Realtime] AI Analysis complete received, notifying', aiAnalysisListeners.size, 'listeners:', payload);
+
+                // Notify all registered listeners
+                aiAnalysisListeners.forEach(listenerFn => {
+                    try {
+                        listenerFn(payload as AIAnalysisData);
+                    } catch (err) {
+                        console.error('[Realtime] Error in AI analysis listener:', err);
+                    }
+                });
+            });
+
+            aiAnalysisChannelSubscribed = true;
+        }
+
+        // Cleanup: remove this listener but DON'T unsubscribe the channel
+        // (channel stays alive as long as any listener exists)
+        return () => {
+            aiAnalysisListeners.delete(listener);
+            console.log('[Realtime] Removed AI analysis listener, remaining:', aiAnalysisListeners.size);
+            // We intentionally do NOT unsubscribe the channel here
+            // It stays subscribed for the lifetime of the app
+        };
+    }, [subscribeToChannel]);
 }
 
 // Broadcast AI analysis complete (to be called from backend or after API response)
