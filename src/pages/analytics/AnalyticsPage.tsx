@@ -304,12 +304,12 @@ export default function AnalyticsPage() {
     const totalWithTrust = allContent.length;
 
     const trustDistribution = totalWithTrust > 0 ? [
-        { name: 'Authentic', value: Math.round((authenticCount / totalWithTrust) * 100), color: '#22c55e' },
-        { name: 'Suspicious', value: Math.round((suspiciousCount / totalWithTrust) * 100), color: '#eab308' },
-        { name: 'Fake', value: Math.round((fakeCount / totalWithTrust) * 100), color: '#ef4444' },
-        { name: 'Pending', value: Math.round((pendingCount / totalWithTrust) * 100), color: '#64748b' },
+        { name: 'Authentic', value: authenticCount, percent: Math.round((authenticCount / totalWithTrust) * 100), color: '#22c55e' },
+        { name: 'Suspicious', value: suspiciousCount, percent: Math.round((suspiciousCount / totalWithTrust) * 100), color: '#eab308' },
+        { name: 'Fake', value: fakeCount, percent: Math.round((fakeCount / totalWithTrust) * 100), color: '#ef4444' },
+        { name: 'Pending', value: pendingCount, percent: Math.round((pendingCount / totalWithTrust) * 100), color: '#64748b' },
     ].filter(item => item.value > 0) : [
-        { name: 'No Data', value: 100, color: '#64748b' },
+        { name: 'No Data', value: 1, percent: 100, color: '#64748b' },
     ];
 
     // Chart data for posts vs shorts
@@ -673,12 +673,12 @@ export default function AnalyticsPage() {
                                             <div key={item.name} className="space-y-1">
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-slate-400 font-bold uppercase">{item.name}</span>
-                                                    <span className="text-xs font-bold text-white">{item.value}%</span>
+                                                    <span className="text-xs font-bold text-white">{item.percent ?? item.value}%</span>
                                                 </div>
                                                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                                                     <div
                                                         className="h-full rounded-full transition-all"
-                                                        style={{ width: `${item.value}%`, backgroundColor: item.color }}
+                                                        style={{ width: `${item.percent ?? item.value}%`, backgroundColor: item.color }}
                                                     />
                                                 </div>
                                             </div>
