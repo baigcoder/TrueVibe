@@ -362,6 +362,96 @@ export function AIReportModal({
                                     </div>
                                 </div>
 
+                                {/* Enhanced Probability Breakdown Section */}
+                                <div className="bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-950/60 rounded-2xl sm:rounded-3xl border border-white/10 p-4 sm:p-6 backdrop-blur-xl">
+                                    <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                                        <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+                                            <Zap className="w-4 h-4 text-violet-400" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xs sm:text-sm font-black uppercase tracking-widest text-white">Probability Analysis</h4>
+                                            <p className="text-[10px] sm:text-xs text-slate-500">AI confidence breakdown</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Real vs Fake Probability Gauges */}
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                                        {/* Authentic Probability */}
+                                        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-400/80">Authentic</span>
+                                            </div>
+                                            <div className="text-2xl sm:text-4xl font-black text-emerald-400 tracking-tighter">
+                                                {report.report.verdict === 'authentic' ? confidence : (100 - confidence)}%
+                                            </div>
+                                            <div className="h-1.5 w-full bg-emerald-500/10 rounded-full mt-2 overflow-hidden">
+                                                <m.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${report.report.verdict === 'authentic' ? confidence : (100 - confidence)}%` }}
+                                                    transition={{ duration: 1, delay: 0.2 }}
+                                                    className="h-full bg-emerald-500 rounded-full"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Manipulation Probability */}
+                                        <div className="bg-red-500/5 border border-red-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <XOctagon className="w-4 h-4 text-red-400" />
+                                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-400/80">Manipulated</span>
+                                            </div>
+                                            <div className="text-2xl sm:text-4xl font-black text-red-400 tracking-tighter">
+                                                {report.report.verdict !== 'authentic' ? confidence : (100 - confidence)}%
+                                            </div>
+                                            <div className="h-1.5 w-full bg-red-500/10 rounded-full mt-2 overflow-hidden">
+                                                <m.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${report.report.verdict !== 'authentic' ? confidence : (100 - confidence)}%` }}
+                                                    transition={{ duration: 1, delay: 0.3 }}
+                                                    className="h-full bg-red-500 rounded-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Detection Category Scores */}
+                                    {report.report.detectionBreakdown && report.report.detectionBreakdown.length > 0 && (
+                                        <div className="space-y-2 sm:space-y-3">
+                                            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Category Scores</div>
+                                            {report.report.detectionBreakdown.slice(0, 5).map((item, idx) => {
+                                                const score = item.score !== undefined ? Math.round(item.score * 100) : 0;
+                                                const isHigh = score >= 70;
+                                                const isMedium = score >= 40 && score < 70;
+                                                return (
+                                                    <div key={idx} className="flex items-center gap-3">
+                                                        <span className="text-[10px] sm:text-xs text-slate-400 font-medium w-24 sm:w-32 truncate">
+                                                            {item.category.replace(' Analysis', '').replace(' Detection', '')}
+                                                        </span>
+                                                        <div className="flex-1 h-2 bg-slate-800/50 rounded-full overflow-hidden">
+                                                            <m.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${score}%` }}
+                                                                transition={{ duration: 0.8, delay: idx * 0.1 }}
+                                                                className={cn(
+                                                                    "h-full rounded-full",
+                                                                    isHigh ? "bg-red-500" : isMedium ? "bg-amber-500" : "bg-emerald-500"
+                                                                )}
+                                                            />
+                                                        </div>
+                                                        <span className={cn(
+                                                            "text-xs font-bold w-10 text-right",
+                                                            isHigh ? "text-red-400" : isMedium ? "text-amber-400" : "text-emerald-400"
+                                                        )}>
+                                                            {score}%
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Audit Metrics Section */}
                                 <div className="space-y-4 sm:space-y-6">
                                     <div className="flex items-center gap-2 sm:gap-4 px-1 sm:px-2">
