@@ -141,14 +141,21 @@ export function TrustBadge({
     // Check if we're in a pending/analyzing state with no real data
     const isPendingState = ['pending', 'analyzing'].includes(level.toLowerCase()) && !analysisDetails;
 
-    const fakePercent = analysisDetails?.fakeScore !== undefined
-        ? Math.round(analysisDetails.fakeScore * 100)
+    // Normalize fakeScore: API might return 0-1 OR 0-100
+    // If fakeScore > 1, it's already a percentage; otherwise multiply by 100
+    const rawFakeScore = analysisDetails?.fakeScore;
+    const normalizedFakeScore = rawFakeScore !== undefined
+        ? (rawFakeScore > 1 ? rawFakeScore : rawFakeScore * 100)
+        : undefined;
+
+    const fakePercent = normalizedFakeScore !== undefined
+        ? Math.round(normalizedFakeScore)
         : (score !== undefined ? (100 - score) : (100 - getDefaultRealPercent(level)));
     const realPercent = 100 - fakePercent;
 
     // Derive the ACTUAL level from SCORE FIRST to ensure accuracy
     // This ensures 60%+ authentic shows as VERIFIED
-    // Professional thresholds:
+    // Professional thresholds (using fakePercent 0-100):
     // - 40% or less fake (60%+ authentic) = VERIFIED (authentic)
     // - 40-55% fake (45-60% authentic) = REVIEW (needs review)
     // - 55-70% fake (30-45% authentic) = HIGH RISK (likely fake)
@@ -156,13 +163,12 @@ export function TrustBadge({
     let rawLevel: string;
     if (isPendingState) {
         rawLevel = level.toLowerCase();
-    } else if (analysisDetails?.fakeScore !== undefined) {
-        // fakeScore is 0-1 (0.35 = 35% fake, 65% authentic)
-        const fakePct = analysisDetails.fakeScore;
-        if (fakePct <= 0.40) rawLevel = 'authentic';          // 60%+ authentic = VERIFIED
-        else if (fakePct <= 0.55) rawLevel = 'suspicious';    // 45-60% authentic = REVIEW
-        else if (fakePct <= 0.70) rawLevel = 'likely_fake';   // 30-45% authentic = HIGH RISK
-        else rawLevel = 'fake';                                // <30% authentic = MANIPULATED
+    } else if (normalizedFakeScore !== undefined) {
+        // Use already-normalized fakePercent (0-100 scale)
+        if (fakePercent <= 40) rawLevel = 'authentic';          // 60%+ authentic = VERIFIED
+        else if (fakePercent <= 55) rawLevel = 'suspicious';    // 45-60% authentic = REVIEW
+        else if (fakePercent <= 70) rawLevel = 'likely_fake';   // 30-45% authentic = HIGH RISK
+        else rawLevel = 'fake';                                  // <30% authentic = MANIPULATED
     } else if (analysisDetails?.classification) {
         rawLevel = analysisDetails.classification.toLowerCase();
     } else {
