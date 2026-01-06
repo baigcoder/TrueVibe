@@ -1658,7 +1658,7 @@ export default function ChatPage() {
                           (p: any) => p._id !== profile?._id && p.userId !== profile?._id
                         );
                         const targetId = otherParticipant?.supabaseId || otherParticipant?.userId || otherParticipant?._id;
-                        if (targetId) initiateCall(targetId, "audio");
+                        if (targetId) initiateCall(targetId, "audio", { name: otherParticipant?.name, avatar: otherParticipant?.avatar });
                       }}
                       className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn shrink-0"
                     >
@@ -1673,7 +1673,7 @@ export default function ChatPage() {
                           (p: any) => p._id !== profile?._id && p.userId !== profile?._id
                         );
                         const targetId = otherParticipant?.supabaseId || otherParticipant?.userId || otherParticipant?._id;
-                        if (targetId) initiateCall(targetId, "video");
+                        if (targetId) initiateCall(targetId, "video", { name: otherParticipant?.name, avatar: otherParticipant?.avatar });
                       }}
                       className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl glass-premium text-slate-400 hover:text-primary transition-all shadow-md group/btn shrink-0"
                     >
@@ -3195,7 +3195,8 @@ export default function ChatPage() {
                   <button
                     onClick={() => {
                       const targetId = otherParticipantId;
-                      if (targetId) initiateCall(targetId, "audio");
+                      const targetUser = selectedConversation.participants?.find((p: any) => p._id !== profile?._id && p.userId !== profile?._id);
+                      if (targetId) initiateCall(targetId, "audio", { name: targetUser?.name, avatar: targetUser?.avatar });
                       setShowContactPanel(false);
                     }}
                     className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"
@@ -3206,7 +3207,8 @@ export default function ChatPage() {
                   <button
                     onClick={() => {
                       const targetId = otherParticipantId;
-                      if (targetId) initiateCall(targetId, "video");
+                      const targetUser = selectedConversation.participants?.find((p: any) => p._id !== profile?._id && p.userId !== profile?._id);
+                      if (targetId) initiateCall(targetId, "video", { name: targetUser?.name, avatar: targetUser?.avatar });
                       setShowContactPanel(false);
                     }}
                     className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-primary/10 transition-colors group"

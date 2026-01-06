@@ -69,21 +69,21 @@ export function CommentSection({ postId }: CommentSectionProps) {
     };
 
     return (
-        <div className="pt-4 space-y-4 border-t border-white/5 mt-4">
+        <div className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 border-t border-white/5 mt-3 sm:mt-4">
             {/* Comment Input */}
-            <form onSubmit={handleSubmit} className="flex gap-3 items-start">
-                <Avatar className="w-8 h-8 border border-white/10">
+            <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-3 items-start">
+                <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border border-white/10 flex-shrink-0">
                     <AvatarImage src={profile?.avatar} />
-                    <AvatarFallback className="text-[10px] bg-slate-800">
+                    <AvatarFallback className="text-[9px] sm:text-[10px] bg-slate-800">
                         {profile?.name?.[0] || "?"}
                     </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 relative group">
+                <div className="flex-1 relative group min-w-0">
                     <Textarea
                         placeholder="Join the frequency..."
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        className="min-h-[40px] max-h-[120px] bg-white/[0.03] border-white/10 focus:border-primary/30 focus:ring-primary/20 rounded-xl py-2 px-3 text-sm placeholder:text-slate-500 transition-all resize-none"
+                        className="min-h-[36px] sm:min-h-[40px] max-h-[100px] sm:max-h-[120px] bg-white/[0.03] border-white/10 focus:border-primary/30 focus:ring-primary/20 rounded-xl py-2 px-3 text-xs sm:text-sm placeholder:text-slate-500 transition-all resize-none pr-10"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
@@ -94,7 +94,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                     <Button
                         type="submit"
                         disabled={!content.trim() || createComment.isPending}
-                        className="absolute right-2 bottom-2 h-7 w-7 p-0 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20 disabled:opacity-30 transition-all"
+                        className="absolute right-1.5 sm:right-2 bottom-1.5 sm:bottom-2 h-6 w-6 sm:h-7 sm:w-7 p-0 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20 disabled:opacity-30 transition-all"
                     >
                         {createComment.isPending ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -106,13 +106,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
             </form>
 
             {/* Comments List */}
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-3 sm:space-y-4 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                 {isLoading ? (
                     <div className="flex justify-center py-4">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
+                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary/40" />
                     </div>
                 ) : comments.length === 0 ? (
-                    <p className="text-center text-slate-500 text-xs py-4 font-medium uppercase tracking-widest opacity-50">
+                    <p className="text-center text-slate-500 text-[10px] sm:text-xs py-3 sm:py-4 font-medium uppercase tracking-widest opacity-50">
                         No signals received yet
                     </p>
                 ) : (
@@ -128,22 +128,22 @@ export function CommentSection({ postId }: CommentSectionProps) {
                                 key={comment._id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="flex gap-3 group/comment"
+                                className="flex gap-2 sm:gap-3 group/comment"
                             >
-                                <Avatar className="w-8 h-8 border border-white/10 mt-1">
+                                <Avatar className="w-6 h-6 sm:w-8 sm:h-8 border border-white/10 mt-0.5 sm:mt-1 flex-shrink-0">
                                     <AvatarImage src={authorAvatar} />
-                                    <AvatarFallback className="text-[10px] bg-slate-900">
+                                    <AvatarFallback className="text-[8px] sm:text-[10px] bg-slate-900">
                                         {authorName?.[0] || "?"}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                    <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-colors relative">
-                                        <div className="flex items-center justify-between gap-2 mb-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[11px] font-black italic uppercase text-slate-300 truncate tracking-tight">
+                                    <div className="bg-white/[0.03] border border-white/5 rounded-xl sm:rounded-2xl p-2 sm:p-3 hover:border-white/10 transition-colors relative">
+                                        <div className="flex items-center justify-between gap-1 sm:gap-2 mb-0.5 sm:mb-1">
+                                            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                                                <span className="text-[10px] sm:text-[11px] font-black italic uppercase text-slate-300 truncate tracking-tight">
                                                     {authorName}
                                                 </span>
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                                                <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">
                                                     @{authorHandle}
                                                 </span>
                                             </div>

@@ -26,7 +26,7 @@ interface CallState {
 }
 
 interface CallContextType extends CallState {
-    initiateCall: (userId: string, type: 'audio' | 'video') => Promise<void>;
+    initiateCall: (userId: string, type: 'audio' | 'video', targetUserInfo?: { name?: string; avatar?: string }) => Promise<void>;
     acceptCall: () => Promise<void>;
     rejectCall: () => void;
     endCall: () => void;
@@ -169,7 +169,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }, [broadcast, user?.id, endCallCleanup]);
 
     // Initiate a call
-    const initiateCall = useCallback(async (targetUserId: string, type: 'audio' | 'video') => {
+    const initiateCall = useCallback(async (targetUserId: string, type: 'audio' | 'video', targetUserInfo?: { name?: string; avatar?: string }) => {
         const stream = await getUserMedia(type);
         if (!stream) return;
 
@@ -193,7 +193,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             },
             participants: [
                 { id: user?.id || '', name: profile?.name || 'You', avatar: profile?.avatar, stream },
-                { id: targetUserId, name: 'Calling...', avatar: undefined },
+                { id: targetUserId, name: targetUserInfo?.name || 'Calling...', avatar: targetUserInfo?.avatar },
             ],
             isMuted: false,
             isVideoOff: type === 'audio',
