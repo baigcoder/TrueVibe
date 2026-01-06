@@ -259,6 +259,15 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
         const { id } = req.params;
         const userId = req.auth!.userId;
 
+        // Validate ObjectId format
+        if (!id || !/^[a-f\d]{24}$/i.test(id)) {
+            res.status(400).json({
+                success: false,
+                error: { message: 'Invalid story ID format' }
+            });
+            return;
+        }
+
         // Find story that belongs to this user
         const story = await Story.findOne({ _id: id, userId });
 

@@ -222,8 +222,8 @@ export default function AnalyticsPage() {
     const { profile } = useAuth();
 
     const { data: overview, isLoading: loadingOverview } = useAnalyticsOverview();
-    const { data: reachData, isLoading: loadingReach } = useAnalyticsReach(period);
-    const { data: trustData, isLoading: loadingTrust } = useAnalyticsTrust();
+    const { data: _reachData, isLoading: loadingReach } = useAnalyticsReach(period);
+    const { data: _trustData, isLoading: loadingTrust } = useAnalyticsTrust();
     useAnalyticsEngagement(); // hook called for side-effects
 
     // Get user's posts and shorts
@@ -259,9 +259,7 @@ export default function AnalyticsPage() {
         totalShorts: 0,
     };
 
-    const reach = (reachData as any)?.data?.metrics || [];
-    const trust = (trustData as any)?.data || { distribution: [], trustScore: 0 };
-    // engagementData is available for future use
+    // Note: reachData and trustData hooks are kept for future API-driven enhancements
 
     // Process posts data
     const posts = ((userPosts as any)?.data?.posts || []).map((post: any) => ({
