@@ -173,6 +173,11 @@ export const usersApi = {
     rejectFollowRequest: (id: string) => api.post(`/users/follow-requests/${id}/reject`),
     cancelFollowRequest: (targetUserId: string) => api.delete(`/users/${targetUserId}/follow-request`),
     getMyReports: (type?: 'post' | 'short' | 'story') => api.get('/users/me/reports', type ? { type } : undefined),
+    // Block APIs
+    block: (id: string, reason?: string) => api.post(`/users/${id}/block`, reason ? { reason } : {}),
+    unblock: (id: string) => api.delete(`/users/${id}/block`),
+    checkBlockStatus: (id: string) => api.get(`/users/${id}/block-status`),
+    getBlockedUsers: () => api.get('/users/blocked'),
 };
 
 

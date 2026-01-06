@@ -7,9 +7,9 @@ import { type PostData } from "@/components/shared/PostCard";
 import {
     MapPin, Link as LinkIcon, Calendar, Loader2, ShieldCheck,
     MessageCircle, Camera, Edit3, Grid3X3, Heart,
-    UserPlus, UserMinus, Video, Play, Sparkles, Lock, X
+    UserPlus, UserMinus, Video, Play, Sparkles, Lock, X, Ban
 } from "lucide-react";
-import { useProfile, useUserPosts, useUserLikedPosts, useFollowUser, useUnfollowUser, useUserShorts, useCancelFollowRequest } from "@/api/hooks";
+import { useProfile, useUserPosts, useUserLikedPosts, useFollowUser, useUnfollowUser, useUserShorts, useCancelFollowRequest, useBlockUser, useCheckBlockStatus } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -126,6 +126,12 @@ export default function ProfilePage() {
     const { data: likedPostsData, isLoading: loadingLikedPosts } = useUserLikedPosts(userId || '');
     const followMutation = useFollowUser();
     const unfollowMutation = useUnfollowUser();
+
+    // Block functionality
+    const blockMutation = useBlockUser();
+    const { data: blockStatusData } = useCheckBlockStatus(!isOwnProfile && userId ? userId : '');
+    const isBlocked = (blockStatusData as any)?.data?.isBlocked ?? false;
+    const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
     // Fix: Extract profile from data.profile (backend returns { data: { profile, isFollowing, isFollowedBy, canMessage, hasPendingRequest } })
     const profileResponse = profileData as { data?: { profile?: ProfileData; isFollowing?: boolean; isFollowedBy?: boolean; canMessage?: boolean; hasPendingRequest?: boolean; isOwner?: boolean } } | undefined;
@@ -368,6 +374,49 @@ export default function ProfilePage() {
                                                 <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                 <span>Follow</span>
                                             </>
+                                        )}
+                                    </Button>
+
+                                    {/* Block Button */}
+                                    <Button
+                                        onClick={() => {
+                                            if (showBlockConfirm) {
+                                                blockMutation.mutate(
+                                                    { userId: userId || '' },
+                                                    {
+                                                        onSuccess: () => {
+                                                            toast.success('User blocked successfully');
+                                                            setShowBlockConfirm(false);
+                                                            navigate({ to: '/app' });
+                                                        },
+                                                        onError: (error: any) => {
+                                                            toast.error(error?.message || 'Failed to block user');
+                                                            setShowBlockConfirm(false);
+                                                        }
+                                                    }
+                                                );
+                                            } else {
+                                                setShowBlockConfirm(true);
+                                                // Reset after 3 seconds if not confirmed
+                                                setTimeout(() => setShowBlockConfirm(false), 3000);
+                                            }
+                                        }}
+                                        disabled={blockMutation.isPending || isBlocked}
+                                        size="icon"
+                                        className={cn(
+                                            "backdrop-blur-xl border rounded-xl sm:rounded-2xl w-9 h-9 sm:w-11 sm:h-11 shadow-2xl transition-all",
+                                            showBlockConfirm
+                                                ? "bg-red-500/30 border-red-500/50 text-red-400 hover:bg-red-500/40"
+                                                : isBlocked
+                                                    ? "bg-red-500/20 border-red-500/30 text-red-400 cursor-not-allowed opacity-60"
+                                                    : "bg-white/10 border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 text-white"
+                                        )}
+                                        title={isBlocked ? "User is blocked" : showBlockConfirm ? "Click again to confirm" : "Block user"}
+                                    >
+                                        {blockMutation.isPending ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Ban className="w-4 h-4 sm:w-5 sm:h-5" />
                                         )}
                                     </Button>
 

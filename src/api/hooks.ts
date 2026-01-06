@@ -217,6 +217,40 @@ export function useFollowing(userId: string) {
 export const useFollowUser = useFollow;
 export const useUnfollowUser = useUnfollow;
 
+// ============ Block Hooks ============
+
+export function useBlockUser() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, reason }: { userId: string; reason?: string }) =>
+            usersApi.block(userId, reason),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['users', variables.userId] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'blocked'] });
+        },
+    });
+}
+
+export function useUnblockUser() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) => usersApi.unblock(userId),
+        onSuccess: (_, userId) => {
+            queryClient.invalidateQueries({ queryKey: ['users', userId] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'blocked'] });
+        },
+    });
+}
+
+export function useCheckBlockStatus(userId: string) {
+    return useQuery({
+        queryKey: ['users', userId, 'block-status'],
+        queryFn: () => usersApi.checkBlockStatus(userId),
+        enabled: !!userId,
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
 
 // ============ Post Hooks ============
 
