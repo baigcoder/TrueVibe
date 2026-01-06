@@ -297,11 +297,21 @@ export default function AnalyticsPage() {
     const totalLikes = [...posts, ...shorts].reduce((sum, item) => sum + item.likes, 0);
     const totalComments = [...posts, ...shorts].reduce((sum, item) => sum + item.comments, 0);
 
-    // Trust distribution
-    const trustDistribution = trust.distribution?.length > 0 ? trust.distribution : [
-        { name: 'Authentic', value: 85, color: '#22c55e' },
-        { name: 'Suspicious', value: 10, color: '#eab308' },
-        { name: 'Fake', value: 5, color: '#ef4444' },
+    // Calculate trust distribution from REAL data
+    const allContent = [...posts, ...shorts];
+    const authenticCount = allContent.filter(item => item.trustLevel === 'authentic').length;
+    const suspiciousCount = allContent.filter(item => item.trustLevel === 'suspicious').length;
+    const fakeCount = allContent.filter(item => item.trustLevel === 'likely_fake' || item.trustLevel === 'fake').length;
+    const pendingCount = allContent.filter(item => !item.trustLevel || item.trustLevel === 'pending').length;
+    const totalWithTrust = allContent.length;
+
+    const trustDistribution = totalWithTrust > 0 ? [
+        { name: 'Authentic', value: Math.round((authenticCount / totalWithTrust) * 100), color: '#22c55e' },
+        { name: 'Suspicious', value: Math.round((suspiciousCount / totalWithTrust) * 100), color: '#eab308' },
+        { name: 'Fake', value: Math.round((fakeCount / totalWithTrust) * 100), color: '#ef4444' },
+        { name: 'Pending', value: Math.round((pendingCount / totalWithTrust) * 100), color: '#64748b' },
+    ].filter(item => item.value > 0) : [
+        { name: 'No Data', value: 100, color: '#64748b' },
     ];
 
     // Chart data for posts vs shorts
@@ -310,16 +320,30 @@ export default function AnalyticsPage() {
         { name: 'Shorts', value: totalShorts, color: '#2dd4bf' },
     ];
 
-    // Engagement by day (mock if no real data)
-    const engagementByDay = reach.length > 0 ? reach : [
-        { date: 'Mon', reach: 120, likes: 45, comments: 12 },
-        { date: 'Tue', reach: 150, likes: 62, comments: 18 },
-        { date: 'Wed', reach: 180, likes: 78, comments: 25 },
-        { date: 'Thu', reach: 140, likes: 55, comments: 15 },
-        { date: 'Fri', reach: 200, likes: 90, comments: 32 },
-        { date: 'Sat', reach: 250, likes: 110, comments: 45 },
-        { date: 'Sun', reach: 220, likes: 95, comments: 38 },
-    ];
+    // Calculate engagement by day from REAL data (last 7 days)
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return date;
+    });
+
+    const engagementByDay = last7Days.map(date => {
+        const dateStr = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayStart = new Date(date.setHours(0, 0, 0, 0));
+        const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+
+        const dayContent = allContent.filter(item => {
+            const itemDate = new Date(item.createdAt);
+            return itemDate >= dayStart && itemDate <= dayEnd;
+        });
+
+        return {
+            date: dateStr,
+            reach: dayContent.reduce((sum, item) => sum + item.views, 0),
+            likes: dayContent.reduce((sum, item) => sum + item.likes, 0),
+            comments: dayContent.reduce((sum, item) => sum + item.comments, 0),
+        };
+    });
 
     if (loadingOverview || loadingReach || loadingTrust) {
         return (
