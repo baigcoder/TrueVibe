@@ -498,3 +498,11 @@ export const projectsApi = {
     delete: (id: string) => api.delete(`/projects/${id}`),
     reorder: (projectIds: string[]) => api.post('/projects/reorder', { projectIds }),
 };
+
+// Trust Score API
+export const trustApi = {
+    getScore: () => api.get('/trust/score'),
+    getScoreForUser: (userId: string) => api.get(`/trust/score/${userId}`),
+    getHistory: (days?: number) => api.get('/trust/history', days ? { days: days.toString() } : undefined),
+    recalculate: () => api.post('/trust/recalculate'),
+};

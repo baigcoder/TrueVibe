@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts, useUserReports, useDeleteReport } from "@/api/hooks";
+import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts, useUserReports, useDeleteReport, useTrustScore, useTrustHistory } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
 import {
     Loader2, Users, Heart, ShieldCheck, ArrowUpRight, ArrowDownRight,
@@ -202,6 +202,18 @@ export default function AnalyticsPage() {
     const { data: reportsData, isLoading: loadingReports } = useUserReports();
     const deleteReport = useDeleteReport();
     const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
+
+    // Trust Score Dashboard Data
+    const { data: trustScoreData } = useTrustScore();
+    const { data: trustHistoryData } = useTrustHistory(30);
+
+    // Extract trust score breakdown
+    const trustBreakdown = (trustScoreData as any)?.data || null;
+    const trustHistory = ((trustHistoryData as any)?.data?.history || []).map((item: any) => ({
+        date: new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        score: item.score,
+        reason: item.reason,
+    }));
 
     // Extract data
     const stats = (overview as any)?.data?.overview || {
@@ -522,7 +534,7 @@ export default function AnalyticsPage() {
 
                         {/* Trust & Top Content */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Trust Score */}
+                            {/* Trust Score with Breakdown */}
                             <m.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -532,7 +544,9 @@ export default function AnalyticsPage() {
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h3 className="font-heading font-bold text-lg text-white">Trust Score</h3>
-                                        <p className="text-xs text-slate-500 uppercase tracking-widest">AI Verification Status</p>
+                                        <p className="text-xs text-slate-500 uppercase tracking-widest">
+                                            {trustBreakdown?.level ? `Level: ${trustBreakdown.level.toUpperCase()}` : 'AI Verification Status'}
+                                        </p>
                                     </div>
                                     <ShieldCheck className="w-5 h-5 text-emerald-400" />
                                 </div>
@@ -556,12 +570,30 @@ export default function AnalyticsPage() {
                                             </PieChart>
                                         </ResponsiveContainer>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span className="text-2xl font-heading font-extrabold text-white">{stats.trustScore || 85}</span>
+                                            <span className="text-2xl font-heading font-extrabold text-white">
+                                                {trustBreakdown?.totalScore || stats.trustScore || 85}
+                                            </span>
                                             <span className="text-[8px] text-slate-500 uppercase tracking-widest">Score</span>
                                         </div>
                                     </div>
-                                    <div className="flex-1 space-y-3">
-                                        {trustDistribution.map((item: any) => (
+                                    <div className="flex-1 space-y-2 max-h-32 overflow-y-auto">
+                                        {trustBreakdown?.factors?.slice(0, 5).map((factor: any) => (
+                                            <div key={factor.name} className="space-y-0.5">
+                                                <div className="flex justify-between">
+                                                    <span className="text-xs text-slate-400 font-medium truncate">{factor.name}</span>
+                                                    <span className="text-xs font-bold text-white">{factor.score}/{factor.maxScore}</span>
+                                                </div>
+                                                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full transition-all"
+                                                        style={{
+                                                            width: `${(factor.score / factor.maxScore) * 100}%`,
+                                                            backgroundColor: factor.score < 0 ? '#ef4444' : factor.score >= factor.maxScore * 0.8 ? '#10b981' : '#f59e0b'
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )) || trustDistribution.map((item: any) => (
                                             <div key={item.name} className="space-y-1">
                                                 <div className="flex justify-between">
                                                     <span className="text-xs text-slate-400 font-bold uppercase">{item.name}</span>
@@ -577,6 +609,29 @@ export default function AnalyticsPage() {
                                         ))}
                                     </div>
                                 </div>
+                                {/* Trust History Mini Chart */}
+                                {trustHistory.length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-white/5">
+                                        <p className="text-xs text-slate-500 mb-2">Score History (30 days)</p>
+                                        <div className="h-16">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={trustHistory.slice(-7)}>
+                                                    <Area
+                                                        type="monotone"
+                                                        dataKey="score"
+                                                        stroke="#10b981"
+                                                        fill="#10b98120"
+                                                        strokeWidth={2}
+                                                    />
+                                                    <Tooltip
+                                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                                        labelStyle={{ color: '#94a3b8' }}
+                                                    />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                )}
                             </m.div>
 
                             {/* Top Performing Content */}

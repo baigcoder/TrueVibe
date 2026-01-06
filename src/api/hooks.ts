@@ -1647,3 +1647,31 @@ export function useRecordActivity() {
         },
     });
 }
+
+// ============ Trust Score Hooks ============
+
+export function useTrustScore() {
+    return useQuery({
+        queryKey: ['trust', 'score'],
+        queryFn: () => import('./client').then(m => m.trustApi.getScore()),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+}
+
+export function useTrustHistory(days: number = 30) {
+    return useQuery({
+        queryKey: ['trust', 'history', days],
+        queryFn: () => import('./client').then(m => m.trustApi.getHistory(days)),
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+}
+
+export function useRecalculateTrust() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: () => import('./client').then(m => m.trustApi.recalculate()),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['trust'] });
+        },
+    });
+}
