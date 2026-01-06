@@ -123,6 +123,16 @@ export function useUserLikedPosts(userId: string) {
     });
 }
 
+export function useUserStories(userId: string) {
+    return useInfiniteQuery({
+        queryKey: ['users', userId, 'stories'],
+        queryFn: ({ pageParam }) => storiesApi.getUserStories(userId, pageParam ? { cursor: pageParam } : undefined),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage: any) => lastPage?.data?.cursor || undefined,
+        enabled: !!userId,
+    });
+}
+
 // Suggested users hook - requires authentication
 export function useSuggestedUsers(limit?: number) {
     return useQuery({

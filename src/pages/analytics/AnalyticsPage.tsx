@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts, useUserReports, useDeleteReport, useTrustScore, useTrustHistory } from "@/api/hooks";
+import { useAnalyticsOverview, useAnalyticsReach, useAnalyticsTrust, useAnalyticsEngagement, useUserPosts, useUserShorts, useUserStories, useUserReports, useDeleteReport, useTrustScore, useTrustHistory } from "@/api/hooks";
 import { useAuth } from "@/context/AuthContext";
 import {
     Loader2, Users, Heart, ShieldCheck, ArrowUpRight, ArrowDownRight,
@@ -226,9 +226,10 @@ export default function AnalyticsPage() {
     const { data: _trustData, isLoading: loadingTrust } = useAnalyticsTrust();
     useAnalyticsEngagement(); // hook called for side-effects
 
-    // Get user's posts and shorts
+    // Get user's posts, shorts, and stories
     const { data: userPosts } = useUserPosts(profile?._id || '');
     const { data: userShorts } = useUserShorts(profile?._id || '');
+    const { data: userStories } = useUserStories(profile?._id || '');
 
     // Get user's AI reports
     const { data: reportsData, isLoading: loadingReports } = useUserReports();
@@ -261,8 +262,8 @@ export default function AnalyticsPage() {
 
     // Note: reachData and trustData hooks are kept for future API-driven enhancements
 
-    // Process posts data
-    const posts = ((userPosts as any)?.data?.posts || []).map((post: any) => ({
+    // Process posts data - flatten pages from infinite query
+    const posts = (userPosts?.pages?.flatMap((page: any) => page?.data?.posts || []) || []).map((post: any) => ({
         id: post._id,
         type: 'post' as const,
         content: post.content,
@@ -275,7 +276,7 @@ export default function AnalyticsPage() {
         trustLevel: post.trustLevel?.toLowerCase(),
     }));
 
-    // Process shorts data
+    // Process shorts data - regular query (not infinite)
     const shorts = ((userShorts as any)?.data?.shorts || []).map((short: any) => ({
         id: short._id,
         type: 'short' as const,
@@ -288,15 +289,29 @@ export default function AnalyticsPage() {
         trustLevel: short.trustLevel?.toLowerCase(),
     }));
 
-    // Calculate totals from actual data
+    // Process stories data - flatten pages from infinite query
+    const stories = (userStories?.pages?.flatMap((page: any) => page?.data?.stories || []) || []).map((story: any) => ({
+        id: story._id,
+        type: 'story' as const,
+        content: story.caption || '',
+        thumbnail: story.thumbnailUrl || story.mediaUrl,
+        views: story.viewersCount || story.viewers?.length || 0,
+        likes: story.likesCount || 0,
+        createdAt: story.createdAt,
+        trustLevel: story.trustLevel?.toLowerCase(),
+        expiresAt: story.expiresAt,
+    }));
+
+    // Calculate totals from actual data (include stories)
     const totalPosts = posts.length;
     const totalShorts = shorts.length;
-    const totalViews = [...posts, ...shorts].reduce((sum, item) => sum + item.views, 0);
-    const totalLikes = [...posts, ...shorts].reduce((sum, item) => sum + item.likes, 0);
-    const totalComments = [...posts, ...shorts].reduce((sum, item) => sum + item.comments, 0);
+    const totalStories = stories.length;
+    const totalViews = [...posts, ...shorts, ...stories].reduce((sum, item) => sum + item.views, 0);
+    const totalLikes = [...posts, ...shorts, ...stories].reduce((sum, item) => sum + item.likes, 0);
+    const totalComments = [...posts, ...shorts].reduce((sum, item) => sum + (item.comments || 0), 0);
 
-    // Calculate trust distribution from REAL data
-    const allContent = [...posts, ...shorts];
+    // Calculate trust distribution from REAL data (include stories)
+    const allContent = [...posts, ...shorts, ...stories];
     const authenticCount = allContent.filter(item => item.trustLevel === 'authentic').length;
     const suspiciousCount = allContent.filter(item => item.trustLevel === 'suspicious').length;
     const fakeCount = allContent.filter(item => item.trustLevel === 'likely_fake' || item.trustLevel === 'fake').length;
@@ -312,10 +327,11 @@ export default function AnalyticsPage() {
         { name: 'No Data', value: 1, percent: 100, color: '#64748b' },
     ];
 
-    // Chart data for posts vs shorts
+    // Chart data for posts vs shorts vs stories
     const contentComparison = [
         { name: 'Posts', value: totalPosts, color: '#818cf8' },
         { name: 'Shorts', value: totalShorts, color: '#2dd4bf' },
+        { name: 'Stories', value: totalStories, color: '#f97316' },
     ];
 
     // Calculate engagement by day from REAL data (last 7 days)

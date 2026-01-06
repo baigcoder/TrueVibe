@@ -322,6 +322,7 @@ export const shortsApi = {
 // Stories API
 export const storiesApi = {
     getFeed: () => api.get('/stories/feed'),
+    getUserStories: (userId: string, params?: Record<string, string>) => api.get(`/stories/user/${userId}`, params),
     create: (formData: FormData) => api.postFormData('/stories', formData),
     view: (id: string) => api.post(`/stories/${id}/view`),
     like: (id: string) => api.post(`/stories/${id}/like`),
