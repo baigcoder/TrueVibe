@@ -153,6 +153,7 @@ def init_colors():
     COLORS = {
         'primary': colors.HexColor('#6366F1'),      # Indigo
         'primary_light': colors.HexColor('#818CF8'),
+        'primary_dark': colors.HexColor('#4F46E5'),
         'secondary': colors.HexColor('#10B981'),    # Emerald
         'secondary_light': colors.HexColor('#34D399'),
         'danger': colors.HexColor('#EF4444'),       # Red
@@ -171,6 +172,7 @@ def init_colors():
         'black': colors.black,
         'purple': colors.HexColor('#A855F7'),
         'cyan': colors.HexColor('#06B6D4'),
+        'gold': colors.HexColor('#D97706'),
     }
 
 
@@ -209,17 +211,16 @@ def create_donut_chart(fake_score: float, real_score: float, size: int = 120) ->
     # Calculate angles (pie chart style, starting from 90 degrees / top)
     fake_angle = fake_score * 360
     
-    # Draw fake portion (red) - from 90 to 90 - fake_angle
-    if fake_score > 0.01:
+    # Draw real portion (green) - whole circle first
+    real_circle = Circle(cx, cy, outer_radius, 
+                         fillColor=COLORS['secondary'], strokeColor=None)
+    drawing.add(real_circle)
+    
+    # Draw fake portion (red) - overlay wedge from 90 to 90 - fake_angle
+    if fake_score > 0.001:
         fake_wedge = Wedge(cx, cy, outer_radius, 90, 90 - fake_angle, 
                           fillColor=COLORS['danger'], strokeColor=None)
         drawing.add(fake_wedge)
-    
-    # Draw real portion (green) - remaining arc
-    if real_score > 0.01:
-        real_wedge = Wedge(cx, cy, outer_radius, 90 - fake_angle, 90 - 360, 
-                          fillColor=COLORS['secondary'], strokeColor=None)
-        drawing.add(real_wedge)
     
     # Inner circle to create donut effect
     inner_circle = Circle(cx, cy, inner_radius, 
@@ -233,7 +234,7 @@ def create_donut_chart(fake_score: float, real_score: float, size: int = 120) ->
                    textAnchor='middle', fillColor=COLORS['dark'])
     drawing.add(label)
     
-    sublabel = String(cx, cy - 12, "Fake", 
+    sublabel = String(cx, cy - 12, "Fake Score", 
                       fontSize=8, fontName='Helvetica',
                       textAnchor='middle', fillColor=COLORS['slate'])
     drawing.add(sublabel)
@@ -315,6 +316,42 @@ def create_gauge(score: float, label: str, size: int = 80) -> Drawing:
     return drawing
 
 
+# ==================== PAGE DECORATIONS ====================
+
+def add_page_decorations(canvas, doc):
+    """Add a lateral accent bar and subtle watermark to every page."""
+    canvas.saveState()
+    
+    # 1. Draw Lateral Accent Bar (Tech style)
+    canvas.setFillColor(COLORS['primary'])
+    # Left bar
+    canvas.rect(0, 0, 20, A4[1], fill=1, stroke=0)
+    
+    # Secondary thinner bar for depth
+    canvas.setFillColor(COLORS['primary_dark'])
+    canvas.rect(20, 0, 4, A4[1], fill=1, stroke=0)
+    
+    # 2. Add Subtle System Watermark
+    canvas.setFont('Helvetica-Bold', 45)
+    # Very light grey with low alpha for professionalism
+    canvas.setStrokeColor(colors.lightgrey)
+    canvas.setFillColor(colors.lightgrey, alpha=0.03)
+    
+    # Single large diagonal watermark
+    canvas.saveState()
+    canvas.translate(A4[0]/2, A4[1]/2)
+    canvas.rotate(45)
+    canvas.drawCentredString(0, 0, "TRUEVIBE AI SECURITY VERIFIED")
+    canvas.restoreState()
+    
+    # 3. Add Page Numbers in Footer area
+    canvas.setFont('Helvetica', 8)
+    canvas.setFillColor(COLORS['slate'])
+    canvas.drawRightString(A4[0] - 0.5*inch, 0.3*inch, f"Page {doc.page} | TRUEVIBE-ID-{datetime.now().year}")
+    
+    canvas.restoreState()
+
+
 # ==================== MAIN PDF GENERATION ====================
 
 def _generate_pdf_internal(data: ReportData) -> bytes:
@@ -378,48 +415,50 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
     report_id = f"TVR-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     
     header_content = [
-        [Paragraph("<font size='18' color='#FFFFFF'><b>🛡️ TrueVibe</b></font>", ParagraphStyle('H1', alignment=TA_LEFT)),
-         Paragraph(f"<font size='8' color='#94A3B8'>AI AUTHENTICITY REPORT<br/>{datetime.now().strftime('%B %d, %Y')}</font>", 
-                   ParagraphStyle('H2', alignment=TA_RIGHT))]
+        [Paragraph("<font size='22' color='#FFFFFF'><b>🛡️ TRUEVIBE</b></font>", ParagraphStyle('H1', alignment=TA_LEFT, leading=26)),
+         Paragraph(f"<font size='9' color='#94A3B8'>SECURITY CLASS: <b>PRO-GRADE</b><br/>REPORT ID: {report_id}<br/>{datetime.now().strftime('%B %d, %Y')}</font>", 
+                   ParagraphStyle('H2', alignment=TA_RIGHT, leading=11))]
     ]
     header = Table(header_content, colWidths=[4*inch, 3*inch])
     header.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), COLORS['dark']),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-        ('LEFTPADDING', (0, 0), (0, 0), 16),
-        ('RIGHTPADDING', (-1, 0), (-1, 0), 16),
+        ('TOPPADDING', (0, 0), (-1, -1), 18),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 18),
+        ('LEFTPADDING', (0, 0), (0, 0), 24),
+        ('RIGHTPADDING', (-1, 0), (-1, 0), 24),
+        ('LINEBELOW', (0, 0), (-1, -1), 3, COLORS['primary']),
     ]))
     elements.append(header)
-    elements.append(Spacer(1, 16))
+    elements.append(Spacer(1, 20))
     
     # ==================== VERDICT SECTION ====================
     verdict_bg, verdict_fg = get_verdict_colors(data.verdict)
     verdict_text = {
-        'fake': '⛔ MANIPULATED CONTENT DETECTED',
-        'suspicious': '⚠️ SUSPICIOUS CONTENT', 
-        'authentic': '✅ AUTHENTIC CONTENT VERIFIED',
-        'real': '✅ AUTHENTIC CONTENT VERIFIED'
-    }.get(data.verdict, '✅ AUTHENTIC CONTENT VERIFIED')
+        'fake': '⛔ CRITICAL: MANIPULATED CONTENT DETECTED',
+        'suspicious': '⚠️ WARNING: SUSPICIOUS CONTENT IDENTIFIED', 
+        'authentic': '✅ VERIFIED: AUTHENTIC CONTENT CONFIRMED',
+        'real': '✅ VERIFIED: AUTHENTIC CONTENT CONFIRMED'
+    }.get(data.verdict, '✅ VERIFIED: AUTHENTIC CONTENT CONFIRMED')
     
     verdict_card = Table([
-        [Paragraph(f"<font size='22' color='#FFFFFF'><b>{verdict_text}</b></font>", 
+        [Paragraph(f"<font size='18' color='#FFFFFF'><b>{verdict_text}</b></font>", 
                    ParagraphStyle('VT', alignment=TA_CENTER))],
-        [Paragraph(f"<font size='11' color='#FFFFFF'>Confidence Level: <b>{data.confidence*100:.1f}%</b></font>", 
+        [Paragraph(f"<font size='12' color='#FFFFFF'>AI ACCURACY CONFIDENCE: <b>{data.confidence*100:.1f}%</b></font>", 
                    ParagraphStyle('VC', alignment=TA_CENTER))]
-    ], colWidths=[7*inch], rowHeights=[45, 25])
+    ], colWidths=[7.2*inch], rowHeights=[45, 25])
     
     verdict_card.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), verdict_bg),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (0, 0), 10),
-        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
-        ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+        ('TOPPADDING', (0, 0), (0, 0), 12),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 10),
+        ('BOX', (0, 0), (-1, -1), 2, COLORS['dark']),
+        ('ROUNDEDCORNERS', [12, 12, 12, 12]),
     ]))
     elements.append(verdict_card)
-    elements.append(Spacer(1, 16))
+    elements.append(Spacer(1, 24))
     
     # ==================== EXECUTIVE SUMMARY ====================
     elements.append(Paragraph("📋 Executive Summary", styles['TVSection']))
@@ -575,16 +614,18 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
         ]))
         metric_cells.append(cell)
     
-    # Combine chart and metrics
+    # Combined chart and metrics
     overview_table = Table([
         [donut, metric_cells[0], metric_cells[1], metric_cells[2], metric_cells[3]]
-    ], colWidths=[1.6*inch, 1.35*inch, 1.35*inch, 1.35*inch, 1.35*inch])
+    ], colWidths=[1.8*inch, 1.35*inch, 1.35*inch, 1.35*inch, 1.35*inch])
     overview_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     elements.append(overview_table)
-    elements.append(Spacer(1, 18))
+    elements.append(Spacer(1, 24))
     
     # ==================== ANALYSIS SCORES TABLE ====================
     scores_for_chart = []
@@ -614,18 +655,19 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
                           ParagraphStyle('SV', alignment=TA_RIGHT))
             ])
         
-        score_table = Table(score_rows, colWidths=[2.5*inch, 2.5*inch, 2*inch])
+        score_table = Table(score_rows, colWidths=[2.5*inch, 2.7*inch, 2*inch])
         score_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), COLORS['lighter']),
-            ('GRID', (0, 0), (-1, -1), 1, COLORS['light']),
+            ('LINEBELOW', (0, 0), (-1, -2), 0.5, COLORS['light']),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('BOX', (0, 0), (-1, -1), 1, COLORS['primary_light']),
         ]))
         elements.append(score_table)
-        elements.append(Spacer(1, 16))
+        elements.append(Spacer(1, 20))
     
     # ==================== PER-FACE SCORES TABLE ====================
     if data.face_scores and len(data.face_scores) > 0:
@@ -1267,32 +1309,56 @@ def _generate_pdf_internal(data: ReportData) -> bytes:
             ]))
             elements.append(legend)
     
+    # ==================== VERIFICATION SEAL ====================
+    elements.append(Spacer(1, 20))
+    seal_color = COLORS['secondary'] if data.fake_score < 0.3 else COLORS['danger'] if data.fake_score > 0.6 else COLORS['warning']
+    seal_text = "TRUSTED AUTHENTIC" if data.fake_score < 0.3 else "FLAGGED MANIPULATED" if data.fake_score > 0.6 else "RE-VIEW REQUIRED"
+    
+    seal_content = [
+        [Paragraph(f"<font size='10' color='#FFFFFF'><b>DIGITAL AUTHENTICITY SEAL</b></font>", 
+                   ParagraphStyle('SealHeader', alignment=TA_CENTER)),
+         Paragraph(f"<font size='10' color='#FFFFFF'><b>{seal_text}</b></font>", 
+                   ParagraphStyle('SealText', alignment=TA_CENTER))]
+    ]
+    seal = Table(seal_content, colWidths=[3*inch, 3*inch])
+    seal.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), seal_color),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('BOX', (0, 0), (-1, -1), 2, COLORS['dark']),
+        ('ROUNDEDCORNERS', [6, 6, 6, 6]),
+    ]))
+    elements.append(seal)
+
     # ==================== FOOTER ====================
-    elements.append(Spacer(1, 24))
-    elements.append(HRFlowable(width="100%", thickness=2, color=COLORS['primary']))
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 30))
+    elements.append(HRFlowable(width="100%", thickness=1.5, color=COLORS['primary'], spaceBefore=10, spaceAfter=10))
     
     footer_text = (
-        f"<font size='7' color='#64748B'>"
-        f"<b>TrueVibe AI Authenticity System v{data.model_version}</b><br/>"
-        f"This report was generated using SigLIP2 neural classification, FFT frequency analysis, "
-        f"multi-layer manipulation detection, and advanced pattern recognition.<br/>"
-        f"Report ID: {report_id} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | © 2024 TrueVibe"
+        f"<font size='8' color='#64748B'>"
+        f"<b>TrueVibe AI Security Engine v{data.model_version}</b><br/>"
+        f"Protected by advanced neural classification and multi-layer frequency analysis.<br/>"
+        f"Report ID: {report_id} | Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC<br/>"
+        f"© {datetime.now().year} TrueVibe Corp. Confidential Security Report."
         f"</font>"
     )
-    elements.append(Paragraph(footer_text, ParagraphStyle('Footer', alignment=TA_CENTER, leading=11)))
+    elements.append(Paragraph(footer_text, ParagraphStyle('Footer', alignment=TA_CENTER, leading=12)))
     
     # Build PDF
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        leftMargin=0.5*inch,
+        leftMargin=0.7*inch, # Increased for the side bar
         rightMargin=0.5*inch,
         topMargin=0.4*inch,
-        bottomMargin=0.4*inch
+        bottomMargin=0.5*inch
     )
-    doc.build(elements)
+    
+    # Use the decoration function for every page
+    doc.build(elements, onFirstPage=add_page_decorations, onLaterPages=add_page_decorations)
     
     pdf_bytes = buffer.getvalue()
     buffer.close()
