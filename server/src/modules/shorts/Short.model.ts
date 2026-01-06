@@ -18,7 +18,7 @@ export interface IShort extends Document {
     commentsCount: number;
     sharesCount: number;
     viewsCount: number;
-    trustLevel: 'authentic' | 'suspicious' | 'fake' | 'pending';
+    trustLevel: 'authentic' | 'suspicious' | 'fake' | 'pending' | 'likely_fake' | 'likely_real';
     aiAnalysisId?: mongoose.Types.ObjectId;
     isDeleted: boolean;
     createdAt: Date;
@@ -84,7 +84,7 @@ const shortSchema = new Schema<IShort>(
         },
         trustLevel: {
             type: String,
-            enum: ['authentic', 'suspicious', 'fake', 'pending'],
+            enum: ['authentic', 'suspicious', 'fake', 'pending', 'likely_fake', 'likely_real'],
             default: 'pending',
         },
         aiAnalysisId: {
