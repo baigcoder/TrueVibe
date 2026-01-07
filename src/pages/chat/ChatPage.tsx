@@ -48,6 +48,7 @@ import {
   Image,
   User,
   Camera,
+  Palette,
 } from "lucide-react";
 import { MessageTicks } from "@/components/chat/MessageTicks";
 import { OnlineIndicator } from "@/components/chat/OnlineIndicator";
@@ -680,8 +681,7 @@ export default function ChatPage() {
         toast.success("Media uploaded!", { id: "upload-media" });
       }
 
-      const messageContent =
-        messageInput.trim() || (uploadedMedia.length > 0 ? "[Media]" : "");
+      const messageContent = messageInput.trim();
 
       if (view === "server" && selectedServerId && selectedChannelId) {
         sendChannelMessage.mutate(
@@ -1989,6 +1989,17 @@ export default function ChatPage() {
                   title="Chat Features Guide"
                 >
                   <HelpCircle className="w-4 h-4 lg:w-5 lg:h-5" />
+                </m.button>
+
+                {/* Chat Theme Button */}
+                <m.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowThemeSelector(true)}
+                  className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-slate-500 hover:text-primary hover:border-primary/30"
+                  title="Chat Theme"
+                >
+                  <Palette className="w-4 h-4 lg:w-5 lg:h-5" />
                 </m.button>
 
                 <div className="hidden sm:flex items-center gap-4">
