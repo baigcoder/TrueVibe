@@ -133,6 +133,30 @@ export function useUserStories(userId: string) {
     });
 }
 
+// Follow user hook
+export function useFollowUser() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) => api.post(`/users/${userId}/follow`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['shorts'] });
+        },
+    });
+}
+
+// Unfollow user hook
+export function useUnfollowUser() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) => api.delete(`/users/${userId}/follow`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['shorts'] });
+        },
+    });
+}
+
 // Suggested users hook - requires authentication
 export function useSuggestedUsers(limit?: number) {
     return useQuery({
@@ -222,10 +246,6 @@ export function useFollowing(userId: string) {
         enabled: !!userId,
     });
 }
-
-// Aliases for follow/unfollow
-export const useFollowUser = useFollow;
-export const useUnfollowUser = useUnfollow;
 
 // ============ Block Hooks ============
 

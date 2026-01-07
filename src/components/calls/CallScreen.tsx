@@ -33,11 +33,19 @@ export function CallScreen() {
         }
     }, [localStream]);
 
-    // Set remote video stream
+    // Set remote video stream - improved detection
     useEffect(() => {
-        const remoteParticipant = participants.find((p) => p.stream && p.id !== participants[0]?.id);
-        if (remoteVideoRef.current && remoteParticipant?.stream) {
-            remoteVideoRef.current.srcObject = remoteParticipant.stream;
+        // Find the remote participant (anyone who is not 'You' or has a different ID)
+        const remoteP = participants.find((p) => {
+            // Check if participant has a stream and is not the local user
+            const isRemote = p.name !== 'You' && p.stream;
+            console.log('[CallScreen] Checking participant:', p.name, 'hasStream:', !!p.stream, 'isRemote:', isRemote);
+            return isRemote;
+        });
+
+        if (remoteVideoRef.current && remoteP?.stream) {
+            console.log('[CallScreen] Attaching remote stream to video element');
+            remoteVideoRef.current.srcObject = remoteP.stream;
         }
     }, [participants]);
 
@@ -51,7 +59,7 @@ export function CallScreen() {
         }
     };
 
-    const remoteParticipant = participants.find((p) => p.id !== participants[0]?.id);
+    const remoteParticipant = participants.find((p) => p.name !== 'You');
 
     return (
         <m.div

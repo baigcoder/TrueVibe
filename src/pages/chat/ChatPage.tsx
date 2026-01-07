@@ -903,10 +903,13 @@ export default function ChatPage() {
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="fixed left-0 top-0 bottom-0 w-[85%] max-w-[340px] bg-neutral-900/95 backdrop-blur-xl z-50 lg:hidden flex flex-col border-r border-white/10 shadow-2xl"
+              style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <h2 className="text-lg font-bold text-white">Messages</h2>
+                <h2 className="text-lg font-bold text-white">
+                  {view === "dms" ? "Messages" : view === "server" ? "Servers" : "Voice Rooms"}
+                </h2>
                 <button
                   onClick={() => setShowMobileSidebar(false)}
                   className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
@@ -915,12 +918,46 @@ export default function ChatPage() {
                 </button>
               </div>
 
+              {/* Tab Navigation */}
+              <div className="flex p-2 gap-1 border-b border-white/10">
+                <button
+                  onClick={() => setView("dms")}
+                  className={cn(
+                    "flex-1 py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all",
+                    view === "dms" ? "bg-primary/20 text-primary" : "text-slate-400 hover:bg-white/5"
+                  )}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  DMs
+                </button>
+                <button
+                  onClick={() => setView("server")}
+                  className={cn(
+                    "flex-1 py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all",
+                    view === "server" ? "bg-primary/20 text-primary" : "text-slate-400 hover:bg-white/5"
+                  )}
+                >
+                  <Cpu className="w-4 h-4" />
+                  Servers
+                </button>
+                <button
+                  onClick={() => setView("discover")}
+                  className={cn(
+                    "flex-1 py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all",
+                    view === "discover" ? "bg-primary/20 text-primary" : "text-slate-400 hover:bg-white/5"
+                  )}
+                >
+                  <Mic className="w-4 h-4" />
+                  Voice
+                </button>
+              </div>
+
               {/* Search */}
               <div className="p-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <Input
-                    placeholder="Search conversations..."
+                    placeholder={view === "dms" ? "Search conversations..." : view === "server" ? "Search servers..." : "Search voice rooms..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 h-10 bg-white/5 border-white/10 text-sm rounded-xl"
@@ -928,57 +965,180 @@ export default function ChatPage() {
                 </div>
               </div>
 
-              {/* Conversations List */}
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-1">
-                  {conversations?.map((conv: Conversation) => {
-                    const otherParticipant = conv.participants?.find(
-                      (p) => p._id !== profile?._id && p.userId !== profile?._id
-                    );
-                    const displayName = conv.type === "group" ? conv.groupName : otherParticipant?.name;
-                    const avatar = otherParticipant?.avatar;
-                    const isSelected = selectedConversationId === conv._id;
+              {/* Enter Invite Code Button */}
+              {(view === "server" || view === "discover") && (
+                <div className="px-3 pb-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setShowJoinServer(true);
+                      setShowMobileSidebar(false);
+                    }}
+                    className="w-full h-10 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 rounded-xl text-xs font-bold"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Enter Invite Code
+                  </Button>
+                </div>
+              )}
 
-                    return (
+              {/* DMs Conversations List */}
+              {view === "dms" && (
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-1">
+                    {conversations?.map((conv: Conversation) => {
+                      const otherParticipant = conv.participants?.find(
+                        (p) => p._id !== profile?._id && p.userId !== profile?._id
+                      );
+                      const displayName = conv.type === "group" ? conv.groupName : otherParticipant?.name;
+                      const avatar = otherParticipant?.avatar;
+                      const isSelected = selectedConversationId === conv._id;
+
+                      return (
+                        <div key={conv._id} className="relative group">
+                          <m.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              setSelectedConversationId(conv._id);
+                              setShowMobileSidebar(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left pr-12",
+                              isSelected
+                                ? "bg-primary/20 border border-primary/30"
+                                : "hover:bg-white/5"
+                            )}
+                          >
+                            <Avatar className="w-11 h-11 border border-white/10 shrink-0">
+                              <AvatarImage src={avatar} />
+                              <AvatarFallback className="bg-primary/20 text-primary text-sm font-bold">
+                                {displayName?.charAt(0)?.toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-white truncate text-sm">{displayName}</p>
+                              {conv.lastMessage && (
+                                <p className="text-xs text-slate-500 truncate mt-0.5">
+                                  {conv.lastMessage.content}
+                                </p>
+                              )}
+                            </div>
+                          </m.button>
+                          {/* Delete button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Delete conversation with ${displayName}? All messages will be permanently removed.`)) {
+                                api.delete(`/chat/conversations/${conv._id}`).then(() => {
+                                  toast.success(`Conversation deleted`);
+                                  queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                                  if (selectedConversationId === conv._id) {
+                                    setSelectedConversationId(null);
+                                  }
+                                }).catch(() => toast.error('Failed to delete conversation'));
+                              }
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500/40 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {(!conversations || conversations.length === 0) && (
+                      <div className="text-center py-8 text-slate-500">
+                        <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No conversations yet</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {/* Servers List */}
+              {view === "server" && (
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-1">
+                    {servers?.map((server: Server) => (
                       <m.button
-                        key={conv._id}
+                        key={server._id}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
-                          setSelectedConversationId(conv._id);
+                          setSelectedServerId(server._id);
                           setShowMobileSidebar(false);
                         }}
                         className={cn(
                           "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
-                          isSelected
+                          selectedServerId === server._id
                             ? "bg-primary/20 border border-primary/30"
                             : "hover:bg-white/5"
                         )}
                       >
-                        <Avatar className="w-11 h-11 border border-white/10 shrink-0">
-                          <AvatarImage src={avatar} />
-                          <AvatarFallback className="bg-primary/20 text-primary text-sm font-bold">
-                            {displayName?.charAt(0)?.toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="w-11 h-11 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                          <span className="text-primary font-bold">{server.name?.charAt(0)?.toUpperCase()}</span>
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-white truncate text-sm">{displayName}</p>
-                          {conv.lastMessage && (
-                            <p className="text-xs text-slate-500 truncate mt-0.5">
-                              {conv.lastMessage.content}
-                            </p>
-                          )}
+                          <p className="font-semibold text-white truncate text-sm">{server.name}</p>
+                          <p className="text-xs text-slate-500">{server.memberCount || 0} members</p>
                         </div>
                       </m.button>
-                    );
-                  })}
-                  {(!conversations || conversations.length === 0) && (
-                    <div className="text-center py-8 text-slate-500">
-                      <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No conversations yet</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                    ))}
+                    {(!servers || servers.length === 0) && (
+                      <div className="text-center py-8 text-slate-500">
+                        <Cpu className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No servers joined</p>
+                        <p className="text-xs mt-1">Enter invite code to join</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {/* Voice Rooms - Discover View */}
+              {view === "discover" && (
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowCreateRoomModal(true);
+                        setShowMobileSidebar(false);
+                      }}
+                      className="w-full h-12 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-bold"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Voice Room
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowJoinRoomModal(true);
+                        setShowMobileSidebar(false);
+                      }}
+                      className="w-full h-12 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-xl text-xs font-bold"
+                    >
+                      <Mic className="w-4 h-4 mr-2" />
+                      Join Voice Room
+                    </Button>
+                    {isInRoom && (
+                      <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                        <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold mb-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          IN VOICE ROOM
+                        </div>
+                        <p className="text-white text-sm font-semibold">{roomId}</p>
+                        <Button
+                          onClick={leaveRoom}
+                          size="sm"
+                          className="w-full mt-2 bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                        >
+                          Leave Room
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
             </m.div>
           </>
         )}
@@ -1654,8 +1814,8 @@ export default function ChatPage() {
         {/* Main Chat Interface */}
         {/* MAIN CHAT INTERFACE */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative z-10 overflow-hidden">
-          {/* Header */}
-          <div className="h-16 lg:h-24 px-4 sm:px-10 lg:px-12 flex items-center justify-between border-b border-white/[0.03] bg-transparent backdrop-blur-3xl relative overflow-hidden group shrink-0">
+          {/* Header - Mobile optimized with safe-area */}
+          <div className="min-h-[56px] h-auto pt-safe lg:h-24 px-3 sm:px-10 lg:px-12 py-2 lg:py-0 flex items-center justify-between border-b border-white/[0.03] bg-black/30 lg:bg-transparent backdrop-blur-xl relative overflow-hidden group shrink-0" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
             {/* Header Depth Layer - Organic Gradient */}
             <div className="absolute inset-0 z-0 opacity-[0.03] bg-[radial-gradient(circle_at_50%_0%,var(--premium-primary),transparent)] group-hover:opacity-[0.08] transition-opacity" />
 
