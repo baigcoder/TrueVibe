@@ -258,6 +258,7 @@ export default function ChatPage() {
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const [chatTheme, setChatTheme] = useState<ChatTheme>(CHAT_THEMES[0]);
+  const [showMediaPlusMenu, setShowMediaPlusMenu] = useState(false);
   const {
     isInRoom,
     roomId,
@@ -2453,12 +2454,12 @@ export default function ChatPage() {
                         {/* Plus Menu with Options */}
                         <div className="relative">
                           <m.button
-                            whileHover={{ scale: 1.1, rotate: showPlusMenu ? 0 : 90 }}
+                            whileHover={{ scale: 1.1, rotate: showMediaPlusMenu ? 0 : 90 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setShowPlusMenu(!showPlusMenu)}
+                            onClick={() => setShowMediaPlusMenu(!showMediaPlusMenu)}
                             className={cn(
                               "w-10 h-10 rounded-[0.85rem] glass-premium transition-all flex items-center justify-center shrink-0 shadow-lg",
-                              showPlusMenu ? "text-primary rotate-45" : "text-slate-400 hover:text-primary"
+                              showMediaPlusMenu ? "text-primary rotate-45" : "text-slate-400 hover:text-primary"
                             )}
                           >
                             <Plus className="w-5 h-5" />
@@ -2466,14 +2467,14 @@ export default function ChatPage() {
 
                           {/* Plus Menu Dropdown with Mobile Optimization */}
                           <AnimatePresence>
-                            {showPlusMenu && (
+                            {showMediaPlusMenu && (
                               <>
                                 {/* Backdrop overlay for mobile */}
                                 <m.div
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
-                                  onClick={() => setShowPlusMenu(false)}
+                                  onClick={() => setShowMediaPlusMenu(false)}
                                   className="fixed inset-0 bg-black/50 z-40 sm:hidden"
                                 />
                                 <m.div
@@ -2483,28 +2484,28 @@ export default function ChatPage() {
                                   className="absolute bottom-14 left-0 w-52 sm:w-48 p-2 glass-premium rounded-2xl border border-white/10 shadow-2xl z-50"
                                 >
                                   <button
-                                    onClick={() => { fileInputRef.current?.click(); setShowPlusMenu(false); }}
+                                    onClick={() => { fileInputRef.current?.click(); setShowMediaPlusMenu(false); }}
                                     className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-2.5 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors text-left"
                                   >
                                     <Image className="w-5 h-5 sm:w-4 sm:h-4 text-blue-400" />
                                     <span className="text-sm font-medium text-white">Photos & Files</span>
                                   </button>
                                   <button
-                                    onClick={() => { setShowVideoRecorder(true); setShowPlusMenu(false); }}
+                                    onClick={() => { setShowVideoRecorder(true); setShowMediaPlusMenu(false); }}
                                     className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-2.5 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors text-left"
                                   >
                                     <Camera className="w-5 h-5 sm:w-4 sm:h-4 text-purple-400" />
                                     <span className="text-sm font-medium text-white">Record Video</span>
                                   </button>
                                   <button
-                                    onClick={() => { setShowVoiceRecorder(true); setShowPlusMenu(false); }}
+                                    onClick={() => { setShowVoiceRecorder(true); setShowMediaPlusMenu(false); }}
                                     className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-2.5 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors text-left"
                                   >
                                     <Mic className="w-5 h-5 sm:w-4 sm:h-4 text-rose-400" />
                                     <span className="text-sm font-medium text-white">Voice Message</span>
                                   </button>
                                   <button
-                                    onClick={() => { setShowLocationPicker(true); setShowPlusMenu(false); }}
+                                    onClick={() => { setShowLocationPicker(true); setShowMediaPlusMenu(false); }}
                                     className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-2.5 rounded-xl hover:bg-white/10 active:bg-white/20 transition-colors text-left"
                                   >
                                     <Compass className="w-5 h-5 sm:w-4 sm:h-4 text-emerald-400" />
