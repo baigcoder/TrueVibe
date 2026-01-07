@@ -884,6 +884,106 @@ export default function ChatPage() {
     <div className="relative h-[calc(100vh-80px)] lg:h-screen w-full flex bg-transparent overflow-hidden aether-font lg:p-3 lg:gap-3">
       <AetherStyles />
 
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {showMobileSidebar && (
+          <>
+            {/* Backdrop */}
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileSidebar(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+            />
+            {/* Sidebar Panel */}
+            <m.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 bottom-0 w-[85%] max-w-[340px] bg-neutral-900/95 backdrop-blur-xl z-50 lg:hidden flex flex-col border-r border-white/10 shadow-2xl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <h2 className="text-lg font-bold text-white">Messages</h2>
+                <button
+                  onClick={() => setShowMobileSidebar(false)}
+                  className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="p-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Input
+                    placeholder="Search conversations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10 bg-white/5 border-white/10 text-sm rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Conversations List */}
+              <ScrollArea className="flex-1">
+                <div className="p-2 space-y-1">
+                  {conversations?.map((conv: Conversation) => {
+                    const otherParticipant = conv.participants?.find(
+                      (p) => p._id !== profile?._id && p.userId !== profile?._id
+                    );
+                    const displayName = conv.type === "group" ? conv.groupName : otherParticipant?.name;
+                    const avatar = otherParticipant?.avatar;
+                    const isSelected = selectedConversationId === conv._id;
+
+                    return (
+                      <m.button
+                        key={conv._id}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedConversationId(conv._id);
+                          setShowMobileSidebar(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
+                          isSelected
+                            ? "bg-primary/20 border border-primary/30"
+                            : "hover:bg-white/5"
+                        )}
+                      >
+                        <Avatar className="w-11 h-11 border border-white/10 shrink-0">
+                          <AvatarImage src={avatar} />
+                          <AvatarFallback className="bg-primary/20 text-primary text-sm font-bold">
+                            {displayName?.charAt(0)?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-white truncate text-sm">{displayName}</p>
+                          {conv.lastMessage && (
+                            <p className="text-xs text-slate-500 truncate mt-0.5">
+                              {conv.lastMessage.content}
+                            </p>
+                          )}
+                        </div>
+                      </m.button>
+                    );
+                  })}
+                  {(!conversations || conversations.length === 0) && (
+                    <div className="text-center py-8 text-slate-500">
+                      <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No conversations yet</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </m.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <div className="flex-1 flex overflow-hidden w-full h-full max-w-full relative z-10 lg:rounded-3xl border border-white/[0.03] bg-black/10 backdrop-blur-3xl shadow-2xl">
         {/* PRIMARY SIDEBAR - Server / DM selection */}
         <div className="hidden lg:flex w-24 bg-transparent flex-col items-center py-8 gap-6 relative z-20 border-r border-white/[0.03] px-3">
