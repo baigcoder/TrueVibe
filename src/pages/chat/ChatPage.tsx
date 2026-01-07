@@ -1963,7 +1963,7 @@ export default function ChatPage() {
                   </div>
                 )}
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 {view === "server" && (
                   <m.button
                     whileHover={{ scale: 1.05 }}
@@ -1985,7 +1985,7 @@ export default function ChatPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowFeaturesGuide(true)}
-                  className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-slate-500 hover:text-primary hover:border-primary/30"
+                  className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-slate-500 hover:text-primary hover:border-primary/30"
                   title="Chat Features Guide"
                 >
                   <HelpCircle className="w-4 h-4 lg:w-5 lg:h-5" />
@@ -1996,7 +1996,7 @@ export default function ChatPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowThemeSelector(true)}
-                  className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-slate-500 hover:text-primary hover:border-primary/30"
+                  className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-xl transition-all border glass-premium text-slate-500 hover:text-primary hover:border-primary/30"
                   title="Chat Theme"
                 >
                   <Palette className="w-4 h-4 lg:w-5 lg:h-5" />
@@ -2151,7 +2151,7 @@ export default function ChatPage() {
               ) : (view === "server" && selectedChannelId) ||
                 (view === "dms" && selectedConversationId) ? (
                 <>
-                  <ScrollArea className="flex-1 h-full">
+                  <ScrollArea className={cn("flex-1 h-full", chatTheme.background)}>
                     <div className="p-3 sm:p-6 lg:p-8 space-y-1 min-h-full flex flex-col justify-end">
                       {messagesLoading ? (
                         <div className="space-y-8 py-10 flex-1">
