@@ -28,8 +28,8 @@ export function BlockedUsersSection() {
     const { data: blockedUsers = [], isLoading, error } = useQuery({
         queryKey: ['blockedUsers'],
         queryFn: async () => {
-            const response = await api.get('/users/blocked') as { data: { data: BlockedUser[] } };
-            return response.data.data || [];
+            const response = await api.get('/users/blocked') as { success: boolean; data: BlockedUser[] };
+            return response.data || [];
         },
     });
 
