@@ -49,6 +49,7 @@ import {
   User,
   Camera,
 } from "lucide-react";
+import { MessageTicks } from "@/components/chat/MessageTicks";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,7 @@ import {
   useBlockUser,
   useCheckBlockStatus,
 } from "@/api/hooks";
+import { api } from "@/api/client";
 import { useSocket } from "@/context/SocketContext";
 import { useRealtime } from "@/context/RealtimeContext";
 import { useCall } from "@/context/CallContext";
@@ -97,6 +99,7 @@ interface Message {
   media?: { type: string; url: string }[];
   reactions?: { emoji: string; users: string[] }[];
   replyTo?: { _id: string; content: string; sender?: { name: string } };
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
   createdAt: Date;
   isPinned?: boolean;
   readBy?: { userId: string; readAt: Date }[];
@@ -2241,6 +2244,10 @@ export default function ChatPage() {
                                   <span className="text-[9px] sm:text-[10px] text-slate-600 font-medium">
                                     {formatTime(msg.createdAt)}
                                   </span>
+                                  {/* Message status ticks for own messages */}
+                                  {isMe && (
+                                    <MessageTicks status={msg.status || 'sent'} className="w-3.5 h-3.5" />
+                                  )}
                                 </div>
 
                                 <div
@@ -2286,6 +2293,26 @@ export default function ChatPage() {
                                         AETHER
                                       </span>
                                     </div>
+                                  )}
+
+                                  {/* Delete Message Button - appears on hover for own messages */}
+                                  {isMe && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm('Delete this message? It will be removed for everyone.')) {
+                                          api.delete(`/chat/conversations/${selectedConversationId}/messages/${msg._id}`)
+                                            .then(() => {
+                                              toast.success('Message deleted');
+                                              queryClient.invalidateQueries({ queryKey: ['messages', selectedConversationId] });
+                                            })
+                                            .catch(() => toast.error('Failed to delete message'));
+                                        }
+                                      }}
+                                      className="absolute -right-8 top-4 opacity-0 group-hover/bubble:opacity-100 transition-all w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center hover:bg-red-500/40"
+                                    >
+                                      <Trash2 className="w-3 h-3 text-red-400" />
+                                    </button>
                                   )}
 
                                   {/* Reactions Panel */}

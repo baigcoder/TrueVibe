@@ -17,6 +17,12 @@ export interface IMessage extends Document {
         users: string[];
     }>;
     replyTo?: mongoose.Types.ObjectId;
+    // Message delivery status tracking (WhatsApp-style ticks)
+    status: 'sending' | 'sent' | 'delivered' | 'read';
+    deliveredTo: Array<{
+        userId: string;
+        deliveredAt: Date;
+    }>;
     readBy: Array<{
         userId: string;
         readAt: Date;
@@ -66,6 +72,16 @@ const messageSchema = new Schema<IMessage>(
             type: Schema.Types.ObjectId,
             ref: 'Message',
         },
+        // Message delivery status (WhatsApp-style ticks)
+        status: {
+            type: String,
+            enum: ['sending', 'sent', 'delivered', 'read'],
+            default: 'sent',
+        },
+        deliveredTo: [{
+            userId: { type: String },
+            deliveredAt: { type: Date, default: Date.now },
+        }],
         readBy: [{
             userId: { type: String },
             readAt: { type: Date, default: Date.now },
