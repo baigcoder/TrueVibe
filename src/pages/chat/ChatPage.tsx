@@ -83,7 +83,6 @@ import { useSearch } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-// Media components
 import { MediaUploader } from "@/components/chat/MediaUploader";
 import { MediaPreview, type PreviewFile } from "@/components/chat/MediaPreview";
 import { MessageMedia } from "@/components/chat/MessageMedia";
@@ -91,6 +90,11 @@ import { CreateRoomModal } from "@/components/chat/CreateRoomModal";
 import { JoinRoomModal } from "@/components/chat/JoinRoomModal";
 import { ParticipantsGrid } from "@/components/chat/VoiceRoomPanel";
 import { useMediaUpload, type MediaAttachment } from "@/hooks/useMediaUpload";
+// New Phase 3 components
+import { VideoRecorder } from "@/components/chat/VideoRecorder";
+import { LocationPicker } from "@/components/chat/LocationSharing";
+import { ChatThemeSelector, CHAT_THEMES, type ChatTheme } from "@/components/chat/ChatThemeSelector";
+import { VoiceRecorder } from "@/components/chat/VoiceRecorder";
 
 interface Message {
   _id: string;
@@ -248,6 +252,12 @@ export default function ChatPage() {
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PreviewFile[]>([]);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  // Phase 3 feature states
+  const [showVideoRecorder, setShowVideoRecorder] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [chatTheme, setChatTheme] = useState<ChatTheme>(CHAT_THEMES[0]);
   const {
     isInRoom,
     roomId,
@@ -2429,25 +2439,72 @@ export default function ChatPage() {
                         </div>
                       )}
 
-                      {/* Hidden file input for media upload */}
+                      {/* Hidden file input for media upload - includes documents */}
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*,video/*"
+                        accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
                         multiple
                         onChange={handleFileSelect}
                         className="hidden"
                       />
 
                       <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-h-[44px] lg:min-h-[56px] px-2 sm:px-3">
-                        <m.button
-                          whileHover={{ scale: 1.1, rotate: 90 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => fileInputRef.current?.click()}
-                          className="w-10 h-10 rounded-[0.85rem] glass-premium text-slate-400 hover:text-primary transition-all flex items-center justify-center shrink-0 shadow-lg"
-                        >
-                          <Plus className="w-5 h-5" />
-                        </m.button>
+                        {/* Plus Menu with Options */}
+                        <div className="relative">
+                          <m.button
+                            whileHover={{ scale: 1.1, rotate: showPlusMenu ? 0 : 90 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setShowPlusMenu(!showPlusMenu)}
+                            className={cn(
+                              "w-10 h-10 rounded-[0.85rem] glass-premium transition-all flex items-center justify-center shrink-0 shadow-lg",
+                              showPlusMenu ? "text-primary rotate-45" : "text-slate-400 hover:text-primary"
+                            )}
+                          >
+                            <Plus className="w-5 h-5" />
+                          </m.button>
+
+                          {/* Dropdown Menu */}
+                          <AnimatePresence>
+                            {showPlusMenu && (
+                              <m.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                className="absolute bottom-14 left-0 w-48 p-2 glass-premium rounded-2xl border border-white/10 shadow-2xl z-50"
+                              >
+                                <button
+                                  onClick={() => { fileInputRef.current?.click(); setShowPlusMenu(false); }}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-left"
+                                >
+                                  <Image className="w-4 h-4 text-blue-400" />
+                                  <span className="text-sm text-white">Photos & Files</span>
+                                </button>
+                                <button
+                                  onClick={() => { setShowVideoRecorder(true); setShowPlusMenu(false); }}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-left"
+                                >
+                                  <Camera className="w-4 h-4 text-purple-400" />
+                                  <span className="text-sm text-white">Record Video</span>
+                                </button>
+                                <button
+                                  onClick={() => { setShowVoiceRecorder(true); setShowPlusMenu(false); }}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-left"
+                                >
+                                  <Mic className="w-4 h-4 text-rose-400" />
+                                  <span className="text-sm text-white">Voice Message</span>
+                                </button>
+                                <button
+                                  onClick={() => { setShowLocationPicker(true); setShowPlusMenu(false); }}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors text-left"
+                                >
+                                  <Compass className="w-4 h-4 text-emerald-400" />
+                                  <span className="text-sm text-white">Share Location</span>
+                                </button>
+                              </m.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
 
                         <div className="flex-1 flex flex-col justify-center relative">
                           <Input
@@ -3682,6 +3739,84 @@ export default function ChatPage() {
                 </div>
               </m.div>
             </>
+          )}
+        </AnimatePresence>
+
+        {/* Video Recorder Modal */}
+        <AnimatePresence>
+          {showVideoRecorder && (
+            <VideoRecorder
+              onRecordingComplete={async (blob, duration) => {
+                toast.success(`Video recorded (${duration}s) - Ready to send!`);
+                console.log('Video blob:', blob);
+                setShowVideoRecorder(false);
+              }}
+              onCancel={() => setShowVideoRecorder(false)}
+              maxDuration={60}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Voice Recorder Modal */}
+        <AnimatePresence>
+          {showVoiceRecorder && (
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowVoiceRecorder(false)}
+            >
+              <div onClick={(e) => e.stopPropagation()}>
+                <VoiceRecorder
+                  onRecordingComplete={async (blob, duration) => {
+                    toast.success(`Voice message recorded (${duration}s) - Ready to send!`);
+                    console.log('Voice blob:', blob);
+                    setShowVoiceRecorder(false);
+                  }}
+                  onCancel={() => setShowVoiceRecorder(false)}
+                />
+              </div>
+            </m.div>
+          )}
+        </AnimatePresence>
+
+        {/* Location Picker Modal */}
+        <AnimatePresence>
+          {showLocationPicker && (
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowLocationPicker(false)}
+            >
+              <div onClick={(e) => e.stopPropagation()}>
+                <LocationPicker
+                  onLocationSelect={(location) => {
+                    toast.success(`Location shared: ${location.address || `${location.lat}, ${location.lng}`}`);
+                    console.log('Location:', location);
+                    setShowLocationPicker(false);
+                  }}
+                  onCancel={() => setShowLocationPicker(false)}
+                />
+              </div>
+            </m.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Theme Selector */}
+        <AnimatePresence>
+          {showThemeSelector && (
+            <ChatThemeSelector
+              currentTheme={chatTheme.id}
+              onSelect={(theme) => {
+                setChatTheme(theme);
+                setShowThemeSelector(false);
+                toast.success(`Theme changed to ${theme.name}`);
+              }}
+              onClose={() => setShowThemeSelector(false)}
+            />
           )}
         </AnimatePresence>
       </div>
