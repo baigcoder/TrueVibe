@@ -76,7 +76,7 @@ export function LocationPicker({ onLocationSelect, onCancel }: LocationPickerPro
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="p-4 rounded-2xl bg-[#1a1a1a] border border-white/10"
+            className="w-full sm:max-w-md p-4 rounded-2xl bg-[#1a1a1a] border border-white/10"
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
