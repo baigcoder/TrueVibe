@@ -2695,7 +2695,7 @@ export default function ChatPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/95 backdrop-blur-3xl flex items-center justify-center z-[100] p-4"
+              className="fixed inset-0 bg-[#0a0a0f] sm:bg-black/95 sm:backdrop-blur-3xl flex items-center justify-center z-[100] p-4 sm:p-6"
               onClick={() => setShowCreateServer(false)}
             >
               <m.div
@@ -2703,68 +2703,74 @@ export default function ChatPage() {
                 animate={{ scale: 1, y: 0, opacity: 1 }}
                 exit={{ scale: 0.9, y: 40, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="glass-luxe border border-primary/20 rounded-[3rem] p-10 lg:p-14 w-full max-w-xl shadow-[0_0_100px_rgba(129,140,248,0.1)] relative overflow-hidden"
+                className="bg-[#0d0d12] sm:glass-luxe border border-white/10 sm:border-primary/20 rounded-2xl sm:rounded-[3rem] p-6 sm:p-10 lg:p-14 w-full max-w-xl shadow-[0_0_100px_rgba(129,140,248,0.1)] relative overflow-hidden"
               >
-                {/* Decorative HUD Accents */}
-                <div className="absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-primary/40 to-transparent" />
-                <div className="absolute top-0 left-0 w-px h-32 bg-gradient-to-b from-primary/40 to-transparent" />
-                <div className="absolute bottom-0 right-0 w-32 h-px bg-gradient-to-l from-violet-500/40 to-transparent" />
-                <div className="absolute bottom-0 right-0 w-px h-32 bg-gradient-to-t from-violet-500/40 to-transparent" />
+                {/* Decorative HUD Accents - hidden on mobile */}
+                <div className="hidden sm:block absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-primary/40 to-transparent" />
+                <div className="hidden sm:block absolute top-0 left-0 w-px h-32 bg-gradient-to-b from-primary/40 to-transparent" />
+                <div className="hidden sm:block absolute bottom-0 right-0 w-32 h-px bg-gradient-to-l from-violet-500/40 to-transparent" />
+                <div className="hidden sm:block absolute bottom-0 right-0 w-px h-32 bg-gradient-to-t from-violet-500/40 to-transparent" />
+
+                {/* Close button for mobile */}
+                <button
+                  onClick={() => setShowCreateServer(false)}
+                  className="absolute top-4 right-4 sm:hidden w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center z-20"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
 
                 <div className="relative z-10">
-                  <div className="flex items-center gap-6 mb-10">
-                    <div className="w-16 h-16 rounded-2xl glass-luxe border border-primary/30 flex items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.2)]">
-                      <Plus className="w-8 h-8 text-primary" />
+                  <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-primary/10 sm:glass-luxe border border-primary/30 flex items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.2)]">
+                      <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter glitch-hover">
+                      <h2 className="text-xl sm:text-3xl font-black text-white italic uppercase tracking-tighter glitch-hover">
                         Initialize Node
                       </h2>
-                      <div className="flex items-center gap-3 mt-1">
+                      <div className="flex items-center gap-2 sm:gap-3 mt-1">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] tech-font">
-                          Protocol: Pocket_Dimension_Alpha
+                        <p className="text-[9px] sm:text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] tech-font">
+                          Create your server
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-10">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between px-2">
-                        <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.4em] tech-font">
-                          Node Identifier
+                  <div className="space-y-6 sm:space-y-10">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="flex items-center justify-between px-1 sm:px-2">
+                        <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] tech-font">
+                          Server Name
                         </label>
-                        <span className="text-[9px] text-slate-700 font-black tech-font">
-                          SECURE_AUTH_REQUIRED
-                        </span>
+                        <span className="text-[9px] text-emerald-500 font-bold">REQUIRED</span>
                       </div>
                       <div className="relative group">
                         <Input
                           value={newServerName}
                           onChange={(e) => setNewServerName(e.target.value)}
-                          placeholder="ENTER_NODE_NAME..."
-                          className="h-20 bg-black/40 border border-white/5 rounded-2xl px-8 text-xl font-black text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-800 tech-font uppercase tracking-wider"
+                          placeholder="Enter server name..."
+                          className="h-14 sm:h-20 bg-black/40 border border-white/10 rounded-xl sm:rounded-2xl px-4 sm:px-8 text-base sm:text-xl font-bold sm:font-black text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-600"
                         />
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity">
-                          <Cpu className="w-6 h-6 text-primary" />
+                        <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity">
+                          <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-6 pt-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 pt-4">
                       <button
-                        className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white hover:bg-white/5 border border-white/5 transition-all text-[11px] tech-font"
+                        className="order-2 sm:order-1 flex-1 h-12 sm:h-16 rounded-xl sm:rounded-2xl font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/5 border border-white/10 transition-all text-xs"
                         onClick={() => setShowCreateServer(false)}
                       >
-                        Abort_Task
+                        Cancel
                       </button>
                       <button
                         className={cn(
-                          "flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] transition-all text-[11px] tech-font flex items-center justify-center gap-3 border shadow-2xl",
+                          "order-1 sm:order-2 flex-1 h-12 sm:h-16 rounded-xl sm:rounded-2xl font-bold uppercase tracking-widest transition-all text-xs flex items-center justify-center gap-3 border shadow-xl",
                           newServerName.trim()
-                            ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_30px_rgba(129,140,248,0.2)] hover:bg-primary/20"
-                            : "bg-white/5 border-white/10 text-slate-700 cursor-not-allowed shadow-none",
+                            ? "bg-primary text-white sm:bg-primary/10 sm:border-primary/50 sm:text-primary shadow-[0_0_30px_rgba(129,140,248,0.2)] hover:bg-primary/90 sm:hover:bg-primary/20"
+                            : "bg-white/5 border-white/10 text-slate-500 cursor-not-allowed shadow-none",
                         )}
                         onClick={handleCreateServer}
                         disabled={
@@ -2775,7 +2781,7 @@ export default function ChatPage() {
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                           <>
-                            Establish_Node
+                            Create Server
                             <ArrowRight className="w-4 h-4" />
                           </>
                         )}
@@ -2794,85 +2800,95 @@ export default function ChatPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-2xl z-[100] flex items-center justify-center p-4 lg:p-8"
+              className="fixed inset-0 bg-[#0a0a0f] sm:bg-black/80 sm:backdrop-blur-2xl z-[100] flex items-center justify-center p-4 sm:p-6"
+              onClick={() => setShowJoinServer(false)}
             >
-              <div className="absolute inset-0 aether-grid opacity-[0.03] pointer-events-none" />
               <m.div
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                className="w-full max-w-[500px] glass-aether border border-white/10 rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] relative overflow-hidden group"
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-[500px] bg-[#0d0d12] sm:glass-aether border border-white/10 rounded-2xl sm:rounded-[2.5rem] shadow-[0_60px_120px_rgba(0,0,0,0.8)] relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 pointer-events-none" />
-                <div className="p-8 lg:p-12 space-y-10 relative z-10">
+                <div className="hidden sm:block absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 pointer-events-none" />
+                <div className="p-6 sm:p-8 lg:p-12 space-y-6 sm:space-y-10 relative z-10">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl glass-aether border border-primary/30 flex items-center justify-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-primary/10 animate-pulse pointer-events-none" />
-                        <Compass className="w-6 h-6 text-primary" />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 sm:glass-aether border border-primary/30 flex items-center justify-center relative overflow-hidden">
+                        <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter aether-font">
-                          Initialize Node
+                        <h3 className="text-lg sm:text-xl font-bold text-white">
+                          Join Node
                         </h3>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest tech-font mt-1">
-                          HANDSHAKE_PROTOCOL_V2.1
+                        <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+                          Enter bridge identifier to sync
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setShowJoinServer(false)}
-                      className="w-10 h-10 rounded-xl glass-aether border border-white/5 flex items-center justify-center hover:text-rose-500 transition-colors"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 sm:glass-aether border border-white/10 flex items-center justify-center hover:text-rose-500 transition-colors"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
 
-                  <div className="space-y-8">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between px-2">
-                        <label className="text-[10px] text-primary/60 font-black uppercase tracking-[0.4em] tech-font">
-                          Access Token
+                  <div className="space-y-6 sm:space-y-8">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="flex items-center justify-between px-1">
+                        <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          Identifier
                         </label>
-                        <span className="text-[9px] text-slate-700 font-black tech-font">
-                          SECURE_SYNC_ACTIVE
+                        <span className="text-[9px] text-emerald-500 font-bold px-2 py-0.5 bg-emerald-500/10 rounded-full">
+                          REQUIRED
                         </span>
                       </div>
                       <div className="relative group/input">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                        </div>
                         <Input
                           value={inviteCode}
                           onChange={(e) => setInviteCode(e.target.value)}
-                          placeholder="EX: PROTOCOL_ALPHA_77"
-                          className="h-20 bg-black/40 border border-white/5 rounded-2xl px-8 text-xl font-black text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-800 tech-font uppercase tracking-wider text-center"
+                          placeholder="Enter node ID..."
+                          className="h-14 sm:h-16 bg-black/40 border border-white/10 rounded-xl sm:rounded-2xl pl-11 sm:pl-14 pr-4 text-base sm:text-lg font-bold text-white focus:border-primary/50 focus:ring-0 transition-all outline-none placeholder:text-slate-600"
                         />
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within/input:opacity-100 transition-opacity">
-                          <Lock className="w-6 h-6 text-primary" />
-                        </div>
+                      </div>
+
+                      {/* Helper text */}
+                      <div className="flex items-start gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                        <Info className="w-4 h-4 text-primary/60 shrink-0 mt-0.5" />
+                        <p className="text-[10px] sm:text-xs text-slate-400 leading-relaxed">
+                          Some nodes may require a manual verification protocol before the sync can be completed.
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex gap-6 pt-4">
-                      <button
-                        className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-slate-500 hover:text-white hover:bg-white/5 border border-white/5 transition-all text-[11px] tech-font"
-                        onClick={() => setShowJoinServer(false)}
-                      >
-                        TERMINATE
-                      </button>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <button
                         className={cn(
-                          "flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] transition-all text-[11px] tech-font flex items-center justify-center gap-3 border shadow-2xl relative overflow-hidden group/btn",
+                          "order-1 sm:order-2 flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold uppercase tracking-wider transition-all text-xs flex items-center justify-center gap-2 border relative overflow-hidden",
                           inviteCode.trim()
-                            ? "bg-primary/10 border-primary/50 text-primary shadow-[0_0_30px_rgba(0,243,255,0.2)] hover:bg-primary/20"
-                            : "bg-white/5 border-white/10 text-slate-700 cursor-not-allowed shadow-none",
+                            ? "bg-primary text-white sm:bg-primary/10 sm:border-primary/50 sm:text-primary shadow-[0_0_20px_rgba(0,243,255,0.15)] hover:bg-primary/90 sm:hover:bg-primary/20"
+                            : "bg-white/5 border-white/10 text-slate-500 cursor-not-allowed",
                         )}
                         onClick={handleJoinServer}
                         disabled={joinServer.isPending || !inviteCode.trim()}
                       >
-                        <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                         {joinServer.isPending ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                          <span className="relative z-10">Establish_Link</span>
+                          <>
+                            Execute Sync
+                            <ArrowRight className="w-4 h-4" />
+                          </>
                         )}
+                      </button>
+                      <button
+                        className="order-2 sm:order-1 flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold uppercase tracking-wider text-slate-400 hover:text-white hover:bg-white/5 border border-white/10 transition-all text-xs"
+                        onClick={() => setShowJoinServer(false)}
+                      >
+                        Cancel
                       </button>
                     </div>
                   </div>
