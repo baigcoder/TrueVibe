@@ -2388,7 +2388,7 @@ export default function ChatPage() {
 
                   {/* Message Input Area */}
                   <div className="px-2 sm:px-6 lg:px-8 pb-3 lg:pb-10 shrink-0 relative z-10">
-                    <div className="glass-premium rounded-2xl lg:rounded-3xl p-2 sm:p-4 lg:p-5 relative group focus-within:border-primary/40 transition-all duration-700 overflow-hidden">
+                    <div className="glass-premium rounded-2xl lg:rounded-3xl p-2 sm:p-4 lg:p-5 relative group focus-within:border-primary/40 transition-all duration-700">
 
 
                       {replyingTo && (
@@ -2481,7 +2481,7 @@ export default function ChatPage() {
                                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                   animate={{ opacity: 1, y: 0, scale: 1 }}
                                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                  className="fixed bottom-24 left-4 lg:bottom-28 lg:left-auto lg:right-auto w-52 sm:w-48 p-2 glass-premium rounded-2xl border border-white/10 shadow-2xl z-[100]"
+                                  className="absolute bottom-14 left-0 w-52 sm:w-48 p-2 glass-premium rounded-2xl border border-white/10 shadow-2xl z-[100]"
                                 >
                                   <button
                                     onClick={() => { fileInputRef.current?.click(); setShowMediaPlusMenu(false); }}
