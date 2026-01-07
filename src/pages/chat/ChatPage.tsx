@@ -103,7 +103,6 @@ interface Message {
   createdAt: Date;
   isPinned?: boolean;
   readBy?: { userId: string; readAt: Date }[];
-  status?: "sending" | "sent" | "delivered" | "read";
 }
 
 interface Channel {
