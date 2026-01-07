@@ -38,6 +38,7 @@ import projectRoutes from './modules/projects/project.routes.js';
 import collectionRoutes from './modules/posts/collection.routes.js';
 import scheduledPostsRoutes from './modules/posts/scheduledPosts.routes.js';
 import trustRoutes from './modules/trust/trust.routes.js';
+import aiRoutes from './modules/ai/ai.routes.js';
 
 export const createApp = (): Application => {
     const app = express();
@@ -161,6 +162,7 @@ export const createApp = (): Application => {
     app.use('/api/v1/collections', collectionRoutes);
     app.use('/api/v1/posts', scheduledPostsRoutes); // Additional scheduled posts routes
     app.use('/api/v1/trust', trustRoutes);
+    app.use('/api/v1/ai', aiLimiter, aiRoutes);
 
     // Error handling
     app.use(notFoundHandler);
