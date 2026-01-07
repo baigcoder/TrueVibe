@@ -50,6 +50,7 @@ import {
   Camera,
 } from "lucide-react";
 import { MessageTicks } from "@/components/chat/MessageTicks";
+import { OnlineIndicator } from "@/components/chat/OnlineIndicator";
 import { useAuth } from "@/context/AuthContext";
 import { useVoiceRoom } from "@/context/VoiceRoomContext";
 import { cn } from "@/lib/utils";
@@ -1878,7 +1879,12 @@ export default function ChatPage() {
                         {selectedConversation.participants[0]?.name?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#030712] shadow-[0_0_12px_rgba(16,185,129,0.5)] z-20" />
+                    {/* Dynamic Online Indicator */}
+                    <OnlineIndicator
+                      isOnline={selectedConversation.participants[0]?.isOnline}
+                      size="lg"
+                      className="absolute -bottom-1 -right-1 z-20"
+                    />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <h2 className="font-bold text-white text-lg lg:text-2xl tracking-tight truncate whitespace-nowrap premium-font group-hover:text-primary transition-colors">
@@ -1887,10 +1893,12 @@ export default function ChatPage() {
                         : selectedConversation.participants[0]?.name}
                     </h2>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest premium-font">
-                        Online
-                      </span>
+                      <OnlineIndicator
+                        isOnline={selectedConversation.participants[0]?.isOnline}
+                        lastSeen={selectedConversation.participants[0]?.lastSeen}
+                        showLastSeen
+                        size="sm"
+                      />
                       {isMutedConversation && (
                         <BellOff className="w-3 h-3 text-amber-400 ml-1" />
                       )}

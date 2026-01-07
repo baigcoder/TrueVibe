@@ -32,6 +32,9 @@ export interface IProfile extends Document {
     spotifyUserId?: string;
     spotifyDisplayName?: string;
     spotifyConnected?: boolean;
+    // Online/Presence Status
+    isOnline: boolean;
+    lastSeen: Date;
 }
 
 const profileSchema = new Schema<IProfile>(
@@ -146,6 +149,16 @@ const profileSchema = new Schema<IProfile>(
             default: null,
         },
         verificationBadgeEarnedAt: Date,
+        // Online/Presence Status
+        isOnline: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        lastSeen: {
+            type: Date,
+            default: Date.now,
+        },
     },
     {
         timestamps: true,
