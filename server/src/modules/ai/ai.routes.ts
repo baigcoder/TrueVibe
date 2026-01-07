@@ -38,7 +38,7 @@ router.post('/generate-caption', authenticate, async (req: Request, res: Respons
         });
 
         if (!response.ok) {
-            const error = await response.json();
+            const error = await response.json() as { detail?: string };
             throw new Error(error.detail || 'Failed to generate caption');
         }
 
@@ -79,7 +79,7 @@ router.post('/suggest-hashtags', authenticate, async (req: Request, res: Respons
         });
 
         if (!response.ok) {
-            const error = await response.json();
+            const error = await response.json() as { detail?: string };
             throw new Error(error.detail || 'Failed to suggest hashtags');
         }
 
@@ -119,7 +119,7 @@ router.post('/generate-ideas', authenticate, async (req: Request, res: Response,
                     {
                         title: `${topic} Behind the Scenes`,
                         caption: `The real story behind ${topic} 🎬`,
-                        hashtags: [`#bts`, '#${topic.toLowerCase().replace(/\s+/g, '')}`, '#raw']
+                        hashtags: [`#bts`, `#${topic.toLowerCase().replace(/\s+/g, '')}`, '#raw']
                     }
                 ],
                 modelUsed: 'mock'
@@ -134,7 +134,7 @@ router.post('/generate-ideas', authenticate, async (req: Request, res: Response,
         });
 
         if (!response.ok) {
-            const error = await response.json();
+            const error = await response.json() as { detail?: string };
             throw new Error(error.detail || 'Failed to generate ideas');
         }
 
